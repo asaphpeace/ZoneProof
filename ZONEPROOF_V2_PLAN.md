@@ -4,23 +4,23 @@ Drafted 2026-10-15. Nothing in this document has been built. It consolidates the
 
 ---
 
-## Progress (updated 2026-10-15)
+## Progress (updated 2026-10-16)
 
 | Band | Items | Done | Notes |
 |---|---|---|---|
-| A. Trust and visibility | 7 | **7** (A6 minus one source) | Passive DNS source (G4) and client scope (G3) remain |
-| B. Workflow | 10 | 0 | Backend and design decisions pending; B10 task test not run |
-| C. AWS readiness | 10 | **2** (C1, C2) | C3 and the infrastructure items next; decisions 2 and 3 open |
-| D. Telemetry integrations | 3 | 0 | Vendor and join question open |
-| E. Brand Guard remaining | 12 | **2** (E1, E5) | E12 is skipped/parked by you |
-| F. Other plans | 6 | **1** (F5) | |
-| G. Found while building | 5 | **1** (G1) | Added 2026-10-15, below |
+| A. Trust and visibility | 7 | **7** | Passive DNS source not added: terms check says no free feed is safe (G4) |
+| B. Workflow | 10 | 0 | Backend and design decisions pending; B10 task test not run; prototype first |
+| C. AWS readiness | 10 | **5** (C1, C2, C3, C8, C9) + C5 partly | C4, C6, C7, C10 need your decisions; no AWS resources created |
+| D. Telemetry integrations | 3 | 0 (D1 backend built) | D1 screen waits for prototype; D2 vendor open |
+| E. Brand Guard remaining | 12 | **3** (E1, E5, E11) | E12 parked by you |
+| F. Other plans | 6 | **2** (F5, F6) | F3 blocked: no attack-path view exists |
+| G. Found while building | 5 | **4** (G1, G2, G4, G5) | G3 client scope remains |
 
-Of the twelve items in the first two steps of the order in section 4, twelve are done (A1 to A7, C1, C2, E1, E5, F5). Not done from those steps: B10.
+Done: 21 of 53 (plus two partly: C5, D1). Everything is committed on branch `v2-foundations` (not pushed). Not done from the first steps of the order in section 4: B10.
 
 Also done outside the plan: IMAP poll no longer crashes when unconfigured, SendGrid verified end to end, the Vite proxy port mismatch diagnosed.
 
-Test status after this work: 116 related backend tests and 81 frontend tests pass; the full backend suite (143 files) has not been run since.
+Test status: the full backend suite last passed on 2026-10-15 (2453 passed, 2 skipped); a re-run after the 2026-10-16 changes is in progress. Frontend: 87 tests pass.
 
 ## 1. Verified starting point
 

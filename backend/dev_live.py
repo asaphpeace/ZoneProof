@@ -9,7 +9,7 @@ touches, selected through the app's optional DATABASE_SCHEMA setting.
 
     python dev_live.py reset     # drop + recreate the schema, create tables, seed demo data
     python dev_live.py seed      # (re)seed demo data without dropping anything
-    python dev_live.py serve     # run the API on :9931 against the schema (resets first if missing)
+    python dev_live.py serve     # run the API on :9931 against the schema (resets first if missing; adds any new tables otherwise)
     python dev_live.py status    # what's in there
     python dev_live.py adduser you@example.com   # add an admin to the demo workspace with a generated password
 
@@ -75,6 +75,19 @@ async def _reset(url: str) -> None:
     scoped = create_async_engine(url, connect_args=engine_connect_args(SCHEMA))
     async with scoped.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    await scoped.dispose()
+
+
+async def _add_missing_tables(url: str) -> None:
+    """Create tables added to the models since this schema was built. Additive only: never alters or drops."""
+    from sqlalchemy.ext.asyncio import create_async_engine
+
+    from app.database import Base, engine_connect_args
+    import app.models  # noqa: F401
+
+    scoped = create_async_engine(url, connect_args=engine_connect_args(SCHEMA))
+    async with scoped.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)  # checkfirst: existing tables are left as they are
     await scoped.dispose()
 
 
@@ -191,6 +204,8 @@ def main(argv: list[str]) -> None:
             print(f"Schema {SCHEMA!r} missing — creating it first.")
             asyncio.run(_reset(url))
             asyncio.run(_seed(url))
+        else:
+            asyncio.run(_add_missing_tables(url))
         import uvicorn
 
         uvicorn.run("app.main:app", host="127.0.0.1", port=PORT)
