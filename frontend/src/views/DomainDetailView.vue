@@ -24,6 +24,9 @@ const dismissing  = ref<string | null>(null)
 const subdomains        = ref<any[]>([])
 const subdomainsLoading = ref(false)
 const subdomainsLoaded  = ref(false)
+const subdomainsError   = ref('')
+const subdomainSources  = ref<Record<string, string>>({})
+const subdomainCoverage = ref<any>(null)
 const addingSubdomain   = ref<string | null>(null)
 
 onMounted(async () => {
@@ -44,10 +47,18 @@ onMounted(async () => {
 async function loadSubdomains() {
   subdomainsLoading.value = true
   subdomainsLoaded.value = true
+  subdomainsError.value = ''
   try {
-    subdomains.value = await api.discoverSubdomains(domainId)
-  } catch {
+    const res = await api.discoverSubdomains(domainId)
+    subdomains.value = res.subdomains || []
+    subdomainSources.value = res.sources || {}
+    subdomainCoverage.value = res.coverage || null
+  } catch (e: any) {
+    // A failed request is not "no subdomains": say so and let the user retry.
     subdomains.value = []
+    subdomainSources.value = {}
+    subdomainCoverage.value = null
+    subdomainsError.value = e?.message && e.message !== 'Unauthorized' ? e.message : 'The scan could not be completed.'
   } finally {
     subdomainsLoading.value = false
   }
@@ -151,7 +162,7 @@ const CLASS_BG: Record<string, string> = {
   known_esp: 'rgba(46,230,197,.1)',
   unknown: 'rgba(245,197,66,.1)',
   suspicious: 'rgba(255,77,109,.08)',
-  tls_issue: 'rgba(91,110,245,.1)',
+  tls_issue: 'rgba(91,92,240,.1)',
 }
 const FIX_LABEL: Record<string, string> = {
   tls_issue: 'Recommended action',
@@ -312,8 +323,8 @@ const MTA_COLOR: Record<string, string> = {
             </svg>
             Discovered subdomains
           </div>
-          <button v-if="!subdomainsLoaded" class="sd-scan-btn" :disabled="subdomainsLoading" @click="loadSubdomains">
-            {{ subdomainsLoading ? 'Scanning…' : 'Scan for subdomains' }}
+          <button class="sd-scan-btn" :disabled="subdomainsLoading" @click="loadSubdomains">
+            {{ subdomainsLoading ? 'Scanning…' : (subdomainsLoaded ? 'Scan again' : 'Scan for subdomains') }}
           </button>
         </div>
 
@@ -328,9 +339,24 @@ const MTA_COLOR: Record<string, string> = {
             Active DNS checks unlock once ownership is verified — passive sources only until then.
           </template>
         </div>
-        <div v-else-if="subdomainsLoading" class="sd-empty">Scanning passive sources — this can take a few seconds…</div>
-        <div v-else-if="!subdomains.length" class="sd-empty">No subdomains found via passive sources.</div>
+        <div v-else-if="subdomainsLoading" class="sd-empty">Scanning passive sources — this can take up to half a minute…</div>
+        <div v-else-if="subdomainsError" class="sd-empty sd-warn" role="alert">
+          The scan failed: {{ subdomainsError }} This is not the same as "no subdomains found". Use Scan again to retry.
+        </div>
+        <div v-else-if="!subdomains.length" class="sd-empty">
+          <template v-if="subdomainSources.ct === 'timed_out' || subdomainSources.ct === 'failed'">
+            Nothing found, but the certificate log lookup {{ subdomainSources.ct === 'timed_out' ? 'timed out' : 'failed' }},
+            so this result is incomplete. Use Scan again to retry.
+          </template>
+          <template v-else>No subdomains found from DMARC reports, certificate SANs or certificate logs.</template>
+        </div>
         <template v-else>
+          <div v-if="subdomainSources.dns_active === 'wildcard_filtered'" class="sd-note" role="status">
+            This domain has a wildcard DNS record, so guessed names would all appear to exist. Guessed names that only match the wildcard were left out.
+          </div>
+          <div v-if="subdomainSources.ct === 'timed_out' || subdomainSources.ct === 'failed'" class="sd-note sd-warn" role="status">
+            The certificate log lookup {{ subdomainSources.ct === 'timed_out' ? 'timed out' : 'failed' }}; this list may be missing subdomains. Use Scan again to retry.
+          </div>
           <div v-if="subdomains.some(s => s.sends_mail)" class="sd-note">
             Subdomains that send mail and have no DMARC alignment of their own need attention first —
             those are listed before the rest.
@@ -365,6 +391,12 @@ const MTA_COLOR: Record<string, string> = {
             </div>
           </div>
         </template>
+
+        <!-- Subdomains nobody listed: covered by the parent policy, no scan needed -->
+        <div v-if="subdomainsLoaded && !subdomainsLoading && subdomainCoverage" class="sd-coverage" :class="'sd-cov-' + subdomainCoverage.level">
+          <strong>Subdomains not listed here</strong>
+          <span>{{ subdomainCoverage.summary }}</span>
+        </div>
       </div>
 
       <!-- Exclude reason modal — required, never a silent drop -->
@@ -389,7 +421,7 @@ const MTA_COLOR: Record<string, string> = {
         <div class="record-card">
           <div class="rc-header">
             <div class="rc-title">
-              <div class="rc-dot" style="background:#5b6ef5" />
+              <div class="rc-dot" style="background:#5b5cf0" />
               DMARC record
             </div>
             <span class="pub-badge" :class="detail.dmarc_record_published ? 'pub-yes' : 'pub-no'">
@@ -402,7 +434,7 @@ const MTA_COLOR: Record<string, string> = {
               <div class="dns-field-label">Host</div>
               <div class="dns-copy-row">
                 <code class="dns-val">{{ dmarcInfo.record_host }}</code>
-                <button class="copy-btn" @click="copyText(dmarcInfo.record_host, 'dmarc-host')">
+                <button class="copy-btn" aria-label="Copy to clipboard" @click="copyText(dmarcInfo.record_host, 'dmarc-host')">
                   <svg v-if="copied !== 'dmarc-host'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                   <svg v-else viewBox="0 0 24 24" fill="none" stroke="var(--good)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                 </button>
@@ -416,7 +448,7 @@ const MTA_COLOR: Record<string, string> = {
               <div class="dns-field-label">Value</div>
               <div class="dns-copy-row dns-copy-row-wrap">
                 <code class="dns-val dns-val-wrap">{{ dmarcInfo.generated_record }}</code>
-                <button class="copy-btn" @click="copyText(dmarcInfo.generated_record, 'dmarc-val')">
+                <button class="copy-btn" aria-label="Copy to clipboard" @click="copyText(dmarcInfo.generated_record, 'dmarc-val')">
                   <svg v-if="copied !== 'dmarc-val'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                   <svg v-else viewBox="0 0 24 24" fill="none" stroke="var(--good)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                 </button>
@@ -431,7 +463,7 @@ const MTA_COLOR: Record<string, string> = {
           <div class="rua-note">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             Reports sent to <code class="inline-code">{{ detail.reporting_address }}</code>
-            <button class="copy-btn-inline" @click="copyText(detail.reporting_address, 'rua')">
+            <button class="copy-btn-inline" aria-label="Copy to clipboard" @click="copyText(detail.reporting_address, 'rua')">
               <svg v-if="copied !== 'rua'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
               <svg v-else viewBox="0 0 24 24" fill="none" stroke="var(--good)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
             </button>
@@ -455,7 +487,7 @@ const MTA_COLOR: Record<string, string> = {
               <div class="dns-field-label">Host</div>
               <div class="dns-copy-row">
                 <code class="dns-val">{{ tlsInfo.tlsrpt_host }}</code>
-                <button class="copy-btn" @click="copyText(tlsInfo.tlsrpt_host, 'tlsrpt-host')">
+                <button class="copy-btn" aria-label="Copy to clipboard" @click="copyText(tlsInfo.tlsrpt_host, 'tlsrpt-host')">
                   <svg v-if="copied !== 'tlsrpt-host'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                   <svg v-else viewBox="0 0 24 24" fill="none" stroke="var(--good)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                 </button>
@@ -469,7 +501,7 @@ const MTA_COLOR: Record<string, string> = {
               <div class="dns-field-label">Value</div>
               <div class="dns-copy-row dns-copy-row-wrap">
                 <code class="dns-val dns-val-wrap">{{ tlsInfo.tlsrpt_record }}</code>
-                <button class="copy-btn" @click="copyText(tlsInfo.tlsrpt_record, 'tlsrpt-val')">
+                <button class="copy-btn" aria-label="Copy to clipboard" @click="copyText(tlsInfo.tlsrpt_record, 'tlsrpt-val')">
                   <svg v-if="copied !== 'tlsrpt-val'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                   <svg v-else viewBox="0 0 24 24" fill="none" stroke="var(--good)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                 </button>
@@ -495,7 +527,7 @@ const MTA_COLOR: Record<string, string> = {
               <div class="dns-field-label">Host</div>
               <div class="dns-copy-row">
                 <code class="dns-val">{{ tlsInfo.mta_sts_dns_host }}</code>
-                <button class="copy-btn" @click="copyText(tlsInfo.mta_sts_dns_host, 'mta-host')">
+                <button class="copy-btn" aria-label="Copy to clipboard" @click="copyText(tlsInfo.mta_sts_dns_host, 'mta-host')">
                   <svg v-if="copied !== 'mta-host'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                   <svg v-else viewBox="0 0 24 24" fill="none" stroke="var(--good)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                 </button>
@@ -509,7 +541,7 @@ const MTA_COLOR: Record<string, string> = {
               <div class="dns-field-label">Value</div>
               <div class="dns-copy-row dns-copy-row-wrap">
                 <code class="dns-val dns-val-wrap">{{ tlsInfo.mta_sts_dns_record }}</code>
-                <button class="copy-btn" @click="copyText(tlsInfo.mta_sts_dns_record, 'mta-val')">
+                <button class="copy-btn" aria-label="Copy to clipboard" @click="copyText(tlsInfo.mta_sts_dns_record, 'mta-val')">
                   <svg v-if="copied !== 'mta-val'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                   <svg v-else viewBox="0 0 24 24" fill="none" stroke="var(--good)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                 </button>
@@ -533,7 +565,7 @@ const MTA_COLOR: Record<string, string> = {
               <div class="dns-field-label">URL</div>
               <div class="dns-copy-row">
                 <code class="dns-val" style="font-size:11px">{{ tlsInfo.policy_url }}</code>
-                <button class="copy-btn" @click="copyText(tlsInfo.policy_url, 'policy-url')">
+                <button class="copy-btn" aria-label="Copy to clipboard" @click="copyText(tlsInfo.policy_url, 'policy-url')">
                   <svg v-if="copied !== 'policy-url'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                   <svg v-else viewBox="0 0 24 24" fill="none" stroke="var(--good)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                 </button>
@@ -547,7 +579,7 @@ const MTA_COLOR: Record<string, string> = {
               <div class="dns-field-label">Content</div>
               <div class="dns-copy-row dns-copy-row-wrap">
                 <pre class="dns-val dns-val-pre">{{ tlsInfo.mta_sts_policy }}</pre>
-                <button class="copy-btn" @click="copyText(tlsInfo.mta_sts_policy, 'policy-body')">
+                <button class="copy-btn" aria-label="Copy to clipboard" @click="copyText(tlsInfo.mta_sts_policy, 'policy-body')">
                   <svg v-if="copied !== 'policy-body'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                   <svg v-else viewBox="0 0 24 24" fill="none" stroke="var(--good)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                 </button>
@@ -695,7 +727,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 26px; margin: 0; let
 .sa-rec { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.55; }
 
 .sa-fix {
-  background: rgba(91,110,245,.07); border: 1px solid rgba(91,110,245,.15);
+  background: rgba(91,92,240,.07); border: 1px solid rgba(91,92,240,.15);
   border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 3px;
 }
 .sa-fix-label { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: .5px; color: var(--indigo); }
@@ -716,6 +748,13 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 26px; margin: 0; let
 .sa-snooze:disabled { opacity: .5; cursor: not-allowed; }
 
 /* ── Discovered subdomains ───────────────────────────────────────────── */
+.sd-warn { color: #f3c969; }
+.sd-coverage { margin-top: 14px; padding: 10px 14px; border-radius: 10px; font-size: 12.5px; display: flex; flex-direction: column; gap: 2px;
+  background: rgba(255,255,255,.04); border: 1px solid var(--line2); color: var(--muted); }
+.sd-coverage strong { color: var(--txt); font-weight: 600; }
+.sd-cov-protected { border-color: rgba(60, 200, 150, .45); }
+.sd-cov-partial { border-color: rgba(243, 201, 105, .5); }
+.sd-cov-open { border-color: rgba(240, 90, 90, .5); }
 .subdomain-card {
   background: var(--glass); border: 1px solid var(--line2); border-radius: 16px;
   padding: 18px 20px; margin-bottom: 20px;
@@ -724,11 +763,11 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 26px; margin: 0; let
 .sd-title { display: flex; align-items: center; gap: 9px; font-family: var(--disp); font-weight: 700; font-size: 14px; }
 .sd-icon { width: 16px; height: 16px; flex: none; }
 .sd-scan-btn {
-  background: rgba(91,110,245,.12); border: 1px solid rgba(91,110,245,.3); color: #9aa6ff;
+  background: rgba(91,92,240,.12); border: 1px solid rgba(91,92,240,.3); color: #9aa6ff;
   border-radius: 10px; padding: 7px 14px; font-family: var(--disp); font-weight: 700;
   font-size: 12px; cursor: pointer; transition: .15s;
 }
-.sd-scan-btn:hover:not(:disabled) { background: rgba(91,110,245,.2); }
+.sd-scan-btn:hover:not(:disabled) { background: rgba(91,92,240,.2); }
 .sd-scan-btn:disabled { opacity: .6; cursor: not-allowed; }
 .sd-empty { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
 .sd-note { font-size: 11.5px; color: var(--amber); line-height: 1.5; margin-bottom: 10px; }
@@ -747,13 +786,13 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 26px; margin: 0; let
 .sd-tag-mail { background: rgba(245,197,66,.14); color: var(--amber); }
 .sd-tag-src  { background: rgba(255,255,255,.06); color: var(--faint); text-transform: uppercase; }
 .sd-add-btn {
-  background: linear-gradient(90deg, #5b6ef5, #8b5cf6); color: #fff; border: none;
+  background: linear-gradient(90deg, #5b5cf0, #4b4ce0); color: #fff; border: none;
   border-radius: 9px; padding: 6px 13px; font-family: var(--disp); font-weight: 700;
   font-size: 11.5px; cursor: pointer; flex: none;
 }
 .sd-add-btn:disabled { opacity: .6; cursor: not-allowed; }
 .sd-monitored { font-family: var(--mono); font-size: 10.5px; color: var(--good); flex: none; }
-.sd-tag-disposition { background: rgba(91,110,245,.14); color: #9aa6ff; }
+.sd-tag-disposition { background: rgba(91,92,240,.14); color: #9aa6ff; }
 .sd-disposition-actions { display: flex; gap: 6px; flex: none; }
 .sd-disp-btn {
   background: rgba(255,255,255,.04); border: 1px solid var(--line2); color: var(--muted);
@@ -776,7 +815,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 26px; margin: 0; let
 }
 .exclude-textarea:focus { border-color: var(--indigo); }
 .exclude-actions { display: flex; justify-content: flex-end; gap: 10px; }
-.btn { background: linear-gradient(90deg,#5b6ef5,#8b5cf6); color: #fff; border: none; border-radius: 11px; padding: 9px 16px; font-family: var(--disp); font-weight: 700; font-size: 12.5px; cursor: pointer; }
+.btn { background: linear-gradient(90deg,#5b5cf0,#4b4ce0); color: #fff; border: none; border-radius: 11px; padding: 9px 16px; font-family: var(--disp); font-weight: 700; font-size: 12.5px; cursor: pointer; }
 .btn.ghost { background: rgba(255,255,255,.04); border: 1px solid var(--line2); color: var(--txt); box-shadow: none; }
 .btn:disabled { opacity: .6; cursor: not-allowed; }
 
@@ -802,7 +841,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 26px; margin: 0; let
 }
 .pub-yes  { background: rgba(52,224,161,.1); color: var(--good); border: 1px solid rgba(52,224,161,.2); }
 .pub-no   { background: rgba(255,77,109,.08); color: var(--bad);  border: 1px solid rgba(255,77,109,.2); }
-.pub-info { background: rgba(91,110,245,.1); color: var(--indigo); border: 1px solid rgba(91,110,245,.2); }
+.pub-info { background: rgba(91,92,240,.1); color: var(--indigo); border: 1px solid rgba(91,92,240,.2); }
 
 .dns-block { display: flex; flex-direction: column; gap: 10px; }
 .dns-row { display: flex; align-items: flex-start; gap: 10px; }
@@ -862,7 +901,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 26px; margin: 0; let
   padding: 12px 16px; color: var(--muted); font-size: 13px; cursor: pointer; transition: .15s;
 }
 .ql-btn svg { width: 15px; height: 15px; flex: none; }
-.ql-btn:hover { color: var(--txt); border-color: var(--indigo); background: rgba(91,110,245,.06); }
+.ql-btn:hover { color: var(--txt); border-color: var(--indigo); background: rgba(91,92,240,.06); }
 .ql-arrow { margin-left: auto; opacity: .4; }
 
 /* ── Misc ─────────────────────────────────────────────────────────────── */

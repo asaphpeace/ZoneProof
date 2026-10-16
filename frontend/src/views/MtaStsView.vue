@@ -5,6 +5,7 @@ import { api } from '@/api/client'
 import { useDomainsStore } from '@/stores/domains'
 import { useUiStore } from '@/stores/ui'
 import KpiCard from '@/components/ui/KpiCard.vue'
+import LoadError from '@/components/ui/LoadError.vue'
 import AdvisorBanner from '@/components/ui/AdvisorBanner.vue'
 import StatusChip from '@/components/ui/StatusChip.vue'
 import DataDeadZone from '@/components/ui/DataDeadZone.vue'
@@ -13,13 +14,18 @@ import MtaStsHostingStatus from '@/components/domain/MtaStsHostingStatus.vue'
 import MxReadinessScorecard from '@/components/domain/MxReadinessScorecard.vue'
 import ConceptCardButton from '@/components/ui/ConceptCardButton.vue'
 import DateRangeFilter from '@/components/ui/DateRangeFilter.vue'
+import { useScopeStore } from '@/stores/scope'
 
 const ALL = '__all__'
 const router  = useRouter()
 const domains = useDomainsStore()
 const ui = useUiStore()
 
-const selected       = ref<string>(ALL)
+const scope = useScopeStore()
+const selected = computed<string>({
+  get: () => scope.domain ?? ALL,
+  set: (v) => scope.set(v === ALL ? null : v),
+})
 const days           = ref(30)
 const data           = ref<any>(null)
 const diff           = ref<any>(null)
@@ -27,10 +33,12 @@ const advisor        = ref<any>(null)
 const advisorLoading = ref(false)
 const allSummary     = ref<any[]>([])
 const loading        = ref(false)
+const loadError = ref('')
 
 onMounted(async () => {
   advisorLoading.value = true
   await domains.fetch()
+  if (domains.error) { loadError.value = domains.error; advisorLoading.value = false; loading.value = false; return }
   await loadData(true)
 })
 
@@ -42,6 +50,7 @@ watch(days, () => loadData(false))
 
 async function loadData(initialLoad = false) {
   loading.value = true
+  loadError.value = ''
   data.value = null
   if (!initialLoad) advisorLoading.value = true
   const capturedSelection = selected.value
@@ -53,7 +62,7 @@ async function loadData(initialLoad = false) {
       if (!dom) { loading.value = false; advisorLoading.value = false; return }
       data.value = await api.tlsData(dom.id, days.value)
     }
-  } finally { loading.value = false }
+  } catch (e: any) { loadError.value = e?.message || 'The data request failed.'; return } finally { loading.value = false }
 
   // Advisor: cached on initial load for instant display, fresh on domain switch
   try {
@@ -141,6 +150,7 @@ function goToRoadmap() {
 
 <template>
   <div>
+    <LoadError v-if="loadError" :message="loadError" @retry="$router.go(0)" />
     <!-- Header -->
     <div class="titlerow">
       <div>
@@ -154,7 +164,7 @@ function goToRoadmap() {
     <!-- Domain dropdown + date filter -->
     <div style="margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
       <DateRangeFilter v-model="days" />
-      <select v-model="selected" class="dom-select">
+      <select v-model="selected" class="dom-select" aria-label="Domain">
         <option :value="ALL">All domains</option>
         <option disabled value="">──────────</option>
         <option v-for="d in domains.list" :key="d.id" :value="d.domain">{{ d.domain }}</option>
@@ -187,7 +197,7 @@ function goToRoadmap() {
       </div>
 
       <div class="card">
-        <div class="ct"><h3>Domain breakdown</h3><span class="sectag">all domains · last {{ days }}d</span></div>
+        <div class="ct"><h3 aria-level="2">Domain breakdown</h3><span class="sectag">all domains · last {{ days }}d</span></div>
         <div class="dom-table">
           <div class="dom-thead">
             <span>Domain</span>
@@ -196,7 +206,7 @@ function goToRoadmap() {
             <span style="text-align:right">Pass rate</span>
             <span style="text-align:right">Failures</span>
           </div>
-          <div v-for="row in allSummary" :key="row.domain_id" class="dom-trow" @click="selected = row.domain">
+          <div v-for="row in allSummary" :key="row.domain_id" class="dom-trow" @click="selected = row.domain" tabindex="0" role="link" @keydown.enter.prevent="selected = row.domain" @keydown.space.prevent="selected = row.domain">
             <span class="dom-name">{{ row.domain }}</span>
             <span>
               <span class="stage-badge" :style="{ color: stageColor(row.mta_sts_stage), borderColor: stageColor(row.mta_sts_stage) }">
@@ -243,7 +253,7 @@ function goToRoadmap() {
         <!-- MX Health card -->
         <div class="card">
           <div class="ct">
-            <h3>MX host health</h3>
+            <h3 aria-level="2">MX host health</h3>
             <StatusChip variant="stg" :value="data.mta_sts_stage" :label="data.mta_sts_stage?.toUpperCase()" />
           </div>
 
@@ -303,7 +313,7 @@ function goToRoadmap() {
 
         <!-- Failure analysis card -->
         <div class="card">
-          <div class="ct"><h3>Failure analysis</h3><span class="sectag">last {{ days }}d</span></div>
+          <div class="ct"><h3 aria-level="2">Failure analysis</h3><span class="sectag">last {{ days }}d</span></div>
 
           <!-- Pass/fail bar -->
           <div v-if="data.total_sessions > 0" style="margin-bottom:20px">
@@ -409,7 +419,7 @@ function goToRoadmap() {
             <button class="btn ghost" @click="diff = null">Cancel</button>
           </div>
           <div class="review-footer">
-            Record drafted by Sentinel · you publish manually to your DNS provider.
+            Record drafted by ZoneProof · you publish manually to your DNS provider.
           </div>
         </div>
       </div>
@@ -448,7 +458,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 25px; letter-spacing
 .ct { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .ct h3 { font-family: var(--disp); font-weight: 700; font-size: 15px; }
 .sectag { font-family: var(--mono); font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--teal); }
-.btn { background: linear-gradient(90deg,#5b6ef5,#8b5cf6); color:#fff; border:none; border-radius:12px; padding:10px 18px; font-family:var(--disp); font-weight:700; font-size:13px; cursor:pointer; }
+.btn { background: linear-gradient(90deg,#5b5cf0,#4b4ce0); color:#fff; border:none; border-radius:12px; padding:10px 18px; font-family:var(--disp); font-weight:700; font-size:13px; cursor:pointer; }
 .btn.ghost { background:rgba(255,255,255,.04); border:1px solid var(--line2); color:var(--txt); box-shadow:none; }
 .btn.ghost:hover { border-color:var(--indigo); }
 
@@ -515,7 +525,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 25px; letter-spacing
 .mh span { font-family:var(--disp);font-weight:800;font-size:16px; }
 .mx-btn { background:none;border:1px solid var(--line);border-radius:8px;color:var(--muted);width:28px;height:28px;cursor:pointer;font-size:14px; }
 
-.review-why { background: rgba(91,110,245,.08); border: 1px solid rgba(91,110,245,.25); border-radius: 10px; padding: 14px; margin-bottom: 16px; }
+.review-why { background: rgba(91,92,240,.08); border: 1px solid rgba(91,92,240,.25); border-radius: 10px; padding: 14px; margin-bottom: 16px; }
 .review-why-title { font-family: var(--mono); font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--indigo); margin-bottom: 6px; }
 .review-why-body { font-size: 12.5px; color: var(--txt); line-height: 1.6; }
 

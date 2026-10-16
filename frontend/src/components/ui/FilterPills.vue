@@ -21,5 +21,5 @@ const emit = defineEmits<{ 'update:modelValue': [v: string] }>()
   background: rgba(255,255,255,.02);
 }
 .fpill:hover { color: var(--txt); border-color: var(--indigo); }
-.fpill.active { background: linear-gradient(90deg, #5b6ef5, #8b5cf6); color: #fff; border-color: transparent; }
+.fpill.active { background: linear-gradient(90deg, #5b5cf0, #4b4ce0); color: #fff; border-color: transparent; }
 </style>

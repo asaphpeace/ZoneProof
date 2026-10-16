@@ -37,5 +37,5 @@ const PRESETS: { label: string; days: number | null }[] = [
   border-radius: 20px; color: var(--muted); cursor: pointer; transition: .12s;
 }
 .pill:hover { border-color: var(--indigo); color: var(--txt); }
-.pill.active { background: rgba(91,110,245,.18); border-color: var(--indigo); color: #9aa6ff; font-weight: 600; }
+.pill.active { background: rgba(91,92,240,.18); border-color: var(--indigo); color: #9aa6ff; font-weight: 600; }
 </style>

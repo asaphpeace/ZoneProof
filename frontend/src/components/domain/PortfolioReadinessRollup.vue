@@ -52,7 +52,7 @@ function goTo(category: string, domainId: string, domainName: string) {
     </div>
 
     <div v-for="c in categories.filter(c => c.count > 0)" :key="c.category" class="rollup-cat">
-      <div class="rollup-cat-head" @click="expanded = expanded === c.category ? null : c.category">
+      <div class="rollup-cat-head" @click="expanded = expanded === c.category ? null : c.category" tabindex="0" role="button" :aria-expanded="expanded === c.category" @keydown.enter.prevent="expanded = expanded === c.category ? null : c.category" @keydown.space.prevent="expanded = expanded === c.category ? null : c.category">
         <span class="cat-label">{{ c.label }}</span>
         <span class="cat-count">{{ c.count }}</span>
         <svg class="cat-chev" :class="{ open: expanded === c.category }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -60,7 +60,7 @@ function goTo(category: string, domainId: string, domainName: string) {
         </svg>
       </div>
       <div v-if="expanded === c.category" class="rollup-domains">
-        <div v-for="d in c.domains" :key="d.domain_id" class="rollup-domain-row" @click="goTo(c.category, d.domain_id, d.domain_name)">
+        <div v-for="d in c.domains" :key="d.domain_id" class="rollup-domain-row" @click="goTo(c.category, d.domain_id, d.domain_name)" tabindex="0" role="link" @keydown.enter.prevent="goTo(c.category, d.domain_id, d.domain_name)" @keydown.space.prevent="goTo(c.category, d.domain_id, d.domain_name)">
           <span class="rd-name">{{ d.domain_name }}</span>
           <span class="rd-detail">{{ d.detail }}</span>
         </div>
@@ -87,7 +87,7 @@ function goTo(category: string, domainId: string, domainName: string) {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding: 8px 10px; border-radius: 9px; background: rgba(255,255,255,.025); cursor: pointer; transition: .15s;
 }
-.rollup-domain-row:hover { background: rgba(91,110,245,.08); }
+.rollup-domain-row:hover { background: rgba(91,92,240,.08); }
 .rd-name { font-family: var(--mono); font-size: 11.5px; color: var(--txt); flex: none; }
 .rd-detail { font-size: 11px; color: var(--faint); text-align: right; }
 </style>

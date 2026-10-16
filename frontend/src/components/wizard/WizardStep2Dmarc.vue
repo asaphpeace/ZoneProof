@@ -42,7 +42,7 @@ onMounted(async () => {
       results.value.push({ ...r, skipped: r.already_exists })
     }
   } catch (e: any) {
-    error.value = e.message || 'Failed to check domains — is Sentinel backend running?'
+    error.value = e.message || 'Failed to check domains — is ZoneProof backend running?'
   } finally {
     loading.value = false
   }
@@ -142,7 +142,7 @@ function proceed() {
             </button>
           </div>
           <div v-if="r.dmarc_exists" class="update-hint">
-            Replace your current TXT record at <code>_dmarc.{{ r.domain }}</code> with the record above to add Sentinel reporting.
+            Replace your current TXT record at <code>_dmarc.{{ r.domain }}</code> with the record above to add ZoneProof reporting.
           </div>
           <div v-else class="update-hint">
             Add this TXT record at <code>_dmarc.{{ r.domain }}</code> in your DNS provider.
@@ -205,7 +205,7 @@ function proceed() {
 @keyframes spin { to { transform: rotate(360deg); } }
 .prog-label { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
 .prog-bar-track { width: 260px; height: 4px; background: rgba(255,255,255,.08); border-radius: 4px; overflow: hidden; }
-.prog-bar-fill { height: 100%; background: linear-gradient(90deg,#2ee6c5,#5b6ef5); border-radius: 4px; transition: width .35s ease; }
+.prog-bar-fill { height: 100%; background: linear-gradient(90deg,#2ee6c5,#5b5cf0); border-radius: 4px; transition: width .35s ease; }
 .prog-count { font-family: var(--mono); font-size: 10px; color: var(--faint); margin-top: 5px; }
 
 .error-box { display: flex; gap: 12px; padding: 16px; background: rgba(255,80,80,.07); border: 1px solid rgba(255,80,80,.25); border-radius: 14px; font-size: 13px; color: var(--muted); }
@@ -239,7 +239,7 @@ function proceed() {
 .record-box { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: rgba(255,255,255,.03); }
 .record-box.current { border-color: rgba(255,255,255,.1); background: rgba(255,255,255,.02); }
 .record-box.new { border-color: rgba(46,230,197,.2); background: rgba(46,230,197,.04); }
-.record-box.addr { border-color: rgba(91,110,245,.2); background: rgba(91,110,245,.04); }
+.record-box.addr { border-color: rgba(91,92,240,.2); background: rgba(91,92,240,.04); }
 .record-text { font-family: var(--mono); font-size: 11.5px; color: var(--muted); word-break: break-all; line-height: 1.6; flex: 1; }
 .record-text.teal { color: var(--teal); }
 .copy-btn { display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,.07); border: 1px solid var(--line); border-radius: 7px; padding: 5px 10px; font-family: var(--mono); font-size: 10px; color: var(--muted); cursor: pointer; white-space: nowrap; flex: none; transition: background .15s; }
@@ -251,5 +251,5 @@ function proceed() {
 .all-done-box { display: flex; gap: 14px; padding: 18px; background: rgba(52,224,161,.07); border: 1px solid rgba(52,224,161,.25); border-radius: 14px; color: var(--muted); margin-top: 8px; }
 
 .actions { margin-top: 20px; display: flex; justify-content: flex-end; }
-.btn { background: linear-gradient(90deg,#5b6ef5,#8b5cf6); color:#fff; border:none; border-radius:12px; padding:11px 24px; font-family:var(--disp); font-weight:700; font-size:13px; cursor:pointer; }
+.btn { background: linear-gradient(90deg,#5b5cf0,#4b4ce0); color:#fff; border:none; border-radius:12px; padding:11px 24px; font-family:var(--disp); font-weight:700; font-size:13px; cursor:pointer; }
 </style>

@@ -21,10 +21,10 @@ defineProps<{
 <style scoped>
 .bubble-row { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 12px; }
 .bubble-row.user { flex-direction: row-reverse; }
-.orb { width: 28px; height: 28px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #2ef5d4, #5b6ef5); display: grid; place-items: center; flex: none; color: #06060f; }
+.orb { width: 28px; height: 28px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #2ef5d4, #5b5cf0); display: grid; place-items: center; flex: none; color: #06060f; }
 .bubble { max-width: 80%; padding: 10px 14px; border-radius: 16px; font-size: 13px; line-height: 1.6; }
 .bubble.assistant { background: rgba(255,255,255,.06); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
-.bubble.user { background: linear-gradient(135deg,#5b6ef5,#8b5cf6); color:#fff; border-bottom-right-radius: 4px; }
+.bubble.user { background: linear-gradient(135deg,#5b5cf0,#4b4ce0); color:#fff; border-bottom-right-radius: 4px; }
 .cursor { animation: blink .8s step-end infinite; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 </style>

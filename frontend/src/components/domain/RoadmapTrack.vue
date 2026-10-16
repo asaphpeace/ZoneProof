@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import StepTracker from '@/components/ui/StepTracker.vue'
+import NextStep from '@/components/ui/NextStep.vue'
 
 const props = defineProps<{
   domain: string
@@ -78,6 +79,15 @@ const MTA_EFFORT   = ['', '~15 min', '~1 week in testing mode']
 interface BlockingIssue {
   text: string
   severity: 'warn' | 'block'
+  // Where the evidence for this blocker lives.
+  link?: { to: string; label: string }
+}
+
+// Where each kind of recommendation is explained in full.
+const REC_LINK: Record<string, { to: string; label: string }> = {
+  dmarc: { to: 'dmarc', label: 'See the senders' },
+  tls:   { to: 'tls',   label: 'See the TLS failures' },
+  cert:  { to: 'certs', label: 'See the certificates' },
 }
 
 function dmarcBlockers(): BlockingIssue[] {
@@ -87,18 +97,21 @@ function dmarcBlockers(): BlockingIssue[] {
     issues.push({
       text: `${(100 - props.dmarcComp).toFixed(1)}% of mail is failing DMARC — align sending sources before advancing`,
       severity: 'block',
+      link: { to: 'dmarc', label: 'See which senders fail' },
     })
   }
   if (s === 1 && props.dmarcFailSources > 0) {
     issues.push({
       text: `${props.dmarcFailSources} unaligned sender${props.dmarcFailSources > 1 ? 's' : ''} detected — fix SPF/DKIM alignment first`,
       severity: 'warn',
+      link: { to: 'dmarc', label: 'See the senders' },
     })
   }
   if (s === 2 && props.dmarcComp !== null && props.dmarcComp < 98) {
     issues.push({
       text: `${(100 - props.dmarcComp).toFixed(1)}% of mail still fails — resolve before moving to reject or legitimate mail may be lost`,
       severity: 'block',
+      link: { to: 'dmarc', label: 'See which senders fail' },
     })
   }
   return issues
@@ -113,15 +126,18 @@ function mtaBlockers(): BlockingIssue[] {
       'starttls-not-supported': 'STARTTLS not offered on your MX — required before enforce',
       'certificate-host-mismatch': 'MX certificate hostname mismatch — fix before enforcing',
     }
+    const isCert = props.tlsFailReason.startsWith('certificate') || props.tlsFailReason === 'starttls-not-supported'
     issues.push({
       text: labels[props.tlsFailReason] ?? `TLS issue detected (${props.tlsFailReason}) — resolve before enforcing`,
       severity: 'block',
+      link: isCert ? { to: 'certs', label: 'See the certificate' } : { to: 'tls', label: 'See the TLS failures' },
     })
   }
   if (props.mtaStage === 1 && props.tlsPassPct !== null && props.tlsPassPct < 95) {
     issues.push({
       text: `Only ${props.tlsPassPct}% of inbound sessions pass TLS — investigate failures before enforcing`,
       severity: props.tlsPassPct < 80 ? 'block' : 'warn',
+      link: { to: 'tls', label: 'See the TLS failures' },
     })
   }
   return issues
@@ -153,13 +169,13 @@ const canAdvanceMta   = (s: number) => s < 2 && mtaBlockers().filter(b => b.seve
     <div v-if="advisorLoading || advisorMessage" :class="['advisor-row', advisorCommend ? 'commend' : '']">
       <div class="adv-orb" />
       <div style="flex:1;min-width:0">
-        <div class="adv-who">Sentinel Advisor · AI</div>
+        <div class="adv-who">ZoneProof Advisor · AI</div>
         <div v-if="advisorLoading" class="adv-skel" />
         <div v-else class="adv-msg" v-html="advisorMessage" />
         <div class="adv-foot">
           ✦ AI-generated · grounded on your reports
           <span v-if="advisorModel" class="adv-model">{{ advisorModel }}</span>
-          <span class="adv-re" @click="onRegenAdvisor?.()">↻ Regenerate</span>
+          <span class="adv-re" @click="onRegenAdvisor?.()" tabindex="0" role="button" @keydown.enter.prevent="onRegenAdvisor?.()" @keydown.space.prevent="onRegenAdvisor?.()">↻ Regenerate</span>
         </div>
       </div>
     </div>
@@ -176,6 +192,7 @@ const canAdvanceMta   = (s: number) => s < 2 && mtaBlockers().filter(b => b.seve
           <div class="rec-title">{{ r.title }}</div>
           <div class="rec-text">{{ r.body }}</div>
           <div v-if="r.blocking_reason" class="rec-blocking">Blocked by: {{ r.blocking_reason }}</div>
+          <NextStep v-if="REC_LINK[r.category]" :to="REC_LINK[r.category].to" :label="REC_LINK[r.category].label" :domain="domain" />
         </div>
       </div>
     </div>
@@ -218,6 +235,7 @@ const canAdvanceMta   = (s: number) => s < 2 && mtaBlockers().filter(b => b.seve
           <div class="stat" v-if="dmarcFailSources > 0">
             <div class="stat-val bad">{{ dmarcFailSources }}</div>
             <div class="stat-lbl">unaligned sender{{ dmarcFailSources > 1 ? 's' : '' }}</div>
+            <NextStep to="dmarc" label="See which" :domain="domain" />
           </div>
           <div class="stat" v-else>
             <div class="stat-val good">All clear</div>
@@ -232,6 +250,7 @@ const canAdvanceMta   = (s: number) => s < 2 && mtaBlockers().filter(b => b.seve
             <path v-else d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line v-if="b.severity==='warn'" x1="12" y1="9" x2="12" y2="13"/><line v-if="b.severity==='warn'" x1="12" y1="17" x2="12.01" y2="17"/>
           </svg>
           {{ b.text }}
+          <NextStep v-if="b.link" class="blocker-link" :to="b.link.to" :label="b.link.label" :domain="domain" />
         </div>
 
         <!-- Next step guidance -->
@@ -352,6 +371,7 @@ const canAdvanceMta   = (s: number) => s < 2 && mtaBlockers().filter(b => b.seve
             <path v-else d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line v-if="b.severity==='warn'" x1="12" y1="9" x2="12" y2="13"/><line v-if="b.severity==='warn'" x1="12" y1="17" x2="12.01" y2="17"/>
           </svg>
           {{ b.text }}
+          <NextStep v-if="b.link" class="blocker-link" :to="b.link.to" :label="b.link.label" :domain="domain" />
         </div>
 
         <!-- Next step guidance -->
@@ -418,7 +438,7 @@ const canAdvanceMta   = (s: number) => s < 2 && mtaBlockers().filter(b => b.seve
 /* ── Advisor row ────────────────────────────────────────────── */
 .advisor-row {
   display: flex; gap: 14px; align-items: flex-start;
-  background: linear-gradient(160deg, rgba(91,110,245,.09), rgba(255,255,255,.012));
+  background: linear-gradient(160deg, rgba(91,92,240,.09), rgba(255,255,255,.012));
   border: 1px solid var(--line2); border-radius: 16px; padding: 15px 18px;
   margin-bottom: 16px; backdrop-filter: blur(12px);
 }
@@ -428,7 +448,7 @@ const canAdvanceMta   = (s: number) => s < 2 && mtaBlockers().filter(b => b.seve
 }
 .adv-orb {
   width: 28px; height: 28px; border-radius: 50%; flex: none; margin-top: 2px;
-  background: radial-gradient(circle at 30% 30%, #6ff7e0, #5b6ef5);
+  background: radial-gradient(circle at 30% 30%, #6ff7e0, #5b5cf0);
   box-shadow: 0 0 16px rgba(46,230,197,.45);
   animation: pulse 2.6s ease-in-out infinite;
 }
@@ -440,7 +460,7 @@ const canAdvanceMta   = (s: number) => s < 2 && mtaBlockers().filter(b => b.seve
 .adv-re { color: var(--teal); cursor: pointer; }
 .adv-re:hover { text-decoration: underline; }
 .adv-model { opacity: .55; }
-@keyframes pulse { 50% { box-shadow: 0 0 26px rgba(91,110,245,.75); } }
+@keyframes pulse { 50% { box-shadow: 0 0 26px rgba(91,92,240,.75); } }
 
 /* ── Recommendation engine panel ───────────────────────────────── */
 .rec-panel {
@@ -475,7 +495,7 @@ const canAdvanceMta   = (s: number) => s < 2 && mtaBlockers().filter(b => b.seve
   box-shadow: 0 12px 40px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.05);
   display: flex; flex-direction: column; gap: 14px;
 }
-.dmarc-card { border-top: 2px solid rgba(91,110,245,.4); }
+.dmarc-card { border-top: 2px solid rgba(91,92,240,.4); }
 .tls-card   { border-top: 2px solid rgba(46,230,197,.35); }
 
 /* ── Track header ───────────────────────────────────────────── */
@@ -489,7 +509,7 @@ const canAdvanceMta   = (s: number) => s < 2 && mtaBlockers().filter(b => b.seve
   font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: .5px;
   padding: 4px 11px; border-radius: 20px;
 }
-.stage-pill.indigo { background: rgba(91,110,245,.15); color: #9aa6ff; }
+.stage-pill.indigo { background: rgba(91,92,240,.15); color: #9aa6ff; }
 .stage-pill.teal   { background: rgba(46,230,197,.15); color: var(--teal); }
 .stage-pill.faint  { background: rgba(255,255,255,.06); color: var(--muted); }
 
@@ -523,7 +543,7 @@ const canAdvanceMta   = (s: number) => s < 2 && mtaBlockers().filter(b => b.seve
 
 /* ── Next step box ──────────────────────────────────────────── */
 .next-box { padding: 13px 15px; border-radius: 13px; display: flex; flex-direction: column; gap: 6px; }
-.indigo-box { background: rgba(91,110,245,.08); border: 1px solid rgba(91,110,245,.22); }
+.indigo-box { background: rgba(91,92,240,.08); border: 1px solid rgba(91,92,240,.22); }
 .teal-box   { background: rgba(46,230,197,.06); border: 1px solid rgba(46,230,197,.2); }
 .next-label { font-family: var(--mono); font-size: 9px; letter-spacing: .8px; text-transform: uppercase; color: var(--faint); }
 .next-text  { font-size: 12.5px; line-height: 1.6; color: var(--muted); }
@@ -543,13 +563,14 @@ const canAdvanceMta   = (s: number) => s < 2 && mtaBlockers().filter(b => b.seve
 .sim-bad { color: #f5e49a; }
 
 /* ── CTA ────────────────────────────────────────────────────── */
+.blocker-link { margin-left: auto; padding-left: 12px; }
 .cta-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .btn-primary {
-  background: linear-gradient(90deg, #5b6ef5, #8b5cf6); color: #fff; border: none;
+  background: linear-gradient(90deg, #5b5cf0, #4b4ce0); color: #fff; border: none;
   border-radius: 12px; padding: 10px 18px; font-family: var(--disp); font-weight: 700;
   font-size: 12.5px; cursor: pointer; transition: opacity .15s;
 }
-.btn-primary.teal { background: linear-gradient(90deg, #2ee6c5, #5b6ef5); color: #04201b; }
+.btn-primary.teal { background: linear-gradient(90deg, #2ee6c5, #5b5cf0); color: #04201b; }
 .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
 .btn-ghost {
   background: transparent; color: var(--muted); border: 1px solid var(--line2);
@@ -568,13 +589,13 @@ const canAdvanceMta   = (s: number) => s < 2 && mtaBlockers().filter(b => b.seve
 .done-row svg { width: 15px; height: 15px; flex: none; }
 
 /* ── BIMI card ──────────────────────────────────────────────── */
-.bimi-card { border-color: rgba(91,110,245,.35); border-top: 2px solid #f5c542; }
+.bimi-card { border-color: rgba(91,92,240,.35); border-top: 2px solid #f5c542; }
 .bimi-inner { display: flex; gap: 16px; align-items: flex-start; }
 .bimi-orb {
   width: 46px; height: 46px; border-radius: 50%; flex: none;
-  background: linear-gradient(135deg, #5b6ef5, #2ee6c5);
+  background: linear-gradient(135deg, #5b5cf0, #2ee6c5);
   display: grid; place-items: center; font-size: 21px;
-  box-shadow: 0 0 22px rgba(91,110,245,.45);
+  box-shadow: 0 0 22px rgba(91,92,240,.45);
 }
 .bimi-title { font-family: var(--disp); font-weight: 800; font-size: 14.5px; margin-bottom: 7px; }
 .bimi-body  { font-size: 12.5px; color: var(--muted); line-height: 1.6; margin-bottom: 14px; }
@@ -587,5 +608,5 @@ const canAdvanceMta   = (s: number) => s < 2 && mtaBlockers().filter(b => b.seve
   display: grid; place-items: center; font-family: var(--mono); font-size: 9px;
   font-weight: 700; color: #f5c542;
 }
-code { font-family: var(--mono); font-size: 10.5px; color: #9aa6ff; background: rgba(91,110,245,.1); padding: 1px 5px; border-radius: 4px; }
+code { font-family: var(--mono); font-size: 10.5px; color: #9aa6ff; background: rgba(91,92,240,.1); padding: 1px 5px; border-radius: 4px; }
 </style>

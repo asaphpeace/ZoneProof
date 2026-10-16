@@ -50,7 +50,7 @@ function toggle() {
   if (open.value && !msgs.value.length) {
     msgs.value.push({
       role: 'assistant',
-      content: 'Hi — I\'m Sentinel AI. I have access to your live security data and can answer questions about your DMARC posture, MTA-STS setup, certificates, and what to do next.',
+      content: 'Hi — I\'m ZoneProof AI. I have access to your live security data and can answer questions about your DMARC posture, MTA-STS setup, certificates, and what to do next.',
     })
   }
 }
@@ -66,13 +66,13 @@ function clear() {
 
 <template>
   <!-- FAB -->
-  <button class="fab" :class="{ active: open }" @click="toggle" title="Sentinel AI">
+  <button class="fab" :class="{ active: open }" @click="toggle" title="ZoneProof AI">
     <svg v-if="!open" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="16" cy="16" r="16" fill="url(#fab-grad)"/>
       <path d="M10 16.5l3.5 3.5L22 11" stroke="#06060f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
       <defs>
         <linearGradient id="fab-grad" x1="0" y1="0" x2="32" y2="32">
-          <stop offset="0%" stop-color="#5b6ef5"/>
+          <stop offset="0%" stop-color="#5b5cf0"/>
           <stop offset="100%" stop-color="#2ee6c5"/>
         </linearGradient>
       </defs>
@@ -95,7 +95,7 @@ function clear() {
             </svg>
           </div>
           <div class="header-text">
-            <div class="panel-title">Sentinel AI</div>
+            <div class="panel-title">ZoneProof AI</div>
             <div class="panel-sub">Grounded on your reports</div>
           </div>
           <div class="header-actions">
@@ -158,11 +158,11 @@ function clear() {
   width: 52px; height: 52px; border-radius: 50%;
   background: var(--bg); border: 1px solid var(--line2);
   color: var(--txt); cursor: pointer;
-  box-shadow: 0 8px 32px rgba(91,110,245,.35);
+  box-shadow: 0 8px 32px rgba(91,92,240,.35);
   display: grid; place-items: center; transition: .2s;
 }
 .fab svg { width: 52px; height: 52px; }
-.fab:hover { transform: scale(1.07); box-shadow: 0 12px 40px rgba(91,110,245,.5); }
+.fab:hover { transform: scale(1.07); box-shadow: 0 12px 40px rgba(91,92,240,.5); }
 .fab.active { background: rgba(255,255,255,.08); box-shadow: none; }
 .fab.active svg { width: 20px; height: 20px; }
 
@@ -171,7 +171,7 @@ function clear() {
   position: fixed; bottom: 92px; right: 28px; z-index: 900;
   width: 370px; max-height: 540px;
   background: #0d0e1a;
-  border: 1px solid rgba(91,110,245,.25);
+  border: 1px solid rgba(91,92,240,.25);
   border-radius: 20px;
   box-shadow: 0 32px 80px rgba(0,0,0,.75), 0 0 0 1px rgba(46,230,197,.06);
   display: flex; flex-direction: column; overflow: hidden;
@@ -187,7 +187,7 @@ function clear() {
 }
 .orb {
   width: 34px; height: 34px; border-radius: 50%; flex: none;
-  background: radial-gradient(circle at 30% 30%, #2ef5d4, #5b6ef5);
+  background: radial-gradient(circle at 30% 30%, #2ef5d4, #5b5cf0);
   display: grid; place-items: center; color: #06060f;
 }
 .header-text { flex: 1; }
@@ -218,7 +218,7 @@ function clear() {
   margin-left: auto;
   font-family: var(--mono); font-size: 8.5px;
   color: var(--indigo); opacity: .7;
-  background: rgba(91,110,245,.1); border: 1px solid rgba(91,110,245,.2);
+  background: rgba(91,92,240,.1); border: 1px solid rgba(91,92,240,.2);
   border-radius: 4px; padding: 1px 5px;
 }
 
@@ -229,11 +229,11 @@ function clear() {
 .quick { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 14px 10px; }
 .qchip {
   font-family: var(--mono); font-size: 10.5px; padding: 6px 12px;
-  border-radius: 20px; border: 1px solid rgba(91,110,245,.3);
-  background: rgba(91,110,245,.08); color: #9aa6ff;
+  border-radius: 20px; border: 1px solid rgba(91,92,240,.3);
+  background: rgba(91,92,240,.08); color: #9aa6ff;
   cursor: pointer; transition: .15s;
 }
-.qchip:hover { border-color: rgba(91,110,245,.6); background: rgba(91,110,245,.16); }
+.qchip:hover { border-color: rgba(91,92,240,.6); background: rgba(91,92,240,.16); }
 
 /* ── Input ────────────────────────────────────────────────────────────── */
 .input-row {
@@ -245,11 +245,11 @@ function clear() {
   border-radius: 10px; padding: 9px 12px; color: var(--txt);
   font-family: var(--body); font-size: 13px; outline: none; transition: .15s;
 }
-.input-row input:focus { border-color: rgba(91,110,245,.5); }
+.input-row input:focus { border-color: rgba(91,92,240,.5); }
 .input-row input:disabled { opacity: .5; }
 .send-btn {
   width: 34px; height: 34px; border-radius: 10px; flex: none;
-  background: linear-gradient(135deg, #5b6ef5, #2ee6c5);
+  background: linear-gradient(135deg, #5b5cf0, #2ee6c5);
   border: none; color: #06060f; cursor: pointer;
   display: grid; place-items: center; transition: .15s;
 }

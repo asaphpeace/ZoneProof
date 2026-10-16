@@ -15,14 +15,14 @@ const severityColor = (s: string) => ({ critical: 'var(--bad)', warn: 'var(--war
 
 <template>
   <Teleport to="body">
-    <div v-if="ui.alertMenuOpen" class="backdrop-thin" @click="ui.closeAlertMenu()" />
+    <div v-if="ui.alertMenuOpen" class="backdrop-thin" aria-hidden="true" @click="ui.closeAlertMenu()" />
     <div v-show="ui.alertMenuOpen" class="alertmenu">
       <div class="amhead">
         Alerts
         <span class="sectag">✦ AI-narrated</span>
       </div>
       <div v-if="!alerts.length" style="padding:16px;color:var(--muted);font-size:12.5px">No alerts</div>
-      <div v-for="a in alerts" :key="a.id" class="alert" @click="api.markAlertRead(a.id)">
+      <div v-for="a in alerts" :key="a.id" class="alert" @click="api.markAlertRead(a.id)" tabindex="0" role="button" @keydown.enter.prevent="api.markAlertRead(a.id)" @keydown.space.prevent="api.markAlertRead(a.id)">
         <span class="ad" :style="`background:${severityColor(a.severity)}`" />
         <div>
           <div class="at">{{ a.title }}</div>

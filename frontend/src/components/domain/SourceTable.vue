@@ -76,7 +76,7 @@ function envelopeState(ip: any): 'clean' | 'esp' | 'mismatch' {
 
     <!-- Source rows -->
     <div v-for="src in sources" :key="src.source_org" class="exp" :class="{ open: openSources.has(src.source_org) }">
-      <div class="exp-head srchead" @click="toggle(src.source_org)">
+      <div class="exp-head srchead" @click="toggle(src.source_org)" tabindex="0" role="button" @keydown.enter.prevent="toggle(src.source_org)" @keydown.space.prevent="toggle(src.source_org)">
         <div class="src">
           <div class="srci">{{ src.source_org[0] }}</div>
           <div>
@@ -97,7 +97,7 @@ function envelopeState(ip: any): 'clean' | 'esp' | 'mismatch' {
         <StatusChip variant="am" :value="src.spf_alignment" />
         <StatusChip variant="am" :value="src.dkim_alignment === 'NONE' ? 'NONE' : src.dkim_alignment" />
         <StatusChip variant="am" :value="src.dmarc_result" />
-        <span class="cls-chip" :class="src.classification" @click.stop="openClassification(src)">
+        <span class="cls-chip" :class="src.classification" @click.stop="openClassification(src)" tabindex="0" role="button" @keydown.enter.prevent="openClassification(src)" @keydown.space.prevent="openClassification(src)">
           {{ src.classification_label }}
         </span>
         <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -177,7 +177,7 @@ function envelopeState(ip: any): 'clean' | 'esp' | 'mismatch' {
 .cls-chip { font-size: 10px; font-weight: 600; padding: 5px 10px; border-radius: 20px; cursor: pointer; transition: .15s; }
 .cls-chip:hover { opacity: .8; }
 .cls-chip.authorized { background: rgba(52,224,161,.14); color: var(--good); }
-.cls-chip.forwarded  { background: rgba(91,110,245,.16); color: #9aa6ff; }
+.cls-chip.forwarded  { background: rgba(91,92,240,.16); color: #9aa6ff; }
 .cls-chip.unauth     { background: rgba(245,197,66,.16); color: var(--amber); }
 .cls-chip.spoof, .cls-chip.unknown { background: rgba(255,77,109,.16); color: var(--bad); }
 .chev { color: var(--faint); transition: .2s; width: 16px; height: 16px; }

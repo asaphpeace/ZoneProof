@@ -114,7 +114,7 @@ const failPct = (d: any) => d.dmarc_comp != null ? Math.max(0, 100 - d.dmarc_com
     <!-- ── Column headers ───────────────────────────────────────────────── -->
     <div class="thead">
       <span class="th" style="padding-left:4px">Grade</span>
-      <span class="th sortable" @click="setSort('domain')">
+      <span class="th sortable" @click="setSort('domain')" tabindex="0" role="button" @keydown.enter.prevent="setSort('domain')" @keydown.space.prevent="setSort('domain')">
         Domain
         <span class="sort-ind" :class="{ active: sortKey === 'domain' }">
           {{ sortKey === 'domain' ? (sortDir === 1 ? '↑' : '↓') : '↕' }}
@@ -128,13 +128,13 @@ const failPct = (d: any) => d.dmarc_comp != null ? Math.max(0, 100 - d.dmarc_com
         <span class="axis-dot tls" />
         Inbound · how mail reaches you
       </span>
-      <span class="th sortable" @click="setSort('volume')">
+      <span class="th sortable" @click="setSort('volume')" tabindex="0" role="button" @keydown.enter.prevent="setSort('volume')" @keydown.space.prevent="setSort('volume')">
         Volume
         <span class="sort-ind" :class="{ active: sortKey === 'volume' }">
           {{ sortKey === 'volume' ? (sortDir === 1 ? '↑' : '↓') : '↕' }}
         </span>
       </span>
-      <span class="th sortable" @click="setSort('posture_score')">
+      <span class="th sortable" @click="setSort('posture_score')" tabindex="0" role="button" @keydown.enter.prevent="setSort('posture_score')" @keydown.space.prevent="setSort('posture_score')">
         Action needed
         <span class="sort-ind" :class="{ active: sortKey === 'posture_score' }">
           {{ sortKey === 'posture_score' ? (sortDir === 1 ? '↑' : '↓') : '↕' }}
@@ -188,7 +188,7 @@ const failPct = (d: any) => d.dmarc_comp != null ? Math.max(0, 100 - d.dmarc_com
           No policy published
         </div>
         <div v-if="d.mta_sts_stage !== 'none'" class="hosting-badge" :class="d.mta_sts_hosting_mode === 'managed' ? 'managed' : 'self'">
-          {{ d.mta_sts_hosting_mode === 'managed' ? 'Sentinel-hosted' : 'Self-hosted' }}
+          {{ d.mta_sts_hosting_mode === 'managed' ? 'ZoneProof-hosted' : 'Self-hosted' }}
         </div>
       </div>
 
@@ -257,7 +257,7 @@ const failPct = (d: any) => d.dmarc_comp != null ? Math.max(0, 100 - d.dmarc_com
 .axis-dot {
   width: 6px; height: 6px; border-radius: 50%; flex: none;
 }
-.axis-dot.dmarc { background: #5b6ef5; }
+.axis-dot.dmarc { background: #5b5cf0; }
 .axis-dot.tls   { background: #2ee6c5; }
 
 /* ── Row ─────────────────────────────────────────────────────────────────── */
@@ -307,7 +307,7 @@ const failPct = (d: any) => d.dmarc_comp != null ? Math.max(0, 100 - d.dmarc_com
   margin-bottom: 4px;
 }
 .vol-seg { min-width: 2px; border-radius: 2px; transition: flex .5s ease; }
-.vol-seg.pass { background: #5b6ef5; }   /* indigo — DMARC pass is outbound auth */
+.vol-seg.pass { background: #5b5cf0; }   /* indigo — DMARC pass is outbound auth */
 .vol-seg.fail { background: var(--bad); }
 .vol-sub { font-family: var(--mono); font-size: 9.5px; }
 

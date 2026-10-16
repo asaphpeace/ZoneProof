@@ -43,7 +43,7 @@ const headline = computed(() => {
 
 const stageColor = (stage: string) =>
   stage === 'reject' ? 'var(--good)'
-  : stage === 'quarantine' ? '#5b6ef5'
+  : stage === 'quarantine' ? '#5b5cf0'
   : 'var(--bad)'
 
 const stageLabel = (stage: string) =>

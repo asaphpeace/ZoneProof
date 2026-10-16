@@ -83,7 +83,7 @@ const gaugePct = () => Math.min(100, Math.round((props.totalLookups / props.look
 
 <style scoped>
 .spf-builder {
-  background: rgba(91,110,245,.05); border: 1px solid rgba(91,110,245,.18);
+  background: rgba(91,92,240,.05); border: 1px solid rgba(91,92,240,.18);
   border-radius: 14px; padding: 16px;
 }
 .spf-head { margin-bottom: 12px; }
@@ -94,7 +94,7 @@ const gaugePct = () => Math.min(100, Math.round((props.totalLookups / props.look
 .spf-fetch-tag { font-family: var(--mono); font-size: 9.5px; padding: 3px 9px; border-radius: 7px; }
 .spf-fetch-tag.found { background: rgba(52,224,161,.12); color: var(--good); }
 .spf-fetch-tag.none  { background: rgba(245,197,66,.12); color: var(--amber); }
-.spf-fetch-tag.real  { background: rgba(91,110,245,.12); color: #9aa6ff; }
+.spf-fetch-tag.real  { background: rgba(91,92,240,.12); color: #9aa6ff; }
 
 .spf-record-row { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 12px; }
 .spf-record {
@@ -103,7 +103,7 @@ const gaugePct = () => Math.min(100, Math.round((props.totalLookups / props.look
   padding: 10px 12px; word-break: break-all; line-height: 1.5;
 }
 .spf-copy {
-  flex: none; background: rgba(91,110,245,.16); border: 1px solid rgba(91,110,245,.35); color: #9aa6ff;
+  flex: none; background: rgba(91,92,240,.16); border: 1px solid rgba(91,92,240,.35); color: #9aa6ff;
   border-radius: 9px; padding: 9px 14px; font-size: 11.5px; font-weight: 700; cursor: pointer;
 }
 

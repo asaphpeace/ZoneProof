@@ -3,7 +3,7 @@ defineProps<{ code: string }>()
 </script>
 
 <template>
-  <pre class="code">{{ code }}</pre>
+  <pre class="code" tabindex="0" aria-label="Code example">{{ code }}</pre>
 </template>
 
 <style scoped>

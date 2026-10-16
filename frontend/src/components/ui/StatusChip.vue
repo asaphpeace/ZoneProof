@@ -47,7 +47,7 @@ export default {
 
 .stg { font-family:var(--mono);font-size:9px;font-weight:700;padding:4px 9px;border-radius:7px;width:fit-content; }
 .stg.good    { background:rgba(52,224,161,.16);color:var(--good) }
-.stg.indigo  { background:rgba(91,110,245,.16);color:#9aa6ff }
+.stg.indigo  { background:rgba(91,92,240,.16);color:#9aa6ff }
 .stg.amber   { background:rgba(245,197,66,.16);color:var(--amber) }
 .stg.bad,.stg.none { background:rgba(255,77,109,.16);color:var(--bad) }
 
@@ -58,7 +58,7 @@ export default {
 
 .cls { font-size:10px;font-weight:600;padding:5px 10px;border-radius:20px;width:fit-content;cursor:pointer; }
 .cls.auth   { background:rgba(52,224,161,.14);color:var(--good) }
-.cls.fwd    { background:rgba(91,110,245,.16);color:#9aa6ff }
+.cls.fwd    { background:rgba(91,92,240,.16);color:#9aa6ff }
 .cls.unauth { background:rgba(245,197,66,.16);color:var(--amber) }
 .cls.susp   { background:rgba(255,77,109,.16);color:var(--bad) }
 .cls.dashed { background:transparent!important;border:1px dashed currentColor; }

@@ -38,7 +38,7 @@ const canProceed = computed(() =>
 
 // Report sections always included
 const SECTIONS = [
-  { icon: '◎', label: 'Executive summary', sub: 'Sentinel Score, KPIs, plain-English posture overview' },
+  { icon: '◎', label: 'Executive summary', sub: 'ZoneProof Score, KPIs, plain-English posture overview' },
   { icon: '⊞', label: 'Domain portfolio', sub: 'Per-domain grade, DMARC stage, MTA-STS, cert health' },
   { icon: '⚠', label: 'Threat surface',   sub: 'Impersonation attempts blocked vs exposed' },
   { icon: '→', label: 'Recommendations',  sub: 'Ordered action list from highest to lowest risk' },
@@ -224,7 +224,7 @@ function generate() {
   display: grid; place-items: center; font-family: var(--mono); font-size: 11px;
   color: var(--faint); flex: none; transition: .2s;
 }
-.step-dot.active { background: linear-gradient(135deg, #5b6ef5, #8b5cf6); border-color: transparent; color: #fff; }
+.step-dot.active { background: linear-gradient(135deg, #5b5cf0, #4b4ce0); border-color: transparent; color: #fff; }
 .step-line { flex: 1; height: 1.5px; background: var(--line2); }
 
 /* Body */
@@ -241,9 +241,9 @@ function generate() {
   font-family: var(--mono); font-size: 12px; transition: .14s;
   display: flex; align-items: center; gap: 7px;
 }
-.option-btn:hover { border-color: rgba(91,110,245,.5); color: var(--txt); }
-.option-btn.active { background: rgba(91,110,245,.15); border-color: rgba(91,110,245,.6); color: #9aa6ff; }
-.opt-count { background: rgba(91,110,245,.2); padding: 1px 6px; border-radius: 10px; font-size: 10px; }
+.option-btn:hover { border-color: rgba(91,92,240,.5); color: var(--txt); }
+.option-btn.active { background: rgba(91,92,240,.15); border-color: rgba(91,92,240,.6); color: #9aa6ff; }
+.opt-count { background: rgba(91,92,240,.2); padding: 1px 6px; border-radius: 10px; font-size: 10px; }
 
 /* Domain checkboxes */
 .domain-list { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; max-height: 200px; overflow-y: auto; }
@@ -257,7 +257,7 @@ function generate() {
   width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--line2);
   display: grid; place-items: center; flex: none; transition: .15s;
 }
-.domain-check.checked .check-box { background: #5b6ef5; border-color: #5b6ef5; }
+.domain-check.checked .check-box { background: #5b5cf0; border-color: #5b5cf0; }
 .check-box svg { width: 11px; height: 11px; color: #fff; }
 .domain-name { font-family: var(--mono); font-size: 12px; }
 
@@ -301,7 +301,7 @@ function generate() {
 .btn-ghost:hover { border-color: var(--indigo); color: var(--txt); }
 .btn-primary {
   display: flex; align-items: center; gap: 8px;
-  background: linear-gradient(90deg, #5b6ef5, #8b5cf6); color: #fff; border: none;
+  background: linear-gradient(90deg, #5b5cf0, #4b4ce0); color: #fff; border: none;
   border-radius: 12px; padding: 11px 20px; font-family: var(--disp); font-weight: 700;
   font-size: 13px; cursor: pointer; transition: opacity .15s;
 }

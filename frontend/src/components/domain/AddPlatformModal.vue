@@ -121,7 +121,7 @@ async function addCustom() {
 .tile:hover:not(:disabled) { border-color: var(--indigo); color: var(--txt); }
 .tile:disabled { opacity: .6; cursor: not-allowed; }
 
-.mimecast-choice { background: rgba(91,110,245,.06); border: 1px solid rgba(91,110,245,.2); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+.mimecast-choice { background: rgba(91,92,240,.06); border: 1px solid rgba(91,92,240,.2); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
 .mc-title { font-size: 12px; font-weight: 600; color: var(--txt); margin-bottom: 10px; }
 .mc-option { display: flex; flex-direction: column; gap: 2px; width: 100%; text-align: left; background: rgba(255,255,255,.03); border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; margin-bottom: 7px; cursor: pointer; color: var(--txt); font-size: 11.5px; }
 .mc-option span { font-size: 10.5px; color: var(--faint); font-weight: 400; }
@@ -129,6 +129,6 @@ async function addCustom() {
 .custom-row { display: flex; gap: 8px; }
 .custom-input { flex: 1; background: rgba(255,255,255,.04); border: 1px solid var(--line2); border-radius: 9px; padding: 8px 12px; font-size: 12px; color: var(--txt); outline: none; }
 .custom-input:focus { border-color: var(--indigo); }
-.btn.small { background: rgba(91,110,245,.16); border: 1px solid rgba(91,110,245,.35); color: #9aa6ff; border-radius: 9px; padding: 8px 14px; font-size: 11.5px; font-weight: 700; cursor: pointer; }
+.btn.small { background: rgba(91,92,240,.16); border: 1px solid rgba(91,92,240,.35); color: #9aa6ff; border-radius: 9px; padding: 8px 14px; font-size: 11.5px; font-weight: 700; cursor: pointer; }
 .btn.small:disabled { opacity: .5; cursor: not-allowed; }
 </style>

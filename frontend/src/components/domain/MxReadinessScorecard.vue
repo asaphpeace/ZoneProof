@@ -93,7 +93,7 @@ function fixThis(h: any) {
 .mx-pct.warning { color: var(--amber); }
 .mx-explain { font-size: 10.5px; color: var(--faint); }
 .mx-owner-tag { font-family: var(--mono); font-size: 8.5px; font-weight: 700; padding: 2px 7px; border-radius: 6px; flex: none; }
-.mx-owner-tag.dns { background: rgba(91,110,245,.14); color: #9aa6ff; }
+.mx-owner-tag.dns { background: rgba(91,92,240,.14); color: #9aa6ff; }
 .mx-owner-tag.server { background: rgba(245,197,66,.14); color: var(--amber); }
 .mx-fix-btn { flex: none; background: rgba(245,197,66,.14); border: 1px solid rgba(245,197,66,.35); color: var(--amber); border-radius: 9px; padding: 5px 11px; font-size: 11px; font-weight: 700; cursor: pointer; }
 

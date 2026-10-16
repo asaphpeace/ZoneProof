@@ -135,7 +135,7 @@ async function save() {
       <div v-for="r in items" :key="r.domain" class="domain-card" :class="{ dimmed: r.skipped }">
 
         <!-- Card header -->
-        <div class="card-head" @click="r.open = !r.open">
+        <div class="card-head" @click="r.open = !r.open" tabindex="0" role="button" :aria-expanded="r.open" @keydown.enter.prevent="r.open = !r.open" @keydown.space.prevent="r.open = !r.open">
           <div class="card-head-left">
             <span class="dn">{{ r.domain }}</span>
             <span v-if="r.already_exists" class="badge amber">Re-onboard</span>
@@ -227,7 +227,7 @@ async function save() {
                 @click="r.hostingMode = 'managed'"
               >
                 <div class="opt-top">
-                  <b>Sentinel-hosted</b>
+                  <b>ZoneProof-hosted</b>
                   <span class="opt-badge recommended">Recommended</span>
                 </div>
                 <span>Publish one CNAME — no server or file to manage</span>
@@ -246,7 +246,7 @@ async function save() {
               <svg viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" style="width:15px;height:15px;flex:none;margin-top:1px"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
               <div>
                 <b>Order matters:</b> click <em>Save &amp; continue</em> first, then change your DNS.
-                Sentinel activates managed hosting immediately on save — if you update DNS before saving,
+                ZoneProof activates managed hosting immediately on save — if you update DNS before saving,
                 the CNAME resolves but no cert has been issued yet, causing a brief gap in coverage.
               </div>
             </div>
@@ -277,7 +277,7 @@ async function save() {
                   </button>
                 </div>
               </div>
-              <p class="sub-note">Sentinel will serve the policy file at <code>{{ r.policy_url }}</code> automatically, always reflecting your current MX records.</p>
+              <p class="sub-note">ZoneProof will serve the policy file at <code>{{ r.policy_url }}</code> automatically, always reflecting your current MX records.</p>
             </template>
 
             <!-- Self-hosted: policy file -->
@@ -331,7 +331,7 @@ async function save() {
 @keyframes spin { to { transform: rotate(360deg); } }
 .prog-label { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
 .prog-bar-track { width: 260px; height: 4px; background: rgba(255,255,255,.08); border-radius: 4px; overflow: hidden; }
-.prog-bar-fill { height: 100%; background: linear-gradient(90deg,#2ee6c5,#5b6ef5); border-radius: 4px; transition: width .35s ease; }
+.prog-bar-fill { height: 100%; background: linear-gradient(90deg,#2ee6c5,#5b5cf0); border-radius: 4px; transition: width .35s ease; }
 .prog-count { font-family: var(--mono); font-size: 10px; color: var(--faint); margin-top: 5px; }
 
 /* Domain card */
@@ -355,7 +355,7 @@ async function save() {
 /* Sections */
 .section { padding: 14px 16px; border-top: 1px solid var(--line); }
 .section-title { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-family: var(--disp); font-weight: 700; font-size: 13px; }
-.section-num { width: 20px; height: 20px; border-radius: 50%; background: rgba(91,110,245,.25); border: 1px solid rgba(91,110,245,.4); color: #9aa6ff; font-family: var(--mono); font-size: 10px; display: grid; place-items: center; flex: none; }
+.section-num { width: 20px; height: 20px; border-radius: 50%; background: rgba(91,92,240,.25); border: 1px solid rgba(91,92,240,.4); color: #9aa6ff; font-family: var(--mono); font-size: 10px; display: grid; place-items: center; flex: none; }
 .section-sub { font-family: var(--body); font-weight: 400; font-size: 11.5px; color: var(--faint); }
 
 /* Records */
@@ -365,7 +365,7 @@ async function save() {
 .record-box { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: rgba(255,255,255,.03); }
 .record-box.current { border-color: rgba(255,255,255,.1); background: rgba(255,255,255,.02); }
 .record-box.new { border-color: rgba(46,230,197,.2); background: rgba(46,230,197,.04); }
-.record-box.indigo { border-color: rgba(91,110,245,.2); background: rgba(91,110,245,.04); }
+.record-box.indigo { border-color: rgba(91,92,240,.2); background: rgba(91,92,240,.04); }
 .record-box.policy-file { align-items: flex-start; }
 .record-text { font-family: var(--mono); font-size: 11.5px; line-height: 1.6; flex: 1; word-break: break-all; }
 .record-text.teal { color: var(--teal); }
@@ -384,7 +384,7 @@ pre.record-text { white-space: pre; margin: 0; }
 .hosting-opt { display: flex; flex-direction: column; gap: 4px; text-align: left; background: rgba(255,255,255,.03); border: 1px solid var(--line2); border-radius: 11px; padding: 10px 12px; cursor: pointer; color: var(--muted); font-size: 12px; transition: border-color .15s, background .15s; }
 .hosting-opt b { color: var(--txt); font-size: 12.5px; }
 .hosting-opt span { font-size: 11px; color: var(--faint); }
-.hosting-opt.active { border-color: var(--indigo); background: rgba(91,110,245,.1); }
+.hosting-opt.active { border-color: var(--indigo); background: rgba(91,92,240,.1); }
 .hosting-opt.active b { color: #9aa6ff; }
 .opt-top { display: flex; align-items: center; gap: 8px; }
 .opt-badge { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: .5px; padding: 2px 6px; border-radius: 5px; }
@@ -403,7 +403,7 @@ pre.record-text { white-space: pre; margin: 0; }
 
 /* Actions */
 .actions { margin-top: 16px; display: flex; justify-content: flex-end; gap: 10px; }
-.btn { background: linear-gradient(90deg,#5b6ef5,#8b5cf6); color: #fff; border: none; border-radius: 12px; padding: 11px 24px; font-family: var(--disp); font-weight: 700; font-size: 13px; cursor: pointer; }
+.btn { background: linear-gradient(90deg,#5b5cf0,#4b4ce0); color: #fff; border: none; border-radius: 12px; padding: 11px 24px; font-family: var(--disp); font-weight: 700; font-size: 13px; cursor: pointer; }
 .btn.ghost { background: rgba(255,255,255,.04); border: 1px solid var(--line2); color: var(--txt); }
 .btn:disabled { opacity: .6; cursor: not-allowed; }
 </style>

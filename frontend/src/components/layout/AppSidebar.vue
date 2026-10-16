@@ -1,12 +1,32 @@
 <script setup lang="ts">
+import ZoneProofLogo from './ZoneProofLogo.vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
+import { useBrandGuardStore } from '@/stores/brandGuard'
+import { computed, ref, watch } from 'vue'
 
 const router = useRouter()
 const route  = useRoute()
 const auth   = useAuthStore()
 const ui     = useUiStore()
+const brand  = useBrandGuardStore()
+
+// Brand Guard has its own pages: while one is open, its submenu shows under the Brand Guard item.
+const inBrand = computed(() => String(route.name ?? '').startsWith('brand-guard'))
+const brandOpen = ref(true)   // the user can fold the submenu while staying on a Brand Guard page
+watch(inBrand, on => { if (on) { brandOpen.value = true; brand.ensureSummary(); if (!brand.campaigns.length) brand.loadCampaigns() } }, { immediate: true })
+type BrandMenuItem = { id?: string; label: string; count?: number | string; urgent?: boolean; soon?: boolean }
+const brandMenu = computed((): { label: string; items: BrandMenuItem[] }[] => [
+  { label: 'Triage', items: [
+    { id: 'brand-guard', label: 'Overview', count: brand.summary?.open_candidates || '', urgent: true },
+    { id: 'brand-guard-candidates', label: 'Candidates' },
+    { id: 'brand-guard-campaigns', label: 'Campaigns', count: brand.campaigns.length || '' },
+  ] },
+  { label: 'Respond', items: [{ id: 'brand-guard-cases', label: 'Cases' }, { id: 'brand-guard-defend', label: 'Defend' }] },
+  { label: 'Setup', items: [{ id: 'brand-guard-profile', label: 'Brand profile' }, { id: 'brand-guard-notifications', label: 'Alerts' }] },
+  { label: 'Insight', items: [{ id: 'brand-guard-funnel', label: 'Funnel' }] },
+])
 
 const nav = [
   { label: 'Portfolio',  group: true },
@@ -16,17 +36,19 @@ const nav = [
   { id: 'posture',  label: 'Posture',         num: '03', icon: 'pulse' },
   { id: 'dmarc',    label: 'DMARC',           num: '04', icon: 'mail' },
   { id: 'tls',      label: 'MTA-STS & TLS',  num: '05', icon: 'lock' },
+  { id: 'brand-guard', label: 'Brand Guard', num: '06', icon: 'shield' },
   { label: 'Plan',   group: true },
-  { id: 'roadmap',  label: 'Roadmap',         num: '06', icon: 'chevron' },
-  { id: 'certs',    label: 'Certificates',    num: '07', icon: 'award' },
-  { id: 'timeline', label: 'DNS Timeline',    num: '08', icon: 'clock' },
+  { id: 'roadmap',  label: 'Roadmap',         num: '07', icon: 'chevron' },
+  { id: 'certs',    label: 'Certificates',    num: '08', icon: 'award' },
+  { id: 'timeline', label: 'DNS Timeline',    num: '09', icon: 'clock' },
   { label: 'Account', group: true },
-  { id: 'billing',  label: 'Plan & Billing',  num: '09', icon: 'billing' },
-  { id: 'profile',  label: 'Settings',        num: '10', icon: 'settings' },
-  { id: 'msp',      label: 'MSP Clients',     num: '11', icon: 'msp',     mspOnly: true },
-  { id: 'audit-log', label: 'Audit Log',      num: '12', icon: 'audit',   enterpriseOnly: true },
+  { id: 'billing',  label: 'Plan & Billing',  num: '10', icon: 'billing' },
+  { id: 'profile',  label: 'Settings',        num: '11', icon: 'settings' },
+  { id: 'sources',  label: 'Data sources',    num: '12', icon: 'pulse',   adminOnly: true },
+  { id: 'msp',      label: 'MSP Clients',     num: '13', icon: 'msp',     mspOnly: true },
+  { id: 'audit-log', label: 'Audit Log',      num: '14', icon: 'audit',   enterpriseOnly: true },
   { label: 'Resources', group: true },
-  { id: 'docs',     label: 'Documentation',   num: '13', icon: 'book' },
+  { id: 'docs',     label: 'Documentation',   num: '15', icon: 'book' },
 ]
 
 const initials = (name: string) => name ? name[0].toUpperCase() : 'A'
@@ -36,6 +58,12 @@ function logout() {
   router.push({ name: 'login' })
 }
 
+// On a Brand Guard page, clicking the Brand Guard item folds/unfolds its submenu; from anywhere else it opens Brand Guard.
+function onNavClick(id: string) {
+  if (id === 'brand-guard' && inBrand.value) { brandOpen.value = !brandOpen.value; return }
+  navigate(id)
+}
+
 function navigate(name: string) {
   router.push({ name })
   ui.closeNav()
@@ -43,27 +71,23 @@ function navigate(name: string) {
 </script>
 
 <template>
-  <aside class="sidebar" :class="{ open: ui.navOpen }">
+  <aside class="sidebar" :class="{ open: ui.navOpen }" aria-label="Main navigation">
     <!-- Brand -->
     <div class="brand">
-      <div class="logo">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#06060f" stroke-width="2.2">
-          <path d="M22 6l-10 7L2 6"/><rect x="2" y="4" width="20" height="16" rx="2"/>
-        </svg>
-      </div>
-      <div>
-        <div class="brand-name">Sen<b>tinel</b></div>
-        <div class="brand-sub">DMARC · MTA-STS</div>
-      </div>
+      <ZoneProofLogo subtitle="DMARC · MTA-STS · BRAND" />
     </div>
 
 
     <!-- Nav -->
     <template v-for="item in nav" :key="item.label">
       <div v-if="item.group" class="nav-label">{{ item.label }}</div>
-      <div v-else-if="!item.mspOnly || ['msp','enterprise'].includes(auth.plan)"
-        :class="['nav-item', route.name === item.id ? 'active' : '', item.enterpriseOnly && auth.plan !== 'enterprise' ? 'locked' : '']"
-        @click="navigate(item.id!)"
+      <div v-else-if="(!item.mspOnly || ['msp','enterprise'].includes(auth.plan)) && (!item.adminOnly || auth.isAdmin())"
+        :class="['nav-item', route.name === item.id || (item.id === 'brand-guard' && inBrand) ? 'active' : '', item.enterpriseOnly && auth.plan !== 'enterprise' ? 'locked' : '']"
+        :role="item.id === 'brand-guard' ? 'button' : 'link'" tabindex="0"
+        :aria-current="route.name === item.id ? 'page' : undefined"
+        :aria-expanded="item.id === 'brand-guard' && inBrand ? brandOpen : undefined"
+        @click="onNavClick(item.id!)"
+        @keydown.enter.prevent="onNavClick(item.id!)" @keydown.space.prevent="onNavClick(item.id!)"
       >
         <!-- icons inline for simplicity -->
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -107,6 +131,9 @@ function navigate(name: string) {
             <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
             <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
           </template>
+          <template v-else-if="item.icon === 'shield'">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>
+          </template>
           <template v-else-if="item.icon === 'audit'">
             <path d="M9 11l3 3L22 4"/>
             <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
@@ -120,10 +147,23 @@ function navigate(name: string) {
         </span>
         <span v-else class="num">{{ item.num }}</span>
       </div>
+      <div v-if="item.id === 'brand-guard' && inBrand && brandOpen" class="subnav" role="group" aria-label="Brand Guard">
+        <template v-for="g in brandMenu" :key="g.label">
+          <div class="sub-label">{{ g.label }}</div>
+          <template v-for="s in g.items" :key="s.label">
+            <span v-if="s.soon" class="sub-item soon" aria-disabled="true" title="Not part of Brand Guard yet">{{ s.label }}<em>Soon</em></span>
+            <div v-else :class="['sub-item', route.name === s.id ? 'on' : '']" :aria-current="route.name === s.id ? 'page' : undefined" role="link" tabindex="0"
+              @click="navigate(s.id!)" @keydown.enter="navigate(s.id!)">
+              {{ s.label }}<b v-if="s.count" :class="{ urgent: s.urgent }">{{ s.count }}</b>
+            </div>
+          </template>
+        </template>
+      </div>
     </template>
 
     <!-- Add domain CTA -->
-    <div class="add-domain-btn" @click="navigate('domains')">
+    <div class="add-domain-btn" role="link" tabindex="0" @click="navigate('domains')"
+      @keydown.enter.prevent="navigate('domains')" @keydown.space.prevent="navigate('domains')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
         <path d="M12 5v14M5 12h14"/>
       </svg>
@@ -137,7 +177,7 @@ function navigate(name: string) {
         <div class="nm">{{ auth.fullName || 'Account' }}</div>
         <div class="rl-row">
           <span class="rl">{{ auth.role || 'Admin' }}</span>
-          <span class="plan-pill" @click.stop="router.push({ name: 'billing' })">{{ auth.plan }}</span>
+          <span class="plan-pill" @click.stop="router.push({ name: 'billing' })" tabindex="0" role="link" @keydown.enter.prevent="router.push({ name: 'billing' })" @keydown.space.prevent="router.push({ name: 'billing' })">{{ auth.plan }}</span>
         </div>
         <div class="ws" v-if="auth.workspaceName">{{ auth.workspaceName }}</div>
       </div>
@@ -161,18 +201,23 @@ function navigate(name: string) {
   position: sticky; top: 14px; height: calc(100vh - 28px); overflow-y: auto;
 }
 .brand { display: flex; align-items: center; gap: 11px; padding: 4px 8px 14px; }
-.logo { width: 36px; height: 36px; border-radius: 11px; flex: none; display: grid; place-items: center; background: radial-gradient(circle at 30% 25%, #2ef5d4, #5b6ef5); box-shadow: 0 0 22px rgba(46,230,197,.45); }
-.logo svg { width: 19px; height: 19px; }
-.brand-name { font-family: var(--disp); font-weight: 800; font-size: 16px; letter-spacing: -.3px; line-height: 1.1; }
-.brand-name b { background: linear-gradient(90deg, #2ee6c5, #5b6ef5); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.brand-sub { font-family: var(--mono); font-size: 8.5px; color: var(--teal); letter-spacing: 1.4px; text-transform: uppercase; }
 .nav-label { font-family: var(--mono); font-size: 9px; letter-spacing: 1.4px; color: var(--faint); text-transform: uppercase; padding: 12px 12px 5px; }
 .nav-item { display: flex; align-items: center; gap: 12px; padding: 9px 13px; border-radius: 12px; color: var(--muted); cursor: pointer; font-weight: 500; font-size: 13px; transition: all .16s ease; }
 .nav-item svg { width: 17px; height: 17px; flex: none; opacity: .85; }
 .nav-item:hover { background: rgba(255,255,255,.05); color: var(--txt); }
-.nav-item.active { background: linear-gradient(90deg, #5b6ef5, #8b5cf6); color: #fff; box-shadow: 0 8px 24px rgba(91,110,245,.45); }
+.nav-item.active { background: linear-gradient(90deg, #5b5cf0, #4b4ce0); color: #fff; box-shadow: 0 8px 24px rgba(91,92,240,.45); }
 .nav-item.active svg { opacity: 1; }
 .num { font-family: var(--mono); font-size: 9.5px; margin-left: auto; opacity: .55; }
+.subnav { margin: 2px 0 6px; padding: 6px 6px 8px; border-radius: 12px; background: rgba(255,255,255,.03); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 1px; }
+.sub-label { font-family: var(--mono); font-size: 9px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--faint); padding: 8px 10px 3px; }
+.sub-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 34px; padding: 0 10px; border-radius: 9px; font-size: 12.5px; color: var(--muted); cursor: pointer; position: relative; }
+.sub-item:hover:not(.soon) { background: rgba(255,255,255,.05); color: var(--txt); }
+.sub-item.on { background: rgba(91,92,240,.2); color: #fff; }
+.sub-item.on::before { content: ''; position: absolute; left: -6px; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: var(--indigo); }
+.sub-item b { font-family: var(--mono); font-size: 10px; padding: 1px 7px; border-radius: 999px; background: rgba(255,255,255,.08); color: var(--muted); }
+.sub-item b.urgent { background: rgba(255,77,109,.18); color: #ff8da1; }
+.sub-item.soon { cursor: default; opacity: .55; }
+.sub-item.soon em { font-style: normal; font-family: var(--mono); font-size: 9px; padding: 1px 6px; border-radius: 4px; border: 1px solid var(--line2); color: var(--faint); }
 .nav-item.locked { opacity: .62; }
 .nav-item.locked:hover { opacity: .85; }
 .lock-badge { margin-left: auto; display: flex; align-items: center; color: var(--faint); }
@@ -180,10 +225,10 @@ function navigate(name: string) {
 .nav-item.active .lock-badge { color: rgba(255,255,255,.8); }
 .add-domain-btn {
   display: flex; align-items: center; gap: 8px; margin: 8px 4px 0; padding: 9px 13px;
-  border-radius: 12px; border: 1px dashed var(--line2); color: var(--teal);
+  border-radius: 12px; border: 1px dashed var(--line2); color: var(--accent-soft);
   cursor: pointer; font-size: 12.5px; font-weight: 600; transition: .15s;
 }
-.add-domain-btn:hover { background: rgba(46,230,197,.07); border-color: var(--teal); }
+.add-domain-btn:hover { background: rgba(91,92,240,.1); border-color: var(--accent); }
 .add-domain-btn svg { width: 14px; height: 14px; }
 .side-user {
   margin-top: auto; display: flex; align-items: center; gap: 10px;
@@ -200,8 +245,8 @@ function navigate(name: string) {
 .nm { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rl-row { display: flex; align-items: center; gap: 6px; margin-top: 1px; }
 .rl { font-size: 10px; color: var(--muted); text-transform: capitalize; }
-.plan-pill { font-family: var(--mono); font-size: 8px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; background: rgba(91,110,245,.18); color: var(--indigo); padding: 1px 7px; border-radius: 10px; cursor: pointer; transition: background .15s; }
-.plan-pill:hover { background: rgba(91,110,245,.3); }
+.plan-pill { font-family: var(--mono); font-size: 8px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; background: rgba(91,92,240,.18); color: var(--indigo); padding: 1px 7px; border-radius: 10px; cursor: pointer; transition: background .15s; }
+.plan-pill:hover { background: rgba(91,92,240,.3); }
 .ws { font-size: 9.5px; color: var(--faint); font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
 .logout-btn {
   flex: none; background: none; border: none; cursor: pointer;

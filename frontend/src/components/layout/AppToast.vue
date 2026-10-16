@@ -5,7 +5,10 @@ const ui = useUiStore()
 
 <template>
   <Teleport to="body">
-    <div :class="['toast', ui.toastVisible ? 'show' : '', ui.toastType === 'error' ? 'error' : '']">{{ ui.toastMsg }}</div>
+    <div
+      :class="['toast', ui.toastVisible ? 'show' : '', ui.toastType === 'error' ? 'error' : '']"
+      role="status" aria-atomic="true" :aria-live="ui.toastType === 'error' ? 'assertive' : 'polite'"
+    >{{ ui.toastVisible ? ui.toastMsg : '' }}</div>
   </Teleport>
 </template>
 

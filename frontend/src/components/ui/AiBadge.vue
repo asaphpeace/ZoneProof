@@ -14,7 +14,7 @@ function fmtTs(iso: string) {
 <template>
   <span class="ai-badge" :class="{ loading }">
     <span class="ai-star">✦</span>
-    <span class="ai-label">Sentinel AI</span>
+    <span class="ai-label">ZoneProof AI</span>
     <span v-if="loading" class="ai-pulse" />
     <span v-else-if="timestamp" class="ai-ts">{{ fmtTs(timestamp) }}</span>
   </span>

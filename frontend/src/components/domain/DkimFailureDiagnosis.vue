@@ -47,13 +47,13 @@ const emit = defineEmits<{ 'open-platform-setup': [key: string]; 'open-arc-info'
 .hyp { background: rgba(255,255,255,.03); border: 1px solid var(--line); border-radius: 11px; padding: 11px 13px; }
 .hyp-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .hyp-label { font-size: 12.5px; font-weight: 600; color: var(--txt); }
-.hyp-conf { font-family: var(--mono); font-size: 10px; color: #9aa6ff; background: rgba(91,110,245,.12); padding: 2px 8px; border-radius: 6px; }
+.hyp-conf { font-family: var(--mono); font-size: 10px; color: #9aa6ff; background: rgba(91,92,240,.12); padding: 2px 8px; border-radius: 6px; }
 .hyp-evidence { font-size: 11.5px; color: var(--muted); line-height: 1.5; margin: 0 0 4px; }
 .hyp-explain { font-size: 11.5px; color: var(--faint); line-height: 1.5; margin: 0 0 8px; }
 .hyp-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; }
 .hyp-fix { font-size: 11px; color: var(--amber); line-height: 1.5; flex: 1; }
 .hyp-btn {
-  flex: none; background: rgba(91,110,245,.16); border: 1px solid rgba(91,110,245,.35); color: #9aa6ff;
+  flex: none; background: rgba(91,92,240,.16); border: 1px solid rgba(91,92,240,.35); color: #9aa6ff;
   border-radius: 8px; padding: 5px 11px; font-size: 11px; font-weight: 700; cursor: pointer;
 }
 .hyp-btn.ghost { background: none; border-color: var(--line2); color: var(--muted); }

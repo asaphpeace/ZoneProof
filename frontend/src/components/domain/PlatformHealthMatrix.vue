@@ -110,10 +110,10 @@ const STATUS_COLOR: Record<string, string> = {
 .mc-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
 .mc-title { font-family: var(--disp); font-weight: 700; font-size: 14px; }
 .add-btn {
-  background: rgba(91,110,245,.12); border: 1px solid rgba(91,110,245,.3); color: #9aa6ff;
+  background: rgba(91,92,240,.12); border: 1px solid rgba(91,92,240,.3); color: #9aa6ff;
   border-radius: 10px; padding: 7px 14px; font-family: var(--disp); font-weight: 700; font-size: 12px; cursor: pointer;
 }
-.add-btn:hover { background: rgba(91,110,245,.2); }
+.add-btn:hover { background: rgba(91,92,240,.2); }
 .empty { font-size: 12.5px; color: var(--muted); padding: 14px 0; }
 
 .thead {
@@ -127,7 +127,7 @@ const STATUS_COLOR: Record<string, string> = {
 }
 .cell-name { font-size: 12.5px; color: var(--txt); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .tag { font-family: var(--mono); font-size: 8px; font-weight: 700; padding: 2px 6px; border-radius: 6px; }
-.tag.declared { background: rgba(91,110,245,.16); color: #9aa6ff; }
+.tag.declared { background: rgba(91,92,240,.16); color: #9aa6ff; }
 .tag.detected { background: rgba(46,230,197,.14); color: var(--teal); }
 .cell-status { font-family: var(--mono); font-size: 11px; text-transform: capitalize; }
 .cell-actions { display: flex; gap: 6px; justify-content: flex-end; }

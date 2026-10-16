@@ -103,7 +103,7 @@ const STATUS_LABEL: Record<string, string> = {
 .rc-status-label { font-family: var(--mono); font-size: 10px; color: var(--faint); }
 .rc-vol { font-size: 10.5px; color: var(--amber); }
 .rc-fix-btn {
-  flex: none; background: rgba(91,110,245,.16); border: 1px solid rgba(91,110,245,.35); color: #9aa6ff;
+  flex: none; background: rgba(91,92,240,.16); border: 1px solid rgba(91,92,240,.35); color: #9aa6ff;
   border-radius: 9px; padding: 6px 12px; font-size: 11px; font-weight: 700; cursor: pointer;
 }
 </style>

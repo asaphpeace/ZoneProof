@@ -272,12 +272,12 @@ function gap(score: number) { return CIRC - arc(score) }
   font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--txt);
   outline: none; transition: border-color .15s;
 }
-.domain-input:focus { border-color: rgba(91,110,245,.7); box-shadow: 0 0 0 3px rgba(91,110,245,.15); }
+.domain-input:focus { border-color: rgba(91,92,240,.7); box-shadow: 0 0 0 3px rgba(91,92,240,.15); }
 .input-wrap.invalid .domain-input { border-color: rgba(255,77,109,.4); }
 
 .scan-btn {
   display: flex; align-items: center; gap: 8px;
-  background: linear-gradient(90deg, #5b6ef5, #8b5cf6);
+  background: linear-gradient(90deg, #5b5cf0, #4b4ce0);
   border: none; border-radius: 13px; padding: 12px 20px;
   font-family: var(--disp); font-weight: 700; font-size: 14px; color: #fff;
   cursor: pointer; white-space: nowrap; transition: opacity .15s;
@@ -314,8 +314,8 @@ function gap(score: number) { return CIRC - arc(score) }
 }
 .scan-ring {
   position: absolute; inset: 0; border-radius: 50%;
-  border: 2px solid rgba(91,110,245,.2);
-  border-top-color: #5b6ef5;
+  border: 2px solid rgba(91,92,240,.2);
+  border-top-color: #5b5cf0;
   animation: spin 1s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }

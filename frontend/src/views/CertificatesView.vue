@@ -4,30 +4,40 @@ import { api } from '@/api/client'
 import { useDomainsStore } from '@/stores/domains'
 import { useUiStore } from '@/stores/ui'
 import AdvisorBanner from '@/components/ui/AdvisorBanner.vue'
+import LoadError from '@/components/ui/LoadError.vue'
+import { useScopeStore } from '@/stores/scope'
+import NextStep from '@/components/ui/NextStep.vue'
 
 const domains  = useDomainsStore()
 const ui = useUiStore()
 const allCerts       = ref<any[]>([])
 const advisor        = ref<any>(null)
 const advisorLoading = ref(false)
+const loadError = ref('')
 const loading        = ref(false)
 const probing        = ref(false)
 const probingId = ref<string | null>(null)
-const filterDomain = ref<string>('all')
+const scope = useScopeStore()
+const filterDomain = computed<string>({
+  get: () => scope.domain ?? 'all',
+  set: (v) => scope.set(v === 'all' ? null : v),
+})
 const expandedId   = ref<string | null>(null)
 
 onMounted(async () => {
   advisorLoading.value = true
   await domains.fetch()
+  if (domains.error) { loadError.value = domains.error; advisorLoading.value = false; loading.value = false; return }
   await loadData(true)
 })
 
 async function loadData(initialLoad = false) {
   loading.value = true
+  loadError.value = ''
   if (!initialLoad) advisorLoading.value = true
   try {
     allCerts.value = await api.allCerts()
-  } finally { loading.value = false }
+  } catch (e: any) { loadError.value = e?.message || 'The certificate request failed.'; return } finally { loading.value = false }
 
   // Advisor: cached on initial load for instant display
   try {
@@ -175,6 +185,7 @@ function domainId(domain: string) {
 
 <template>
   <div>
+    <LoadError v-if="loadError" :message="loadError" @retry="$router.go(0)" />
     <!-- Title row -->
     <div class="titlerow">
       <div>
@@ -263,7 +274,7 @@ function domainId(domain: string) {
 
         <!-- Domain filter dropdown -->
         <div class="filter-wrap">
-          <select v-model="filterDomain" class="filter-select">
+          <select v-model="filterDomain" class="filter-select" aria-label="Domain">
             <option value="all">All domains ({{ domains.list.length }})</option>
             <option v-for="d in domainOptions" :key="d" :value="d">{{ d }}</option>
           </select>
@@ -296,7 +307,7 @@ function domainId(domain: string) {
 
         <!-- Rows -->
         <template v-for="c in visibleCerts" :key="c.id">
-          <div :class="['tbl-row', expandedId === c.id ? 'expanded' : '']" @click="toggleExpand(c.id)">
+          <div :class="['tbl-row', expandedId === c.id ? 'expanded' : '']" @click="toggleExpand(c.id)" tabindex="0" role="button" :aria-expanded="expandedId === c.id" @keydown.enter.prevent="toggleExpand(c.id)" @keydown.space.prevent="toggleExpand(c.id)">
             <!-- Host -->
             <div class="cell-host">
               <span class="host-name">{{ c.host }}</span>
@@ -387,6 +398,15 @@ function domainId(domain: string) {
                 <div class="detail-val mono" style="color:var(--bad)">{{ c.probe_error }}</div>
               </div>
             </div>
+            <div v-if="c.domain" class="detail-links">
+              <NextStep
+                v-if="c.status && c.status !== 'ok'"
+                to="roadmap" :domain="c.domain" label="What this blocks on the roadmap"
+                title="MTA-STS enforcement waits on a healthy certificate"
+              />
+              <NextStep to="tls" :domain="c.domain" label="TLS delivery for this domain" />
+              <NextStep to="timeline" :domain="c.domain" label="Recent DNS changes" />
+            </div>
             <button
               v-if="domainId(c.domain)"
               class="btn-reprobe"
@@ -412,7 +432,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 25px; letter-spacing
 .probed-at { font-family: var(--mono); font-size: 10.5px; color: var(--faint); }
 .btn {
   display: flex; align-items: center; gap: 7px;
-  background: linear-gradient(90deg,#5b6ef5,#8b5cf6); color: #fff; border: none;
+  background: linear-gradient(90deg,#5b5cf0,#4b4ce0); color: #fff; border: none;
   border-radius: 12px; padding: 10px 18px; font-family: var(--disp); font-weight: 700;
   font-size: 13px; cursor: pointer; transition: opacity .15s;
 }
@@ -509,6 +529,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 25px; letter-spacing
 .expand-chevron.open { transform: rotate(180deg); }
 
 /* ── Expanded detail ─────────────────────────────────────────── */
+.detail-links { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0 0 12px; }
 .tbl-detail {
   margin: 0 4px 4px; padding: 14px 16px; border-radius: 10px;
   background: rgba(255,255,255,.03); border: 1px solid var(--line);

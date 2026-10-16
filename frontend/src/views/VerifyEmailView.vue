@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ZoneProofLogo from '@/components/layout/ZoneProofLogo.vue'
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '@/api/client'
@@ -36,14 +37,7 @@ function continueToApp() {
   <div class="wrap">
     <div class="card">
       <div class="brand">
-        <div class="logo">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#06060f" stroke-width="2.2">
-            <path d="M22 6l-10 7L2 6"/><rect x="2" y="4" width="20" height="16" rx="2"/>
-          </svg>
-        </div>
-        <div>
-          <div class="brand-name">Sen<b>tinel</b></div>
-        </div>
+        <ZoneProofLogo :size="40" />
       </div>
 
       <div v-if="status === 'verifying'" class="state">
@@ -81,10 +75,6 @@ function continueToApp() {
   backdrop-filter:blur(16px);
 }
 .brand { display:flex; align-items:center; gap:12px; margin-bottom:28px; }
-.logo { width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:radial-gradient(circle at 30% 25%,#2ef5d4,#5b6ef5); box-shadow:0 0 22px rgba(46,230,197,.45); }
-.logo svg { width:20px; height:20px; }
-.brand-name { font-family:var(--disp); font-weight:800; font-size:18px; }
-.brand-name b { background:linear-gradient(90deg,#2ee6c5,#5b6ef5); -webkit-background-clip:text; background-clip:text; color:transparent; }
 
 .state { text-align:center; padding:12px 0; }
 .state-title { font-family:var(--disp); font-weight:800; font-size:18px; margin-top:14px; }
@@ -102,6 +92,6 @@ function continueToApp() {
 .icon.good { background:rgba(52,224,161,.12); color:var(--good); }
 .icon.bad  { background:rgba(255,77,109,.12); color:var(--bad); }
 
-.btn { width:100%; background:linear-gradient(90deg,#5b6ef5,#8b5cf6); color:#fff; border:none; border-radius:12px; padding:13px; font-family:var(--disp); font-weight:700; font-size:14px; cursor:pointer; transition:opacity .15s; }
+.btn { width:100%; background:linear-gradient(90deg,#5b5cf0,#4b4ce0); color:#fff; border:none; border-radius:12px; padding:13px; font-family:var(--disp); font-weight:700; font-size:14px; cursor:pointer; transition:opacity .15s; }
 .btn:hover { opacity:.88; }
 </style>

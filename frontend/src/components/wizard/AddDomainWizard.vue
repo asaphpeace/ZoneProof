@@ -47,7 +47,7 @@ async function abort() {
                 <path d="M22 6l-10 7L2 6"/><rect x="2" y="4" width="20" height="16" rx="2"/>
               </svg>
             </div>
-            Add domains to Sentinel
+            Add domains to ZoneProof
           </div>
           <button class="close-btn" @click="abort">×</button>
         </div>
@@ -71,7 +71,7 @@ async function abort() {
 .wizard-panel { width: 660px; max-width: 96vw; max-height: 90vh; background: #0f1118; border: 1px solid var(--line2); border-radius: 22px; box-shadow: 0 40px 120px rgba(0,0,0,.7); display: flex; flex-direction: column; overflow: hidden; }
 .wizard-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px 0; }
 .wh-title { display: flex; align-items: center; gap: 10px; font-family: var(--disp); font-weight: 800; font-size: 15px; }
-.wh-logo { width: 32px; height: 32px; border-radius: 10px; background: radial-gradient(circle at 30% 25%,#2ef5d4,#5b6ef5); display: grid; place-items: center; color: #06060f; }
+.wh-logo { width: 32px; height: 32px; border-radius: 10px; background: radial-gradient(circle at 30% 25%,#2ef5d4,#5b5cf0); display: grid; place-items: center; color: #06060f; }
 .close-btn { background: none; border: none; color: var(--muted); font-size: 22px; cursor: pointer; line-height: 1; padding: 4px; border-radius: 8px; }
 .close-btn:hover { color: var(--txt); background: rgba(255,255,255,.06); }
 .wizard-steps { padding: 20px 24px 0; }

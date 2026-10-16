@@ -5,6 +5,7 @@ import { api } from '@/api/client'
 import { useDomainsStore } from '@/stores/domains'
 import { useUiStore } from '@/stores/ui'
 import SentinelRing from '@/components/ui/SentinelRing.vue'
+import LoadError from '@/components/ui/LoadError.vue'
 import ThreatSurface from '@/components/ui/ThreatSurface.vue'
 import PortfolioReadinessRollup from '@/components/domain/PortfolioReadinessRollup.vue'
 import DomainTable from '@/components/domain/DomainTable.vue'
@@ -34,11 +35,12 @@ async function onWizardClose() {
   loading.value = true
   try {
     await domains.fetch()
+    if (domains.error) throw new Error(domains.error)
     ;[overview.value, threat.value] = await Promise.all([
       api.overview(),
       api.threatSurface(days.value),
     ])
-  } finally { loading.value = false }
+  } catch (e: any) { loadError.value = e?.message || 'The data request failed.' } finally { loading.value = false }
 }
 
 const overview       = ref<any>(null)
@@ -46,16 +48,25 @@ const threat         = ref<any>(null)
 const loading        = ref(true)
 const advisor        = ref<any>(null)
 const advisorLoading = ref(false)
+const loadError = ref('')
+// Brand Guard card: shown only when the workspace protects at least one brand. Failure here must never affect the rest of the page.
+const brand = ref<any>(null)
+async function loadBrand() {
+  try { const s = await api.brandGuardSummary(); brand.value = s && s.brands > 0 ? s : null } catch { brand.value = null }
+}
+const brandExposure = computed(() => overview.value?.sentinel?.pillar_brand_exposure ?? null)
 
 onMounted(async () => {
   advisorLoading.value = true
+  loadBrand()
   try {
     await domains.fetch()
+    if (domains.error) throw new Error(domains.error)
     ;[overview.value, threat.value] = await Promise.all([
       api.overview(),
       api.threatSurface(days.value),
     ])
-  } finally { loading.value = false }
+  } catch (e: any) { loadError.value = e?.message || 'The data request failed.' } finally { loading.value = false }
 
   // Load cached advisor immediately, refresh in background
   try {
@@ -99,6 +110,7 @@ const tlsTotal = computed(() => o.value
 
 <template>
   <div>
+    <LoadError v-if="loadError" :message="loadError" @retry="$router.go(0)" />
     <!-- ── First-run empty state ─────────────────────────────────────────── -->
     <div v-if="!loading && domains.list.length === 0" class="firstrun">
       <div class="fr-glow" />
@@ -107,10 +119,10 @@ const tlsTotal = computed(() => o.value
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
         </svg>
       </div>
-      <h2 class="fr-title">Welcome to Sentinel</h2>
+      <h2 class="fr-title">Welcome to ZoneProof</h2>
       <p class="fr-sub">
         Add your first domain to start monitoring DMARC enforcement, MTA-STS protection,
-        certificate health, and get your Sentinel Score.
+        certificate health, and get your ZoneProof Score.
       </p>
       <div class="fr-steps">
         <div class="fr-step">
@@ -125,7 +137,7 @@ const tlsTotal = computed(() => o.value
         <div class="fr-step-sep">→</div>
         <div class="fr-step">
           <span class="fr-step-num">3</span>
-          <span>Reports flow in — Sentinel scores and guides you</span>
+          <span>Reports flow in — ZoneProof scores and guides you</span>
         </div>
       </div>
       <button class="fr-btn" @click="showWizard = true">
@@ -175,10 +187,10 @@ const tlsTotal = computed(() => o.value
     <template v-if="domains.list.length > 0 || loading">
     <div class="hero-band">
 
-      <!-- Left: Sentinel Score ring -->
+      <!-- Left: ZoneProof Score ring -->
       <div class="card hero-score">
         <div class="hero-eyebrow">
-          <span class="sentinel-tag">SENTINEL SCORE</span>
+          <span class="sentinel-tag">ZONEPROOF SCORE</span>
           <span class="sentinel-ctx" v-if="o">
             {{ o.sentinel.volume_weighted ? 'volume-weighted' : 'equal weight' }}
           </span>
@@ -250,6 +262,17 @@ const tlsTotal = computed(() => o.value
       </div>
     </div>
 
+    <!-- ── Brand Guard ──────────────────────────────────────────────────── -->
+    <RouterLink v-if="brand" :to="{ name: 'brand-guard' }" class="card brand-card" aria-label="Open Brand Guard">
+      <div class="bc-head"><h3 aria-level="2">Brand protection</h3><span v-if="brandExposure !== null" class="bc-score" :title="'Exposure score from live look-alikes, overdue cases and pending decisions. The point values are judgement calls.'">Exposure {{ Math.round(brandExposure) }}/100</span></div>
+      <div class="bc-grid">
+        <div><b>{{ brand.open_candidates }}</b><span>need a decision</span></div>
+        <div><b>{{ brand.confirmed + brand.takedown }}</b><span>open cases</span></div>
+        <div><b>{{ brand.new_24h }}</b><span>new in 24 h</span></div>
+        <div><b>{{ brand.went_live_7d }}</b><span>went live this week</span></div>
+      </div>
+    </RouterLink>
+
     <!-- ── Portfolio readiness rollup ───────────────────────────────────── -->
     <PortfolioReadinessRollup />
 
@@ -279,7 +302,7 @@ const tlsTotal = computed(() => o.value
       <!-- Table header -->
       <div class="pt-head">
         <div>
-          <h3>Domain portfolio</h3>
+          <h3 aria-level="2">Domain portfolio</h3>
           <div class="pt-sub">Hover grade badge for rubric · click row to open full analysis</div>
         </div>
         <div class="grade-legend">
@@ -373,9 +396,9 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 25px; letter-spacing
 .action-btn.scan:hover { background: rgba(46,230,197,.2); border-color: rgba(46,230,197,.6); color: #fff; }
 
 .action-btn.report {
-  background: rgba(91,110,245,.12); border-color: rgba(91,110,245,.4); color: #9aa6ff;
+  background: rgba(91,92,240,.12); border-color: rgba(91,92,240,.4); color: #9aa6ff;
 }
-.action-btn.report:hover { background: rgba(91,110,245,.22); border-color: rgba(91,110,245,.7); color: #fff; }
+.action-btn.report:hover { background: rgba(91,92,240,.22); border-color: rgba(91,92,240,.7); color: #fff; }
 
 /* ── Hero band ──────────────────────────────────────────────── */
 .hero-band {
@@ -414,6 +437,14 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 25px; letter-spacing
 
 /* ── Threat card ────────────────────────────────────────────── */
 .threat-card { margin-bottom: 14px; }
+.brand-card { display: block; margin-bottom: 14px; text-decoration: none; color: inherit; }
+.brand-card:hover { border-color: var(--indigo); }
+.bc-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+.bc-head h3 { margin: 0; font-size: 15px; }
+.bc-score { font: 700 11px var(--mono); padding: 2px 10px; border-radius: 999px; background: rgba(91,92,240,.16); color: #b9c0ff; }
+.bc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
+.bc-grid b { display: block; font-size: 24px; }
+.bc-grid span { font-size: 12px; color: var(--muted); }
 .narrative-card { margin-bottom: 14px; }
 
 /* ── Portfolio card ─────────────────────────────────────────── */
@@ -482,7 +513,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 25px; letter-spacing
 }
 .fr-logo {
   width: 56px; height: 56px; border-radius: 18px; display: grid; place-items: center;
-  background: radial-gradient(circle at 30% 25%, #2ef5d4, #5b6ef5);
+  background: radial-gradient(circle at 30% 25%, #2ef5d4, #5b5cf0);
   color: #06060f; margin-bottom: 24px; position: relative;
 }
 .fr-logo svg { width: 26px; height: 26px; }
@@ -506,14 +537,14 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 25px; letter-spacing
 }
 .fr-step-num {
   width: 22px; height: 22px; flex: none; border-radius: 50%;
-  background: rgba(91,110,245,.2); border: 1px solid rgba(91,110,245,.4);
+  background: rgba(91,92,240,.2); border: 1px solid rgba(91,92,240,.4);
   color: #9aa6ff; font-family: var(--mono); font-size: 11px; font-weight: 700;
   display: grid; place-items: center;
 }
 .fr-step-sep { color: var(--faint); font-size: 16px; }
 .fr-btn {
   display: flex; align-items: center; gap: 8px;
-  background: linear-gradient(90deg, #5b6ef5, #8b5cf6); color: #fff;
+  background: linear-gradient(90deg, #5b5cf0, #4b4ce0); color: #fff;
   border: none; border-radius: 14px; padding: 13px 28px;
   font-family: var(--disp); font-weight: 800; font-size: 15px;
   cursor: pointer; transition: opacity .15s; margin-bottom: 14px;

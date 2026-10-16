@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ZoneProofLogo from '@/components/layout/ZoneProofLogo.vue'
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '@/api/client'
@@ -63,15 +64,7 @@ async function submit() {
   <div class="login-wrap">
     <div class="login-card">
       <div class="brand">
-        <div class="logo">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#06060f" stroke-width="2.2">
-            <path d="M22 6l-10 7L2 6"/><rect x="2" y="4" width="20" height="16" rx="2"/>
-          </svg>
-        </div>
-        <div>
-          <div class="brand-name">Sen<b>tinel</b></div>
-          <div class="brand-sub">Email Security Posture</div>
-        </div>
+        <ZoneProofLogo :size="40" subtitle="Email Security Posture" />
       </div>
 
       <div v-if="status === 'loading'" class="state">
@@ -122,11 +115,6 @@ async function submit() {
   backdrop-filter:blur(16px);
 }
 .brand { display:flex; align-items:center; gap:12px; margin-bottom:28px; }
-.logo { width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:radial-gradient(circle at 30% 25%,#2ef5d4,#5b6ef5); box-shadow:0 0 22px rgba(46,230,197,.45); }
-.logo svg { width:20px; height:20px; }
-.brand-name { font-family:var(--disp); font-weight:800; font-size:18px; }
-.brand-name b { background:linear-gradient(90deg,#2ee6c5,#5b6ef5); -webkit-background-clip:text; background-clip:text; color:transparent; }
-.brand-sub { font-family:var(--mono); font-size:9px; color:var(--teal); letter-spacing:1.4px; text-transform:uppercase; }
 
 h2 { font-family:var(--disp); font-weight:800; font-size:22px; margin:0; }
 .sub { color:var(--muted); font-size:13px; margin:5px 0 24px; line-height:1.5; }
@@ -143,12 +131,12 @@ input:focus { border-color:var(--indigo); }
 
 .terms-row { display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:var(--muted); line-height:1.5; margin:4px 0 14px; cursor:pointer; }
 .terms-row input[type=checkbox] { margin-top:2px; flex:none; accent-color:var(--indigo); }
-.terms-row a { color:var(--teal); text-decoration:none; }
+.terms-row a { color:var(--accent-soft); text-decoration:none; }
 .terms-row a:hover { text-decoration:underline; }
 
 .err { color:var(--bad); font-size:12px; margin-bottom:10px; }
 
-.btn { width:100%; background:linear-gradient(90deg,#5b6ef5,#8b5cf6); color:#fff; border:none; border-radius:12px; padding:13px; font-family:var(--disp); font-weight:700; font-size:14px; cursor:pointer; margin-top:6px; transition:opacity .15s; }
+.btn { width:100%; background:linear-gradient(90deg,#5b5cf0,#4b4ce0); color:#fff; border:none; border-radius:12px; padding:13px; font-family:var(--disp); font-weight:700; font-size:14px; cursor:pointer; margin-top:6px; transition:opacity .15s; }
 .btn:disabled { opacity:.6; cursor:not-allowed; }
 .btn:hover:not(:disabled) { opacity:.88; }
 

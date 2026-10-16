@@ -17,7 +17,7 @@ const emit = defineEmits<{ regenerate: [] }>()
     <div class="orb" :class="{ spinning: refreshing }" />
     <div style="flex:1">
       <div class="who-row">
-        <span class="who">Sentinel Advisor</span>
+        <span class="who">ZoneProof Advisor</span>
         <span v-if="refreshing" class="refresh-label">Updating…</span>
       </div>
 
@@ -52,7 +52,7 @@ const emit = defineEmits<{ regenerate: [] }>()
 
 <style scoped>
 .advisor {
-  background: linear-gradient(160deg, rgba(91,110,245,.1), rgba(255,255,255,.012));
+  background: linear-gradient(160deg, rgba(91,92,240,.1), rgba(255,255,255,.012));
   border: 1px solid var(--line2); border-radius: 16px; padding: 16px 18px;
   margin-bottom: 16px; display: flex; gap: 14px; align-items: flex-start;
   backdrop-filter: blur(12px); transition: border-color .3s;
@@ -61,11 +61,11 @@ const emit = defineEmits<{ regenerate: [] }>()
   background: linear-gradient(160deg, rgba(52,224,161,.1), rgba(255,255,255,.012));
   border-color: rgba(52,224,161,.3);
 }
-.advisor.refreshing { border-color: rgba(91,110,245,.35); }
+.advisor.refreshing { border-color: rgba(91,92,240,.35); }
 
 .orb {
   width: 30px; height: 30px; border-radius: 50%; flex: none; margin-top: 1px;
-  background: radial-gradient(circle at 30% 30%, #6ff7e0, #5b6ef5);
+  background: radial-gradient(circle at 30% 30%, #6ff7e0, #5b5cf0);
   box-shadow: 0 0 18px rgba(46,230,197,.5);
   animation: pulse-orb 2.6s ease-in-out infinite;
   transition: opacity .2s;
@@ -107,6 +107,6 @@ const emit = defineEmits<{ regenerate: [] }>()
 .re svg { width: 11px; height: 11px; }
 .re svg.spin { animation: spin-orb .9s linear infinite; }
 
-@keyframes pulse-orb { 50% { box-shadow: 0 0 28px rgba(91,110,245,.8); } }
+@keyframes pulse-orb { 50% { box-shadow: 0 0 28px rgba(91,92,240,.8); } }
 @keyframes spin-orb  { to { transform: rotate(360deg); } }
 </style>

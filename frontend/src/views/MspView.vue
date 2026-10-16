@@ -119,6 +119,7 @@ function planLabel(p: string) { return { free: 'Free', starter: 'Starter', pro: 
         <h1>MSP Clients</h1>
         <p class="sub">Manage all client tenants from one place.</p>
       </div>
+      <RouterLink v-if="isMsp" :to="{ name: 'msp-brand-guard' }" class="btn-new" style="text-decoration:none">Brand Guard roll-up</RouterLink>
       <button v-if="isMsp" class="btn-new" @click="showNew = true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
           <path d="M12 5v14M5 12h14"/>
@@ -327,7 +328,7 @@ h1 { font-family:var(--disp); font-size:22px; font-weight:900; color:var(--txt);
 .page-head { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:24px; }
 .btn-new {
   display:flex; align-items:center; gap:6px; padding:9px 16px; border-radius:12px;
-  background:linear-gradient(90deg,#5b6ef5,#8b5cf6); color:#fff; border:none;
+  background:linear-gradient(90deg,#5b5cf0,#4b4ce0); color:#fff; border:none;
   font-family:var(--disp); font-weight:700; font-size:12.5px; cursor:pointer;
 }
 .btn-new svg { width:14px; height:14px; }
@@ -336,9 +337,9 @@ h1 { font-family:var(--disp); font-size:22px; font-weight:900; color:var(--txt);
 /* Gate */
 .gate-banner {
   display:flex; align-items:center; gap:16px; padding:20px 24px;
-  background:rgba(91,110,245,.07); border:1px solid rgba(91,110,245,.2); border-radius:16px;
+  background:rgba(91,92,240,.07); border:1px solid rgba(91,92,240,.2); border-radius:16px;
 }
-.gate-icon { width:44px; height:44px; border-radius:12px; display:grid; place-items:center; background:rgba(91,110,245,.15); flex:none; }
+.gate-icon { width:44px; height:44px; border-radius:12px; display:grid; place-items:center; background:rgba(91,92,240,.15); flex:none; }
 .gate-icon svg { width:22px; height:22px; color:var(--indigo); }
 .gate-title { font-family:var(--disp); font-weight:800; font-size:15px; color:var(--txt); margin-bottom:3px; }
 .gate-sub { font-size:12px; color:var(--muted); }
@@ -368,7 +369,7 @@ h1 { font-family:var(--disp); font-size:22px; font-weight:900; color:var(--txt);
 .cc-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
 .cc-name { font-family:var(--disp); font-size:15px; font-weight:800; color:var(--txt); margin-bottom:5px; }
 .cc-meta { display:flex; align-items:center; gap:6px; font-size:10.5px; color:var(--muted); }
-.plan-chip { font-family:var(--mono); font-size:8.5px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; background:rgba(91,110,245,.14); color:var(--indigo); padding:1px 7px; border-radius:10px; }
+.plan-chip { font-family:var(--mono); font-size:8.5px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; background:rgba(91,92,240,.14); color:var(--indigo); padding:1px 7px; border-radius:10px; }
 .meta-sep { color:var(--faint); }
 
 .grade-circle {
@@ -392,8 +393,8 @@ h1 { font-family:var(--disp); font-size:22px; font-weight:900; color:var(--txt);
   transition:opacity .15s;
 }
 .act-btn svg { width:13px; height:13px; }
-.act-btn-primary { background:rgba(91,110,245,.15); color:var(--indigo); flex:1; justify-content:center; }
-.act-btn-primary:hover { background:rgba(91,110,245,.25); }
+.act-btn-primary { background:rgba(91,92,240,.15); color:var(--indigo); flex:1; justify-content:center; }
+.act-btn-primary:hover { background:rgba(91,92,240,.25); }
 .act-btn-danger { background:rgba(255,77,109,.1); color:#ff4d6d; }
 .act-btn-danger:hover:not(:disabled) { background:rgba(255,77,109,.2); }
 .act-btn-danger:disabled { opacity:.45; cursor:default; }
@@ -404,7 +405,7 @@ h1 { font-family:var(--disp); font-size:22px; font-weight:900; color:var(--txt);
 /* Upgrade button */
 .btn-upgrade {
   padding:9px 18px; border-radius:10px; border:none;
-  background:linear-gradient(90deg,#5b6ef5,#8b5cf6); color:#fff;
+  background:linear-gradient(90deg,#5b5cf0,#4b4ce0); color:#fff;
   font-family:var(--disp); font-weight:700; font-size:12.5px; cursor:pointer;
   display:flex; align-items:center; gap:8px;
 }
@@ -429,11 +430,11 @@ h1 { font-family:var(--disp); font-size:22px; font-weight:900; color:var(--txt);
   border-radius:10px; color:var(--txt); font-size:13px; padding:9px 12px;
   outline:none; box-sizing:border-box; transition:border-color .15s; font-family:inherit;
 }
-.field-input:focus { border-color:rgba(91,110,245,.5); }
+.field-input:focus { border-color:rgba(91,92,240,.5); }
 
 .toggle-row { display:flex; background:rgba(255,255,255,.05); border-radius:10px; padding:3px; gap:3px; }
 .toggle-opt { flex:1; padding:7px; border:none; background:none; color:var(--muted); font-family:var(--disp); font-weight:600; font-size:11.5px; border-radius:8px; cursor:pointer; transition:.15s; }
-.toggle-opt.tog-active { background:rgba(91,110,245,.25); color:var(--txt); }
+.toggle-opt.tog-active { background:rgba(91,92,240,.25); color:var(--txt); }
 
 .result-success { text-align:center; }
 .result-success svg { width:40px; height:40px; margin:8px auto 16px; display:block; }

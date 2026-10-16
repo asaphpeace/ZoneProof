@@ -143,7 +143,7 @@ async function openPortal() {
       <section class="card usage-card">
         <div class="ct">
           <div style="display:flex;align-items:center;gap:12px">
-            <h3>Current plan</h3>
+            <h3 aria-level="2">Current plan</h3>
             <span class="plan-badge">{{ status.current_plan.label }}</span>
           </div>
           <div style="display:flex;gap:8px">
@@ -362,7 +362,7 @@ h1 { font-family:var(--disp); font-size:22px; font-weight:900; color:var(--txt);
 .card { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.07); border-radius:16px; padding:22px 24px; }
 .ct { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
 .ct h3 { font-family:var(--disp); font-size:15px; font-weight:700; color:var(--txt); margin:0; }
-.plan-badge { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; background:rgba(91,110,245,.15); color:var(--indigo); padding:3px 10px; border-radius:20px; }
+.plan-badge { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; background:rgba(91,92,240,.15); color:var(--indigo); padding:3px 10px; border-radius:20px; }
 
 .usage-row { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
 .usage-head { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-bottom:6px; }
@@ -390,7 +390,7 @@ h1 { font-family:var(--disp); font-size:22px; font-weight:900; color:var(--txt);
 }
 .schedule-opt:hover:not(:disabled) { background:rgba(255,255,255,.08); color:var(--txt); }
 .schedule-opt:disabled { opacity:.4; cursor:not-allowed; }
-.schedule-opt.sched-active { background:linear-gradient(90deg,#5b6ef5,#8b5cf6); color:#fff; border-color:transparent; }
+.schedule-opt.sched-active { background:linear-gradient(90deg,#5b5cf0,#4b4ce0); color:#fff; border-color:transparent; }
 .schedule-last { margin-top:10px; font-size:10.5px; color:var(--faint); font-family:var(--mono); }
 
 .portal-btn {
@@ -406,7 +406,7 @@ h1 { font-family:var(--disp); font-size:22px; font-weight:900; color:var(--txt);
 /* Cycle toggle */
 .cycle-toggle { display:inline-flex; background:rgba(255,255,255,.05); border-radius:12px; padding:3px; gap:3px; margin:24px 0 16px; }
 .cycle-opt { padding:7px 18px; border:none; background:none; color:var(--muted); font-family:var(--disp); font-weight:700; font-size:12px; border-radius:10px; cursor:pointer; transition:.15s; display:flex; align-items:center; gap:7px; }
-.cycle-opt.cyc-active { background:rgba(91,110,245,.25); color:var(--txt); }
+.cycle-opt.cyc-active { background:rgba(91,92,240,.25); color:var(--txt); }
 .save-chip { font-family:var(--mono); font-size:8px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; background:rgba(52,224,161,.2); color:#34e0a1; padding:1px 6px; border-radius:20px; }
 
 /* Plans grid */
@@ -420,9 +420,9 @@ h1 { font-family:var(--disp); font-size:22px; font-weight:900; color:var(--txt);
 }
 .plan-card:hover { border-color:rgba(255,255,255,.14); }
 .plan-current  { border-color:rgba(46,230,197,.35) !important; background:rgba(46,230,197,.04); }
-.plan-featured { border-color:rgba(91,110,245,.4) !important; background:rgba(91,110,245,.05); }
+.plan-featured { border-color:rgba(91,92,240,.4) !important; background:rgba(91,92,240,.05); }
 
-.plan-featured-band { position:absolute; top:0; left:0; right:0; text-align:center; font-family:var(--mono); font-size:8.5px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; background:linear-gradient(90deg,#5b6ef5,#8b5cf6); color:#fff; padding:4px 0; }
+.plan-featured-band { position:absolute; top:0; left:0; right:0; text-align:center; font-family:var(--mono); font-size:8.5px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; background:linear-gradient(90deg,#5b5cf0,#4b4ce0); color:#fff; padding:4px 0; }
 .plan-featured .plan-header { margin-top:20px; }
 
 .plan-header { margin-bottom:14px; }
@@ -447,11 +447,11 @@ h1 { font-family:var(--disp); font-size:22px; font-weight:900; color:var(--txt);
 .plan-action { margin-top:auto; }
 .plan-btn { width:100%; padding:9px; border-radius:10px; border:none; font-family:var(--disp); font-weight:700; font-size:12px; cursor:pointer; transition:opacity .15s; display:flex; align-items:center; justify-content:center; gap:7px; }
 .plan-btn:disabled { opacity:.55; cursor:default; }
-.plan-btn-upgrade  { background:linear-gradient(90deg,#5b6ef5,#8b5cf6); color:#fff; }
+.plan-btn-upgrade  { background:linear-gradient(90deg,#5b5cf0,#4b4ce0); color:#fff; }
 .plan-btn-upgrade:hover:not(:disabled) { opacity:.88; }
 .plan-btn-downgrade { background:rgba(255,255,255,.06); color:var(--muted); border:1px solid rgba(255,255,255,.1); }
 .plan-btn-current  { background:rgba(46,230,197,.12); color:#2ee6c5; border:1px solid rgba(46,230,197,.25); cursor:default; }
-.plan-btn-contact  { background:rgba(91,110,245,.12); color:var(--indigo); border:1px solid rgba(91,110,245,.2); }
+.plan-btn-contact  { background:rgba(91,92,240,.12); color:var(--indigo); border:1px solid rgba(91,92,240,.2); }
 .btn-spinner { width:14px; height:14px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; }
 
 .billing-note { font-family:var(--mono); font-size:9.5px; color:var(--faint); margin-top:20px; line-height:1.65; }

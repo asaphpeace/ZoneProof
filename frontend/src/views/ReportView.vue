@@ -84,16 +84,16 @@ function effortCol(e: string) {
   return { Low: '#34e0a1', Medium: '#f5c542', High: '#ff4d6d' }[e] ?? '#9098b5'
 }
 function impactBg(i: string) {
-  return { Low: 'rgba(144,152,181,.1)', Medium: 'rgba(46,230,197,.12)', High: 'rgba(91,110,245,.18)' }[i] ?? 'rgba(255,255,255,.06)'
+  return { Low: 'rgba(144,152,181,.1)', Medium: 'rgba(46,230,197,.12)', High: 'rgba(91,92,240,.18)' }[i] ?? 'rgba(255,255,255,.06)'
 }
 function impactCol(i: string) {
   return { Low: '#9098b5', Medium: '#2ee6c5', High: '#8b8ff8' }[i] ?? '#9098b5'
 }
 function stageCol(s: string) {
-  return { reject: '#34e0a1', quarantine: '#5b6ef5', monitor: '#f5c542', none: '#ff4d6d', enforce: '#34e0a1', testing: '#f5c542' }[s] ?? '#9098b5'
+  return { reject: '#34e0a1', quarantine: '#5b5cf0', monitor: '#f5c542', none: '#ff4d6d', enforce: '#34e0a1', testing: '#f5c542' }[s] ?? '#9098b5'
 }
 function stageBg(s: string) {
-  return { reject: 'rgba(52,224,161,.12)', quarantine: 'rgba(91,110,245,.12)', monitor: 'rgba(245,197,66,.12)', none: 'rgba(255,77,109,.12)', enforce: 'rgba(52,224,161,.12)', testing: 'rgba(245,197,66,.12)' }[s] ?? 'rgba(255,255,255,.06)'
+  return { reject: 'rgba(52,224,161,.12)', quarantine: 'rgba(91,92,240,.12)', monitor: 'rgba(245,197,66,.12)', none: 'rgba(255,77,109,.12)', enforce: 'rgba(52,224,161,.12)', testing: 'rgba(245,197,66,.12)' }[s] ?? 'rgba(255,255,255,.06)'
 }
 
 // posture indicator for a cell value
@@ -160,9 +160,9 @@ function postureColor(val: string | number | null, type: 'dmarc' | 'dkim' | 'mta
 
       <!-- Brand row -->
       <div class="r-brand-row">
-        <div class="r-brand-logo">S</div>
+        <div class="r-brand-logo"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M8 12.5l2.8 2.8L16.5 9"/></svg></div>
         <div class="r-brand-text">
-          <div class="r-brand-name">Sen<span class="accent">tinel</span></div>
+          <div class="r-brand-name">Zone<span class="accent">Proof</span></div>
           <div class="r-brand-tag">DMARC · MTA-STS · Email Security</div>
         </div>
         <div class="r-brand-meta">
@@ -262,7 +262,7 @@ function postureColor(val: string | number | null, type: 'dmarc' | 'dkim' | 'mta
         </div>
       </div>
 
-      <div class="r-footer"><span>{{ data.workspace_name }} · Confidential</span><span>Sentinel · {{ fmtDate(data.generated_at) }}</span></div>
+      <div class="r-footer"><span>{{ data.workspace_name }} · Confidential</span><span>ZoneProof · {{ fmtDate(data.generated_at) }}</span></div>
     </section>
 
     <!-- ══════════════════════════════════════════
@@ -280,7 +280,7 @@ function postureColor(val: string | number | null, type: 'dmarc' | 'dkim' | 'mta
       <!-- AI narrative (3 paragraphs) or rule-based fallback -->
       <div v-if="data.narrative" class="r-narrative-wrap">
         <div class="r-narrative-badge">
-          <span v-if="data.narrative.is_ai" class="r-ai-badge">✦ Sentinel AI · {{ data.narrative.generated_at ? new Date(data.narrative.generated_at).toLocaleDateString() : '' }}</span>
+          <span v-if="data.narrative.is_ai" class="r-ai-badge">✦ ZoneProof AI · {{ data.narrative.generated_at ? new Date(data.narrative.generated_at).toLocaleDateString() : '' }}</span>
           <span v-else class="r-ai-badge rule">Analysis</span>
         </div>
         <p class="r-narrative">{{ data.narrative.summary }}</p>
@@ -322,7 +322,7 @@ function postureColor(val: string | number | null, type: 'dmarc' | 'dkim' | 'mta
 
       <!-- Trend chart -->
       <div v-if="data.score_trend.length >= 2" class="r-trend-wrap">
-        <div class="r-subsec-lbl">Sentinel Score — {{ data.score_trend.length }}-week trajectory</div>
+        <div class="r-subsec-lbl">ZoneProof Score — {{ data.score_trend.length }}-week trajectory</div>
         <svg viewBox="0 0 560 70" class="r-trend-svg" preserveAspectRatio="none">
           <defs>
             <linearGradient id="t-fill" x1="0" y1="0" x2="0" y2="1">
@@ -490,7 +490,7 @@ function postureColor(val: string | number | null, type: 'dmarc' | 'dkim' | 'mta
       <!-- Grade legend -->
       <div class="r-legend">
         <span class="r-legend-lbl">Grade scale:</span>
-        <span v-for="[g, c, l] in [['A','#34e0a1','90–100'],['B','#5b6ef5','75–89'],['C','#f5c542','55–74'],['D','#ff8c42','35–54'],['F','#ff4d6d','0–34']]" :key="g" class="r-legend-item">
+        <span v-for="[g, c, l] in [['A','#34e0a1','90–100'],['B','#5b5cf0','75–89'],['C','#f5c542','55–74'],['D','#ff8c42','35–54'],['F','#ff4d6d','0–34']]" :key="g" class="r-legend-item">
           <span class="r-grade-badge" :style="`color:${c};border-color:${c}40`">{{ g }}</span>{{ l }}
         </span>
         <span class="r-posture-legend">
@@ -748,7 +748,7 @@ function postureColor(val: string | number | null, type: 'dmarc' | 'dkim' | 'mta
       <div class="r-signoff">
         <div class="r-signoff-line"/>
         <div class="r-signoff-text">
-          This report was generated automatically by Sentinel on {{ fmtDate(data.generated_at) }}.
+          This report was generated automatically by ZoneProof on {{ fmtDate(data.generated_at) }}.
           Data reflects DMARC aggregate reports, TLS-RPT reports, live DNS polling, and certificate probes
           collected during the {{ data.period_days }}-day period ending {{ fmtDate(data.generated_at) }}.
         </div>
@@ -830,11 +830,11 @@ function postureColor(val: string | number | null, type: 'dmarc' | 'dkim' | 'mta
 .r-export-btn {
   position: fixed; top: 20px; right: 24px; z-index: 100;
   display: flex; align-items: center; gap: 8px;
-  background: linear-gradient(90deg, #5b6ef5, #8b5cf6);
+  background: linear-gradient(90deg, #5b5cf0, #4b4ce0);
   color: #fff; border: none; border-radius: 12px;
   padding: 10px 18px; font-family: var(--disp); font-weight: 700;
   font-size: 13px; cursor: pointer; transition: opacity .15s;
-  box-shadow: 0 4px 20px rgba(91,110,245,.4);
+  box-shadow: 0 4px 20px rgba(91,92,240,.4);
 }
 .r-export-btn:hover { opacity: .88; }
 .r-export-btn svg { width: 15px; height: 15px; }
@@ -860,24 +860,24 @@ function postureColor(val: string | number | null, type: 'dmarc' | 'dkim' | 'mta
 
 /* ── Cover ────────────────────────────────────────────────────────── */
 .r-cover {
-  background: linear-gradient(160deg, rgba(91,110,245,.08), rgba(46,230,197,.05), rgba(255,255,255,.02));
-  border-color: rgba(91,110,245,.2);
+  background: linear-gradient(160deg, rgba(91,92,240,.08), rgba(46,230,197,.05), rgba(255,255,255,.02));
+  border-color: rgba(91,92,240,.2);
 }
 .r-brand-row { display: flex; align-items: center; gap: 12px; }
 .r-brand-logo {
   width: 38px; height: 38px; border-radius: 11px;
-  background: linear-gradient(135deg, #2ee6c5, #5b6ef5);
+  background: var(--accent);
   display: grid; place-items: center;
   font-weight: 900; font-size: 18px; color: #fff; flex: none;
 }
 .r-brand-name { font-family: var(--disp); font-size: 17px; font-weight: 800; color: var(--txt); }
-.r-brand-name .accent { color: var(--teal); }
+.r-brand-name .accent { color: var(--accent-soft); }
 .r-brand-tag { font-family: var(--mono); font-size: 8.5px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--faint); margin-top: 2px; }
 .r-brand-meta { margin-left: auto; text-align: right; }
 .r-report-label { font-family: var(--mono); font-size: 9px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--teal); font-weight: 700; }
 .r-report-period { font-family: var(--mono); font-size: 10px; color: var(--faint); margin-top: 2px; }
 
-.r-verdict { border-top: 1px solid rgba(91,110,245,.3); border-bottom: 1px solid rgba(255,255,255,.07); padding: 20px 0 18px; }
+.r-verdict { border-top: 1px solid rgba(91,92,240,.3); border-bottom: 1px solid rgba(255,255,255,.07); padding: 20px 0 18px; }
 .r-verdict-ws { font-family: var(--mono); font-size: 10px; letter-spacing: .8px; text-transform: uppercase; color: var(--faint); margin-bottom: 7px; }
 .r-verdict-text { font-family: var(--disp); font-size: 20px; font-weight: 800; color: var(--txt); line-height: 1.3; letter-spacing: -.3px; }
 
@@ -918,7 +918,7 @@ function postureColor(val: string | number | null, type: 'dmarc' | 'dkim' | 'mta
 .r-kpi-sep { width: 1px; height: 36px; background: rgba(255,255,255,.07); flex: none; }
 
 /* ── Section header ───────────────────────────────────────────────── */
-.r-sec-hdr { display: flex; gap: 14px; align-items: flex-start; padding-bottom: 14px; border-bottom: 1px solid rgba(91,110,245,.3); }
+.r-sec-hdr { display: flex; gap: 14px; align-items: flex-start; padding-bottom: 14px; border-bottom: 1px solid rgba(91,92,240,.3); }
 .r-sec-num { font-family: var(--mono); font-size: 10px; font-weight: 700; color: var(--teal); letter-spacing: 1px; padding-top: 4px; }
 .r-sec-title { font-family: var(--disp); font-size: 18px; font-weight: 800; color: var(--txt); }
 .r-sec-sub { font-family: var(--mono); font-size: 10px; color: var(--faint); margin-top: 2px; }
@@ -936,8 +936,8 @@ function postureColor(val: string | number | null, type: 'dmarc' | 'dkim' | 'mta
 .r-ai-badge.rule { color: #5b6285; background: transparent; border-color: rgba(255,255,255,.1); }
 .r-narrative {
   padding: 10px 16px; font-size: 12.5px; line-height: 1.75; color: var(--muted);
-  background: rgba(91,110,245,.07); border-left: 3px solid var(--indigo);
-  border-radius: 0; margin: 0; border-bottom: 1px solid rgba(91,110,245,.08);
+  background: rgba(91,92,240,.07); border-left: 3px solid var(--indigo);
+  border-radius: 0; margin: 0; border-bottom: 1px solid rgba(91,92,240,.08);
 }
 .r-narrative.last { border-radius: 0 0 10px 0; border-bottom: none; }
 .r-narrative-wrap > .r-narrative:first-of-type { border-radius: 0 10px 0 0; }
@@ -1119,9 +1119,9 @@ function postureColor(val: string | number | null, type: 'dmarc' | 'dkim' | 'mta
     background: #f8faff !important;
     border-bottom: 3px solid #4338ca !important;
   }
-  .r-brand-logo { background: linear-gradient(135deg, #0d9488, #4338ca) !important; }
+  .r-brand-logo { background: #5b5cf0 !important; }
   .r-brand-name  { color: #111827 !important; }
-  .r-brand-name .accent { color: #0d9488 !important; }
+  .r-brand-name .accent { color: #4b4ce0 !important; }
   .r-brand-tag   { color: #4b5563 !important; }
   .r-report-label{ color: #4338ca !important; }
   .r-report-period { color: #4b5563 !important; }

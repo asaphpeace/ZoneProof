@@ -307,7 +307,7 @@ const tickLabels = computed(() => {
 }
 .rt-bar-col.out-range { opacity: .2; }
 .rt-bar-col.in-range  { opacity: 1; }
-.rt-bar-col:hover { outline: 1px solid rgba(91,110,245,.5); }
+.rt-bar-col:hover { outline: 1px solid rgba(91,92,240,.5); }
 .rt-bar-inner {
   width: 100%; display: flex; flex-direction: column-reverse;
   align-items: stretch; gap: 0;
@@ -341,8 +341,8 @@ const tickLabels = computed(() => {
   color: var(--muted); border-radius: 7px; padding: 4px 10px; cursor: pointer;
   transition: all .15s;
 }
-.rt-preset:hover { color: var(--txt); border-color: rgba(91,110,245,.5); }
-.rt-preset.active { background: rgba(91,110,245,.15); border-color: rgba(91,110,245,.5); color: #9aa6ff; }
+.rt-preset:hover { color: var(--txt); border-color: rgba(91,92,240,.5); }
+.rt-preset.active { background: rgba(91,92,240,.15); border-color: rgba(91,92,240,.5); color: #9aa6ff; }
 .rt-clear {
   font-family: var(--mono); font-size: 10px; color: var(--muted);
   background: none; border: none; cursor: pointer; padding: 0;
@@ -357,7 +357,7 @@ const tickLabels = computed(() => {
   border-radius: 7px; color: var(--txt); outline: none;
   transition: border-color .15s; cursor: pointer;
 }
-.rt-date-input:focus { border-color: rgba(91,110,245,.5); }
+.rt-date-input:focus { border-color: rgba(91,92,240,.5); }
 .rt-date-input::-webkit-calendar-picker-indicator { filter: invert(.5) sepia(1) hue-rotate(190deg); cursor: pointer; }
 .rt-date-sep { font-family: var(--mono); font-size: 10px; color: var(--faint); }
 

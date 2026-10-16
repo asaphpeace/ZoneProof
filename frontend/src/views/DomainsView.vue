@@ -382,8 +382,8 @@ const MTA_CLASS: Record<string, string> = {
           <template v-else-if="verifyRecord">
             <!-- Explainer -->
             <div class="verify-intro">
-              <p>Sentinel needs to confirm you control <strong>{{ verifyDomain.domain }}</strong>. Add the DNS record below to your domain registrar or DNS provider, then click <em>Check now</em>.</p>
-              <p>Your reporting address is embedded in this record — it's how Sentinel receives DMARC reports for your domain.</p>
+              <p>ZoneProof needs to confirm you control <strong>{{ verifyDomain.domain }}</strong>. Add the DNS record below to your domain registrar or DNS provider, then click <em>Check now</em>.</p>
+              <p>Your reporting address is embedded in this record — it's how ZoneProof receives DMARC reports for your domain.</p>
             </div>
 
             <!-- Step 1: DNS host -->
@@ -426,7 +426,7 @@ const MTA_CLASS: Record<string, string> = {
                 </div>
                 <div class="step-hint">
                   The <code class="inline-code">rua=mailto:</code> tag contains your unique reporting address.
-                  Sentinel uses it to receive aggregate reports and confirm you own this domain.
+                  ZoneProof uses it to receive aggregate reports and confirm you own this domain.
                 </div>
               </div>
             </div>
@@ -541,7 +541,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 26px; margin: 0; let
 
 .btn-add {
   display: flex; align-items: center; gap: 7px;
-  background: linear-gradient(90deg, #5b6ef5, #8b5cf6); color: #fff;
+  background: linear-gradient(90deg, #5b5cf0, #4b4ce0); color: #fff;
   border: none; border-radius: 11px; padding: 9px 16px;
   font-family: var(--disp); font-weight: 700; font-size: 13px; cursor: pointer;
   transition: opacity .15s; white-space: nowrap;
@@ -733,7 +733,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 26px; margin: 0; let
 }
 .step-num {
   width: 24px; height: 24px; flex: none; border-radius: 50%;
-  background: rgba(91,110,245,.18); border: 1px solid rgba(91,110,245,.35);
+  background: rgba(91,92,240,.18); border: 1px solid rgba(91,92,240,.35);
   color: var(--indigo); font-family: var(--mono); font-size: 11px; font-weight: 700;
   display: grid; place-items: center; margin-top: 1px;
 }
@@ -799,7 +799,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 26px; margin: 0; let
 .btn-cancel:hover { color: var(--txt); }
 .btn-confirm {
   flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
-  background: linear-gradient(90deg, #5b6ef5, #8b5cf6); color: #fff;
+  background: linear-gradient(90deg, #5b5cf0, #4b4ce0); color: #fff;
   border: none; border-radius: 11px; padding: 11px;
   font-family: var(--disp); font-weight: 700; font-size: 13px; cursor: pointer; transition: opacity .15s;
 }

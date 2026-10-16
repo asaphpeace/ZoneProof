@@ -217,7 +217,7 @@ async function detectFromDns() {
   text-align: center; position: relative;
 }
 .tile:hover { border-color: var(--indigo); color: var(--txt); }
-.tile.active { background: rgba(91,110,245,.14); border-color: var(--indigo); color: #9aa6ff; font-weight: 600; }
+.tile.active { background: rgba(91,92,240,.14); border-color: var(--indigo); color: #9aa6ff; font-weight: 600; }
 .tile.other { border-style: dashed; }
 .tile-branch { display: block; font-family: var(--mono); font-size: 9px; color: var(--teal); margin-top: 3px; }
 
@@ -226,7 +226,7 @@ async function detectFromDns() {
 .custom-input:focus { border-color: var(--indigo); }
 .custom-hint { font-size: 10.5px; color: var(--faint); }
 
-.mimecast-choice { background: rgba(91,110,245,.06); border: 1px solid rgba(91,110,245,.2); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+.mimecast-choice { background: rgba(91,92,240,.06); border: 1px solid rgba(91,92,240,.2); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
 .mc-title { font-size: 12.5px; font-weight: 600; color: var(--txt); margin-bottom: 10px; }
 .mc-option {
   display: flex; flex-direction: column; gap: 2px; width: 100%; text-align: left;
@@ -247,7 +247,7 @@ async function detectFromDns() {
 .detect-btn { display: flex; align-items: center; gap: 6px; }
 .spinner { width: 11px; height: 11px; border: 1.5px solid rgba(255,255,255,.2); border-top-color: var(--teal); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
 @keyframes spin { to { transform: rotate(360deg); } }
-.btn { background: linear-gradient(90deg,#5b6ef5,#8b5cf6); color: #fff; border: none; border-radius: 12px; padding: 11px 18px; font-family: var(--disp); font-weight: 700; font-size: 13px; cursor: pointer; }
+.btn { background: linear-gradient(90deg,#5b5cf0,#4b4ce0); color: #fff; border: none; border-radius: 12px; padding: 11px 18px; font-family: var(--disp); font-weight: 700; font-size: 13px; cursor: pointer; }
 .btn.ghost { background: rgba(255,255,255,.04); border: 1px solid var(--line2); color: var(--txt); box-shadow: none; }
 .btn:disabled { opacity: .6; cursor: not-allowed; }
 </style>

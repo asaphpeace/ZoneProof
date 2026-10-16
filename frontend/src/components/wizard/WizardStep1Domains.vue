@@ -140,7 +140,7 @@ const existingCount = computed(() => queued.value.filter(d => existingSet.value.
 .sh { font-family: var(--disp); font-weight: 800; font-size: 18px; margin-bottom: 8px; }
 .hint { color: var(--muted); font-size: 13px; line-height: 1.6; margin-bottom: 18px; }
 .tag-input { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 14px; background: rgba(255,255,255,.04); border: 1px solid var(--line2); border-radius: 14px; min-height: 56px; align-items: center; }
-.tag { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11.5px; padding: 4px 10px; background: rgba(91,110,245,.2); border: 1px solid rgba(91,110,245,.4); border-radius: 20px; color: #9aa6ff; }
+.tag { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11.5px; padding: 4px 10px; background: rgba(91,92,240,.2); border: 1px solid rgba(91,92,240,.4); border-radius: 20px; color: #9aa6ff; }
 .tag-existing { background: rgba(255,190,0,.12); border-color: rgba(255,190,0,.35); color: var(--amber); }
 .tag-badge { font-size: 9px; text-transform: uppercase; letter-spacing: .6px; background: rgba(255,190,0,.2); border-radius: 6px; padding: 1px 5px; }
 .tag button { background: none; border: none; color: inherit; cursor: pointer; padding: 0; font-size: 14px; line-height: 1; opacity: .7; }
@@ -163,6 +163,6 @@ const existingCount = computed(() => queued.value.filter(d => existingSet.value.
 .file-note { font-size: 11.5px; color: var(--amber); }
 
 .actions { margin-top: 24px; display: flex; justify-content: flex-end; }
-.btn { background: linear-gradient(90deg,#5b6ef5,#8b5cf6); color:#fff; border:none; border-radius:12px; padding:11px 24px; font-family:var(--disp); font-weight:700; font-size:13px; cursor:pointer; }
+.btn { background: linear-gradient(90deg,#5b5cf0,#4b4ce0); color:#fff; border:none; border-radius:12px; padding:11px 24px; font-family:var(--disp); font-weight:700; font-size:13px; cursor:pointer; }
 .btn:disabled { opacity:.5; cursor:not-allowed; }
 </style>

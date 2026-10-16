@@ -8,7 +8,7 @@ export default defineConfig({
     alias: { '@': resolve(__dirname, 'src') },
   },
   server: {
-    port: 5173,
+    port: 5192,
     proxy: {
       '/api': { target: 'http://localhost:9931', rewrite: p => p.replace(/^\/api/, '') },
     },

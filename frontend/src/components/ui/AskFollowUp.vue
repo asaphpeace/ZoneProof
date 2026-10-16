@@ -83,7 +83,7 @@ function submitDraft() {
 
 .thread {
   display: flex; flex-direction: column; gap: 8px; margin-top: 8px;
-  background: rgba(91,110,245,.05); border: 1px solid rgba(91,110,245,.18);
+  background: rgba(91,92,240,.05); border: 1px solid rgba(91,92,240,.18);
   border-radius: 12px; padding: 12px;
 }
 .msg { display: flex; flex-direction: column; gap: 2px; }
@@ -100,7 +100,7 @@ function submitDraft() {
 }
 .composer input:focus { border-color: var(--indigo); }
 .composer button {
-  background: rgba(91,110,245,.16); border: 1px solid rgba(91,110,245,.35); color: #9aa6ff;
+  background: rgba(91,92,240,.16); border: 1px solid rgba(91,92,240,.35); color: #9aa6ff;
   border-radius: 8px; padding: 6px 12px; font-size: 11px; font-weight: 700; cursor: pointer;
 }
 .composer button:disabled { opacity: .5; cursor: not-allowed; }

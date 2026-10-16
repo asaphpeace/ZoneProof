@@ -17,7 +17,7 @@ onMounted(async () => {
       generatingIdx.value = i
       const r = props.dmarcResults[i]
       const tls = await api.wizardTlsInfo(r.domain)
-      // Default to Sentinel-hosted — removes the "I need an HTTPS server"
+      // Default to ZoneProof-hosted — removes the "I need an HTTPS server"
       // barrier that's the single biggest reason MTA-STS adoption is low;
       // self-hosting stays available for anyone who wants control over it.
       results.value.push({ ...r, tls, hostingMode: 'managed' })
@@ -83,7 +83,7 @@ function setHostingMode(r: any, mode: 'managed' | 'self') {
               class="hosting-opt" :class="{ active: r.hostingMode === 'managed' }"
               @click="setHostingMode(r, 'managed')"
             >
-              <b>Sentinel-hosted</b>
+              <b>ZoneProof-hosted</b>
               <span>Recommended — just publish one CNAME, no server needed</span>
             </button>
             <button
@@ -99,7 +99,7 @@ function setHostingMode(r: any, mode: 'managed' | 'self') {
             <div class="host-hint" style="margin-bottom:8px">Publish a CNAME at <span class="fm">{{ r.tls.mta_sts_cname_host }}</span></div>
             <CodeBlock :code="r.tls.mta_sts_cname_target" lang="dns" />
             <p class="managed-note">
-              Sentinel will serve the policy file from this hostname automatically, always
+              ZoneProof will serve the policy file from this hostname automatically, always
               computed from your domain's current MX records — no file to host or keep updated yourself.
             </p>
           </template>
@@ -133,7 +133,7 @@ function setHostingMode(r: any, mode: 'managed' | 'self') {
 @keyframes spin { to { transform: rotate(360deg); } }
 .prog-label { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
 .prog-bar-track { width: 260px; height: 4px; background: rgba(255,255,255,.08); border-radius: 4px; overflow: hidden; }
-.prog-bar-fill { height: 100%; background: linear-gradient(90deg,#2ee6c5,#5b6ef5); border-radius: 4px; transition: width .35s ease; }
+.prog-bar-fill { height: 100%; background: linear-gradient(90deg,#2ee6c5,#5b5cf0); border-radius: 4px; transition: width .35s ease; }
 .prog-count { font-family: var(--mono); font-size: 10px; color: var(--faint); margin-top: 5px; }
 
 .error-box { display: flex; gap: 12px; padding: 16px; background: rgba(255,80,80,.07); border: 1px solid rgba(255,80,80,.25); border-radius: 14px; font-size: 13px; color: var(--muted); }
@@ -156,10 +156,10 @@ function setHostingMode(r: any, mode: 'managed' | 'self') {
 }
 .hosting-opt b { color: var(--txt); }
 .hosting-opt span { font-size: 10.5px; color: var(--faint); }
-.hosting-opt.active { border-color: var(--indigo); background: rgba(91,110,245,.1); }
+.hosting-opt.active { border-color: var(--indigo); background: rgba(91,92,240,.1); }
 .hosting-opt.active b { color: #9aa6ff; }
 .managed-note { font-size: 11px; color: var(--faint); line-height: 1.5; margin-top: 8px; }
 
 .actions { margin-top: 8px; display: flex; justify-content: flex-end; }
-.btn { background: linear-gradient(90deg,#5b6ef5,#8b5cf6); color:#fff; border:none; border-radius:12px; padding:11px 24px; font-family:var(--disp); font-weight:700; font-size:13px; cursor:pointer; }
+.btn { background: linear-gradient(90deg,#5b5cf0,#4b4ce0); color:#fff; border:none; border-radius:12px; padding:11px 24px; font-family:var(--disp); font-weight:700; font-size:13px; cursor:pointer; }
 </style>

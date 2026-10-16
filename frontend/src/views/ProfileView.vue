@@ -167,7 +167,7 @@ async function exportData() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `sentinel-data-export-${new Date().toISOString().slice(0, 10)}.json`
+    a.download = `zoneproof-data-export-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     URL.revokeObjectURL(url)
   } catch (e: any) {
@@ -220,7 +220,7 @@ const strength = () => pwStrength(newPw.value)
         <!-- Profile card -->
         <div class="card">
           <div class="ct">
-            <h3>Profile</h3>
+            <h3 aria-level="2">Profile</h3>
             <button v-if="!profileEditing" class="ghost-btn" @click="profileEditing = true; startEditProfile()">Edit</button>
             <button v-else class="ghost-btn" @click="profileEditing = false">Cancel</button>
           </div>
@@ -247,7 +247,7 @@ const strength = () => pwStrength(newPw.value)
               <div class="field-row">
                 <span class="fl">Plan</span>
                 <span class="fv">
-                  <span class="plan-chip" @click="router.push({ name: 'billing' })">{{ me.plan }}</span>
+                  <span class="plan-chip" @click="router.push({ name: 'billing' })" tabindex="0" role="link" @keydown.enter.prevent="router.push({ name: 'billing' })" @keydown.space.prevent="router.push({ name: 'billing' })">{{ me.plan }}</span>
                 </span>
               </div>
               <div class="field-row">
@@ -285,13 +285,13 @@ const strength = () => pwStrength(newPw.value)
 
         <!-- Change password -->
         <div class="card">
-          <div class="ct"><h3>Change password</h3></div>
+          <div class="ct"><h3 aria-level="2">Change password</h3></div>
           <form @submit.prevent="changePw">
             <div class="field">
               <label>Current password</label>
               <div class="pw-wrap">
                 <input v-model="currentPw" :type="showCurr ? 'text' : 'password'" placeholder="••••••••" required autocomplete="current-password"/>
-                <button type="button" class="eye-btn" @click="showCurr = !showCurr">
+                <button type="button" class="eye-btn" :aria-label="showCurr ? 'Hide current password' : 'Show current password'" :aria-pressed="showCurr" @click="showCurr = !showCurr">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <template v-if="showCurr">
                       <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
@@ -308,7 +308,7 @@ const strength = () => pwStrength(newPw.value)
               <label>New password</label>
               <div class="pw-wrap">
                 <input v-model="newPw" :type="showNew ? 'text' : 'password'" placeholder="Min 8 characters" required autocomplete="new-password"/>
-                <button type="button" class="eye-btn" @click="showNew = !showNew">
+                <button type="button" class="eye-btn" :aria-label="showNew ? 'Hide new password' : 'Show new password'" :aria-pressed="showNew" @click="showNew = !showNew">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <template v-if="showNew">
                       <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
@@ -336,7 +336,7 @@ const strength = () => pwStrength(newPw.value)
               <label>Confirm new password</label>
               <div class="pw-wrap">
                 <input v-model="confirmPw" :type="showConf ? 'text' : 'password'" placeholder="••••••••" required autocomplete="new-password"/>
-                <button type="button" class="eye-btn" @click="showConf = !showConf">
+                <button type="button" class="eye-btn" :aria-label="showConf ? 'Hide confirmation password' : 'Show confirmation password'" :aria-pressed="showConf" @click="showConf = !showConf">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
                   </svg>
@@ -356,7 +356,7 @@ const strength = () => pwStrength(newPw.value)
       <!-- ── 2FA card ─────────────────────────────────────────────────────── -->
       <div class="card">
         <div class="ct">
-          <h3>Two-factor authentication</h3>
+          <h3 aria-level="2">Two-factor authentication</h3>
           <span :class="['status-chip', me.totp_enabled ? 'chip-good' : 'chip-off']">
             {{ me.totp_enabled ? 'Enabled' : 'Disabled' }}
           </span>
@@ -433,12 +433,12 @@ const strength = () => pwStrength(newPw.value)
       <!-- ── Reporting config (read-only) ────────────────────────────────── -->
       <div class="card">
         <div class="ct">
-          <h3>Reporting configuration</h3>
+          <h3 aria-level="2">Reporting configuration</h3>
           <span class="sectag">read-only</span>
         </div>
         <p class="section-desc">
           Each domain receives a unique reporting address routed through mailsentry.co.za.
-          These settings are managed by Sentinel.
+          These settings are managed by ZoneProof.
         </p>
         <div class="field-group">
           <div class="field-row"><span class="fl">Reporting domain</span><span class="fv fmono">mailsentry.co.za</span></div>
@@ -451,7 +451,7 @@ const strength = () => pwStrength(newPw.value)
 
       <!-- ── Danger zone ──────────────────────────────────────────────────── -->
       <div class="card">
-        <div class="ct"><h3>Your data</h3></div>
+        <div class="ct"><h3 aria-level="2">Your data</h3></div>
         <div class="danger-row">
           <div>
             <div class="danger-label">Export my data</div>
@@ -464,7 +464,7 @@ const strength = () => pwStrength(newPw.value)
       </div>
 
       <div class="card danger-card">
-        <div class="ct"><h3>Danger zone</h3></div>
+        <div class="ct"><h3 aria-level="2">Danger zone</h3></div>
 
         <!-- Sign out -->
         <div class="danger-row">
@@ -503,7 +503,7 @@ const strength = () => pwStrength(newPw.value)
       <div v-if="showDelete" class="modal-backdrop" @click.self="showDelete = false; deleteConfirm = ''">
         <div class="modal">
           <div class="modal-head">
-            <h3>{{ me?.role === 'admin' ? 'Delete workspace' : 'Remove account' }}</h3>
+            <h3 aria-level="2">{{ me?.role === 'admin' ? 'Delete workspace' : 'Remove account' }}</h3>
             <button class="modal-close" @click="showDelete = false; deleteConfirm = ''">✕</button>
           </div>
           <div class="modal-body">
@@ -562,7 +562,7 @@ h1 { font-family:var(--disp); font-weight:900; font-size:22px; margin-bottom:24p
 
 /* Avatar */
 .avatar-row { display:flex; align-items:center; gap:14px; }
-.avatar { width:52px; height:52px; border-radius:16px; background:linear-gradient(135deg,#5b6ef5,#2ee6c5); display:grid; place-items:center; font-family:var(--disp); font-weight:800; font-size:22px; flex:none; color:#fff; }
+.avatar { width:52px; height:52px; border-radius:16px; background:linear-gradient(135deg,#5b5cf0,#2ee6c5); display:grid; place-items:center; font-family:var(--disp); font-weight:800; font-size:22px; flex:none; color:#fff; }
 .av-name  { font-family:var(--disp); font-weight:700; font-size:15px; }
 .av-email { font-size:11.5px; color:var(--muted); margin-top:2px; font-family:var(--mono); }
 .av-role  { font-family:var(--mono); font-size:9px; letter-spacing:.8px; text-transform:uppercase; color:var(--teal); margin-top:4px; }
@@ -578,8 +578,8 @@ h1 { font-family:var(--disp); font-weight:900; font-size:22px; margin-bottom:24p
 .status-chip { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; padding:2px 8px; border-radius:20px; }
 .chip-good { background:rgba(52,224,161,.12); color:#34e0a1; }
 .chip-off  { background:rgba(255,255,255,.07); color:var(--faint); }
-.plan-chip { font-family:var(--mono); font-size:9.5px; font-weight:700; text-transform:uppercase; background:rgba(91,110,245,.15); color:var(--indigo); padding:2px 9px; border-radius:20px; cursor:pointer; }
-.plan-chip:hover { background:rgba(91,110,245,.25); }
+.plan-chip { font-family:var(--mono); font-size:9.5px; font-weight:700; text-transform:uppercase; background:rgba(91,92,240,.15); color:var(--indigo); padding:2px 9px; border-radius:20px; cursor:pointer; }
+.plan-chip:hover { background:rgba(91,92,240,.25); }
 
 /* Form fields */
 .field { margin-bottom:14px; }
@@ -589,7 +589,7 @@ input[type=text], input[type=email], input[type=password] {
   border-radius:11px; padding:10px 13px; color:var(--txt); font-family:var(--body);
   font-size:13px; outline:none; box-sizing:border-box; transition:border-color .15s;
 }
-input:focus { border-color:rgba(91,110,245,.5); }
+input:focus { border-color:rgba(91,92,240,.5); }
 
 /* Password show/hide */
 .pw-wrap { position:relative; }
@@ -608,13 +608,13 @@ input:focus { border-color:rgba(91,110,245,.5); }
 /* Buttons */
 .btn {
   display:inline-flex; align-items:center; justify-content:center; gap:7px;
-  background:linear-gradient(90deg,#5b6ef5,#8b5cf6); color:#fff; border:none;
+  background:linear-gradient(90deg,#5b5cf0,#4b4ce0); color:#fff; border:none;
   border-radius:12px; padding:10px 20px; font-family:var(--disp); font-weight:700;
   font-size:13px; cursor:pointer; transition:opacity .15s;
 }
 .btn:disabled { opacity:.55; cursor:not-allowed; }
 .btn:hover:not(:disabled) { opacity:.88; }
-.btn-danger { background:rgba(255,77,109,1); }
+.btn-danger { background:#d7264b; }
 .btn-danger-ghost { background:none; border:1px solid rgba(255,77,109,.4); color:#ff4d6d; }
 .btn-danger-ghost:hover { background:rgba(255,77,109,.1); }
 .btn-spinner { width:13px; height:13px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; }
@@ -631,7 +631,7 @@ input:focus { border-color:rgba(91,110,245,.5); }
 .totp-secret { font-family:var(--mono); font-size:12px; color:var(--teal); background:rgba(46,230,197,.08); border:1px solid rgba(46,230,197,.2); border-radius:8px; padding:7px 11px; letter-spacing:1.5px; word-break:break-all; margin-bottom:4px; }
 .totp-code-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:6px; }
 .code-input { width:110px; font-family:var(--mono); font-size:20px; letter-spacing:4px; text-align:center; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:11px; padding:10px; color:var(--txt); outline:none; }
-.code-input:focus { border-color:rgba(91,110,245,.5); }
+.code-input:focus { border-color:rgba(91,92,240,.5); }
 .warn-note { font-size:12px; color:var(--warn); background:rgba(245,197,66,.07); border:1px solid rgba(245,197,66,.2); border-radius:8px; padding:9px 12px; margin:0 0 10px; }
 .disable-2fa-row { margin-top:12px; }
 

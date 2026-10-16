@@ -11,7 +11,7 @@ const sections = [
   { id: 'dns-timeline',    label: 'DNS Timeline',         num: '05' },
   { id: 'msp-guide',       label: 'MSP Guide',            num: '06' },
   { id: 'api',             label: 'API Reference',        num: '07' },
-  { id: 'score-ref',       label: 'Sentinel Score',       num: '08' },
+  { id: 'score-ref',       label: 'ZoneProof Score',       num: '08' },
   { id: 'account-security', label: 'Account & Security',  num: '09' },
   { id: 'audit-log',       label: 'Audit Log',            num: '10' },
 ]
@@ -22,7 +22,7 @@ const sections = [
     <div class="titlerow">
       <div class="crumb">12 / Documentation</div>
       <h1>Documentation</h1>
-      <div class="sub">Guides, reference, and implementation walkthroughs for Sentinel</div>
+      <div class="sub">Guides, reference, and implementation walkthroughs for ZoneProof</div>
     </div>
 
     <div class="docs-layout">
@@ -47,7 +47,7 @@ const sections = [
             <div class="sec-num">01</div>
             <div>
               <h2>Getting Started</h2>
-              <p class="sec-sub">Add your first domain, understand what Sentinel monitors, and read your first score.</p>
+              <p class="sec-sub">Add your first domain, understand what ZoneProof monitors, and read your first score.</p>
             </div>
           </div>
 
@@ -57,8 +57,8 @@ const sections = [
           </div>
 
           <div class="doc-block">
-            <h3>What Sentinel protects</h3>
-            <p>Sentinel monitors two independent email security standards that address different attack vectors:</p>
+            <h3>What ZoneProof protects</h3>
+            <p>ZoneProof monitors two independent email security standards that address different attack vectors:</p>
             <div class="two-col">
               <div class="info-card">
                 <div class="ic-head">DMARC</div>
@@ -76,20 +76,20 @@ const sections = [
             <h3>Adding your first domain</h3>
             <p>Click <strong>Add domain</strong> in the sidebar. The wizard runs in three steps:</p>
             <div class="steps">
-              <div class="step"><span class="step-num">1</span><div><strong>Enter your domain names.</strong> You can add multiple domains at once. Sentinel checks whether a DMARC record already exists in DNS.</div></div>
-              <div class="step"><span class="step-num">2</span><div><strong>Publish the DMARC record.</strong> Sentinel generates the exact TXT record to add to your DNS at <code>_dmarc.yourdomain.com</code>. The record includes your unique reporting address so aggregate reports are routed to Sentinel.</div></div>
-              <div class="step"><span class="step-num">3</span><div><strong>Optionally set up MTA-STS.</strong> Sentinel generates the TLS-RPT and MTA-STS DNS records and the policy file. You can skip this step and return later — DMARC setup is the priority.</div></div>
+              <div class="step"><span class="step-num">1</span><div><strong>Enter your domain names.</strong> You can add multiple domains at once. ZoneProof checks whether a DMARC record already exists in DNS.</div></div>
+              <div class="step"><span class="step-num">2</span><div><strong>Publish the DMARC record.</strong> ZoneProof generates the exact TXT record to add to your DNS at <code>_dmarc.yourdomain.com</code>. The record includes your unique reporting address so aggregate reports are routed to ZoneProof.</div></div>
+              <div class="step"><span class="step-num">3</span><div><strong>Optionally set up MTA-STS.</strong> ZoneProof generates the TLS-RPT and MTA-STS DNS records and the policy file. You can skip this step and return later — DMARC setup is the priority.</div></div>
             </div>
           </div>
 
           <div class="doc-block">
             <h3>The reporting address</h3>
-            <p>Each domain gets a unique address in the form <code>abc123@mailsentry.co.za</code>. This address must appear in the DMARC <code>rua=</code> tag and/or the TLS-RPT <code>rua=</code> tag of your published DNS records. When Sentinel finds it in DNS, the domain is marked ownership-verified and aggregate reports will be attributed to your workspace.</p>
+            <p>Each domain gets a unique address in the form <code>abc123@mailsentry.co.za</code>. This address must appear in the DMARC <code>rua=</code> tag and/or the TLS-RPT <code>rua=</code> tag of your published DNS records. When ZoneProof finds it in DNS, the domain is marked ownership-verified and aggregate reports will be attributed to your workspace.</p>
             <div class="callout info">
-              <strong>Why a unique address per domain?</strong> It lets Sentinel identify which workspace owns which domain without requiring you to log into a third-party report processor. It also enables ownership transfer — if you move a domain between workspaces, you update the address in DNS.
+              <strong>Why a unique address per domain?</strong> It lets ZoneProof identify which workspace owns which domain without requiring you to log into a third-party report processor. It also enables ownership transfer — if you move a domain between workspaces, you update the address in DNS.
             </div>
-            <p>If your DMARC record was published before adding the domain to Sentinel, add the reporting address to your existing <code>rua=</code> tag as a second address:</p>
-            <div class="code-block"><pre>v=DMARC1; p=none; rua=mailto:reports@yourdmarc.com,mailto:abc123@mailsentry.co.za;</pre></div>
+            <p>If your DMARC record was published before adding the domain to ZoneProof, add the reporting address to your existing <code>rua=</code> tag as a second address:</p>
+            <div class="code-block" tabindex="0" role="region" aria-label="Code example"><pre>v=DMARC1; p=none; rua=mailto:reports@yourdmarc.com,mailto:abc123@mailsentry.co.za;</pre></div>
           </div>
 
           <div class="doc-block">
@@ -104,7 +104,7 @@ const sections = [
           </div>
 
           <div class="doc-block">
-            <h3>Understanding your first Sentinel Score</h3>
+            <h3>Understanding your first ZoneProof Score</h3>
             <p>The score (0–100) reflects the overall security posture of your domain portfolio across three pillars:</p>
             <div class="pillar-list">
               <div class="pillar"><span class="pl-max">60 pts</span><strong>DMARC enforcement</strong> — where you are on the none → quarantine → reject journey</div>
@@ -112,7 +112,7 @@ const sections = [
               <div class="pillar"><span class="pl-max">15 pts</span><strong>Certificate health</strong> — whether MX host certificates are valid and not expiring</div>
             </div>
             <p>A new domain starting at <code>p=none</code> with no MTA-STS will score near zero. That's expected. The score exists to track progress, not to judge you on day one.</p>
-            <p>See <a href="#" @click.prevent="activeSection = 'score-ref'">Sentinel Score Reference</a> for the exact point breakdown.</p>
+            <p>See <a href="#" @click.prevent="activeSection = 'score-ref'">ZoneProof Score Reference</a> for the exact point breakdown.</p>
           </div>
         </template>
 
@@ -145,7 +145,7 @@ const sections = [
               </div>
               <div class="stage-card stage-bimi">
                 <div class="sc-head"><span class="sc-badge badge-b">p=reject + BIMI</span> Brand indicator</div>
-                <p>Once at reject, you can publish a BIMI (Brand Indicators for Message Identification) record. This displays your logo in the sender column of supporting email clients (Gmail, Yahoo). Not yet tracked by Sentinel but enabled by a clean reject posture.</p>
+                <p>Once at reject, you can publish a BIMI (Brand Indicators for Message Identification) record. This displays your logo in the sender column of supporting email clients (Gmail, Yahoo). Not yet tracked by ZoneProof but enabled by a clean reject posture.</p>
               </div>
             </div>
           </div>
@@ -186,7 +186,7 @@ const sections = [
                 </tbody>
               </table>
             </div>
-            <p>After publishing the DNS record, allow 24–48 hours for propagation before checking alignment in the Sentinel DMARC Analytics view.</p>
+            <p>After publishing the DNS record, allow 24–48 hours for propagation before checking alignment in the ZoneProof DMARC Analytics view.</p>
           </div>
 
           <div class="doc-block">
@@ -214,9 +214,9 @@ const sections = [
           <div class="doc-block">
             <h3>Subdomain policy</h3>
             <p>The <code>p=</code> tag applies to the organisational domain. Subdomains inherit the parent policy unless you set a separate <code>sp=</code> (subdomain policy) tag.</p>
-            <div class="code-block"><pre>v=DMARC1; p=reject; sp=quarantine; rua=mailto:abc123@mailsentry.co.za;</pre></div>
+            <div class="code-block" tabindex="0" role="region" aria-label="Code example"><pre>v=DMARC1; p=reject; sp=quarantine; rua=mailto:abc123@mailsentry.co.za;</pre></div>
             <p>Common scenario: you want strict enforcement on your main domain but a softer policy on subdomains you use for internal tooling that isn't yet aligned. Set <code>sp=quarantine</code> while you fix the subdomain senders, then remove the <code>sp=</code> tag once they're aligned.</p>
-            <p>Sentinel currently tracks the organisational domain policy. Subdomain-specific overrides are visible in the raw DMARC record but are not separately scored.</p>
+            <p>ZoneProof currently tracks the organisational domain policy. Subdomain-specific overrides are visible in the raw DMARC record but are not separately scored.</p>
           </div>
         </template>
 
@@ -274,7 +274,7 @@ max_age: 86400</pre></div>
                 </div>
               </div>
             </div>
-            <p>Sentinel generates all three records for you in the Add Domain wizard and in the Roadmap view.</p>
+            <p>ZoneProof generates all three records for you in the Add Domain wizard and in the Roadmap view.</p>
           </div>
 
           <div class="doc-block">
@@ -402,7 +402,7 @@ max_age: 86400</pre></div>
           <div class="doc-block">
             <h3>Deprecated TLS versions</h3>
             <p>TLS 1.0 and TLS 1.1 are deprecated (RFC 8996). Using them is a security risk — they have known vulnerabilities and cannot be considered secure for mail delivery.</p>
-            <p>Sentinel surfaces the negotiated TLS version for each MX host. If you see <code>TLSv1.0</code> or <code>TLSv1.1</code>:</p>
+            <p>ZoneProof surfaces the negotiated TLS version for each MX host. If you see <code>TLSv1.0</code> or <code>TLSv1.1</code>:</p>
             <ul class="bullet-list">
               <li>This is a server configuration issue, not a certificate issue</li>
               <li>Contact your mail host or hosting provider to disable TLS 1.0 and 1.1 and enable TLS 1.2 and 1.3</li>
@@ -413,7 +413,7 @@ max_age: 86400</pre></div>
           <div class="doc-block">
             <h3>STARTTLS</h3>
             <p>STARTTLS is the mechanism by which an SMTP connection upgrades from plaintext to TLS. Your MX host must advertise STARTTLS in its EHLO response for senders to use TLS at all.</p>
-            <p>Sentinel's certificate probe checks whether STARTTLS is supported. If <code>starttls_supported: false</code>:</p>
+            <p>ZoneProof's certificate probe checks whether STARTTLS is supported. If <code>starttls_supported: false</code>:</p>
             <ul class="bullet-list">
               <li>TLS is not available for inbound delivery to this MX host</li>
               <li>MTA-STS enforce mode cannot work — senders will queue and retry indefinitely</li>
@@ -425,11 +425,11 @@ max_age: 86400</pre></div>
             <h3>Renewal cadence</h3>
             <div class="timeline-list">
               <div class="tl-row"><span class="tl-time">90 days before expiry</span><span>If using Let's Encrypt with auto-renewal (certbot, ACME), renewal attempts should begin around this time</span></div>
-              <div class="tl-row"><span class="tl-time">30 days before expiry</span><span>Sentinel shows <code>expiring_soon</code>. Verify that auto-renewal has succeeded or initiate manual renewal</span></div>
-              <div class="tl-row"><span class="tl-time">7 days before expiry</span><span>Sentinel shows <code>critical</code>. If auto-renewal hasn't fired, renew manually immediately</span></div>
-              <div class="tl-row"><span class="tl-time">0 days (expiry)</span><span>Sentinel shows <code>expired</code>. MTA-STS enforce delivery fails for this host. Replace certificate immediately</span></div>
+              <div class="tl-row"><span class="tl-time">30 days before expiry</span><span>ZoneProof shows <code>expiring_soon</code>. Verify that auto-renewal has succeeded or initiate manual renewal</span></div>
+              <div class="tl-row"><span class="tl-time">7 days before expiry</span><span>ZoneProof shows <code>critical</code>. If auto-renewal hasn't fired, renew manually immediately</span></div>
+              <div class="tl-row"><span class="tl-time">0 days (expiry)</span><span>ZoneProof shows <code>expired</code>. MTA-STS enforce delivery fails for this host. Replace certificate immediately</span></div>
             </div>
-            <p>Set up an out-of-band certificate expiry alert (most CAs and certificate monitoring services provide this) so you have a second warning path independent of Sentinel.</p>
+            <p>Set up an out-of-band certificate expiry alert (most CAs and certificate monitoring services provide this) so you have a second warning path independent of ZoneProof.</p>
           </div>
         </template>
 
@@ -447,7 +447,7 @@ max_age: 86400</pre></div>
 
           <div class="doc-block">
             <h3>What the DNS Timeline audits</h3>
-            <p>Sentinel periodically polls the DNS records that affect your email security posture and logs any changes. The timeline captures:</p>
+            <p>ZoneProof periodically polls the DNS records that affect your email security posture and logs any changes. The timeline captures:</p>
             <div class="field-list">
               <div class="fl-row"><span class="fl-k">DMARC</span><span>The <code>_dmarc.</code> TXT record — policy changes, rua/ruf tag changes, record removal</span></div>
               <div class="fl-row"><span class="fl-k">SPF</span><span>The root TXT record with <code>v=spf1</code> — additions, removals, modifier changes like <code>+all</code></span></div>
@@ -502,7 +502,7 @@ max_age: 86400</pre></div>
             <h3>Investigating a critical change</h3>
             <p>When a critical change appears in the timeline:</p>
             <div class="steps">
-              <div class="step"><span class="step-num">1</span><div><strong>Establish the window.</strong> The timeline shows when Sentinel detected the change, not necessarily when it was made. DNS TTLs mean the change could have been made hours earlier. Note the detected_at timestamp and work backwards.</div></div>
+              <div class="step"><span class="step-num">1</span><div><strong>Establish the window.</strong> The timeline shows when ZoneProof detected the change, not necessarily when it was made. DNS TTLs mean the change could have been made hours earlier. Note the detected_at timestamp and work backwards.</div></div>
               <div class="step"><span class="step-num">2</span><div><strong>Check your DNS provider's change log.</strong> Most DNS providers (Cloudflare, Route53, GoDaddy) have an audit log of record changes. Find which user account made the change and when.</div></div>
               <div class="step"><span class="step-num">3</span><div><strong>Cross-reference with your change management records.</strong> Was this change planned? Was it part of a migration or configuration update? If yes, close the investigation. If no, treat it as a potential security incident.</div></div>
               <div class="step"><span class="step-num">4</span><div><strong>Restore if unauthorised.</strong> If the change was not authorised, restore the previous record value immediately. Then investigate how the change was made (compromised credentials, misconfigured automation, social engineering of your DNS provider).</div></div>
@@ -554,7 +554,7 @@ max_age: 86400</pre></div>
 
           <div class="doc-block">
             <h3>Multi-tenant architecture</h3>
-            <p>In Sentinel, a <strong>tenant</strong> is a workspace — a billing entity with its own set of domains, users, and data. MSP accounts can create and manage <strong>client tenants</strong> as sub-accounts.</p>
+            <p>In ZoneProof, a <strong>tenant</strong> is a workspace — a billing entity with its own set of domains, users, and data. MSP accounts can create and manage <strong>client tenants</strong> as sub-accounts.</p>
             <p>Data is always strictly separated between tenants. A client tenant's domain data, DMARC reports, TLS data, and certificates are never visible to other tenants — not even to the MSP account unless it explicitly switches into the client's context.</p>
             <p>The MSP account itself is a tenant. Its own domains (if any) are tracked separately from its clients.</p>
           </div>
@@ -564,7 +564,7 @@ max_age: 86400</pre></div>
             <p>From the <strong>MSP Clients</strong> view you can:</p>
             <ul class="bullet-list">
               <li>Create a new client tenant (give it a name and optional billing email)</li>
-              <li>View all clients in a portfolio table with Sentinel Score, domain count, and cert alert count</li>
+              <li>View all clients in a portfolio table with ZoneProof Score, domain count, and cert alert count</li>
               <li>Click into a client to see its full domain detail</li>
               <li>Update a client's name, billing email, or brand settings</li>
               <li>Invite a user directly into a client tenant without that user needing to self-register</li>
@@ -579,7 +579,7 @@ max_age: 86400</pre></div>
             <h3>The white-label PDF report</h3>
             <p>The PDF report is the primary deliverable for MSP client communication. It contains:</p>
             <ul class="bullet-list">
-              <li>Sentinel Score with grade and week-over-week delta</li>
+              <li>ZoneProof Score with grade and week-over-week delta</li>
               <li>Executive narrative (AI-generated, 3 sentences, board-readable)</li>
               <li>Threat surface summary — impersonation attempts blocked vs exposed</li>
               <li>Per-domain grade table with DMARC stage, MTA-STS stage, compliance rate, and primary issue</li>
@@ -595,13 +595,13 @@ max_age: 86400</pre></div>
             <h3>Portfolio view</h3>
             <p>The MSP Clients list is a portfolio view — a single screen showing the security posture of all client tenants. Each row shows:</p>
             <div class="field-list">
-              <div class="fl-row"><span class="fl-k">Sentinel Score</span><span>0–100 composite score for that client's domains</span></div>
+              <div class="fl-row"><span class="fl-k">ZoneProof Score</span><span>0–100 composite score for that client's domains</span></div>
               <div class="fl-row"><span class="fl-k">Grade</span><span>A–F letter grade</span></div>
               <div class="fl-row"><span class="fl-k">Domain count</span><span>Number of active domains in that workspace</span></div>
               <div class="fl-row"><span class="fl-k">DMARC reject count</span><span>How many domains have reached full enforcement</span></div>
               <div class="fl-row"><span class="fl-k">Cert alerts</span><span>Number of domains with certificate issues requiring attention</span></div>
             </div>
-            <p>Sort by Sentinel Score ascending to prioritise which clients need the most attention this month.</p>
+            <p>Sort by ZoneProof Score ascending to prioritise which clients need the most attention this month.</p>
           </div>
 
           <div class="doc-block">
@@ -633,7 +633,7 @@ max_age: 86400</pre></div>
             <div class="sec-num">07</div>
             <div>
               <h2>API Reference</h2>
-              <p class="sec-sub">REST API for the Sentinel backend. Base URL: <code>http://localhost:8000</code> (production URL is environment-specific).</p>
+              <p class="sec-sub">REST API for the ZoneProof backend. Base URL: <code>http://localhost:8000</code> (production URL is environment-specific).</p>
             </div>
           </div>
 
@@ -644,11 +644,11 @@ max_age: 86400</pre></div>
             <div class="endpoint-card">
               <div class="ep-line"><span class="method post">POST</span><code class="ep-path">/auth/token</code><span class="ep-desc">Obtain an access token</span></div>
               <p class="ep-note">Form-encoded body.</p>
-              <div class="code-block"><pre>Content-Type: application/x-www-form-urlencoded
+              <div class="code-block" tabindex="0" role="region" aria-label="Code example"><pre>Content-Type: application/x-www-form-urlencoded
 
 username=admin@example.com&password=secret</pre></div>
               <div class="response-label">Response — 200 OK</div>
-              <div class="code-block"><pre>{
+              <div class="code-block" tabindex="0" role="region" aria-label="Code example"><pre>{
   "access_token": "eyJ...",
   "token_type":   "bearer",
   "user_id":      "uuid",
@@ -663,12 +663,12 @@ username=admin@example.com&password=secret</pre></div>
 
             <div class="endpoint-card">
               <div class="ep-line"><span class="method post">POST</span><code class="ep-path">/auth/2fa/challenge</code><span class="ep-desc">Complete login when 2FA is enabled</span></div>
-              <div class="code-block"><pre>{ "pre_auth_token": "eyJ...", "code": "123456" }</pre></div>
+              <div class="code-block" tabindex="0" role="region" aria-label="Code example"><pre>{ "pre_auth_token": "eyJ...", "code": "123456" }</pre></div>
             </div>
 
             <div class="endpoint-card">
               <div class="ep-line"><span class="method post">POST</span><code class="ep-path">/auth/register</code><span class="ep-desc">Create a new workspace</span></div>
-              <div class="code-block"><pre>{ "email": "admin@example.com", "password": "secret", "full_name": "Jane Smith", "workspace_name": "Acme Corp" }</pre></div>
+              <div class="code-block" tabindex="0" role="region" aria-label="Code example"><pre>{ "email": "admin@example.com", "password": "secret", "full_name": "Jane Smith", "workspace_name": "Acme Corp" }</pre></div>
             </div>
 
             <div class="usage-note"><strong>Using the token</strong><br>Add to every subsequent request:<div class="code-block mt8"><pre>Authorization: Bearer eyJ...</pre></div></div>
@@ -680,16 +680,16 @@ username=admin@example.com&password=secret</pre></div>
             <div class="endpoint-card"><div class="ep-line"><span class="method patch">PATCH</span><code class="ep-path">/auth/me</code><span class="ep-desc">Update display name or workspace name (admin only for workspace)</span></div></div>
             <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/auth/me/export</code><span class="ep-desc">Download a JSON export of account, workspace, team, and domain summary data</span></div></div>
             <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/auth/team</code><span class="ep-desc">List all users in the workspace</span></div></div>
-            <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/auth/invite</code><span class="ep-desc">Send a team invite — returns the invite URL (admin only)</span></div><div class="code-block"><pre>{ "email": "colleague@example.com", "role": "viewer" }</pre></div></div>
+            <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/auth/invite</code><span class="ep-desc">Send a team invite — returns the invite URL (admin only)</span></div><div class="code-block" tabindex="0" role="region" aria-label="Code example"><pre>{ "email": "colleague@example.com", "role": "viewer" }</pre></div></div>
             <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/auth/invite/{'{'}token{'}'}</code><span class="ep-desc">Preview invite details before accepting (workspace name, role, expiry)</span></div></div>
-            <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/auth/accept-invite</code><span class="ep-desc">Accept an invite and set a password — requires terms_accepted: true</span></div><div class="code-block"><pre>{ "token": "...", "full_name": "Jane Smith", "password": "...", "terms_accepted": true }</pre></div></div>
+            <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/auth/accept-invite</code><span class="ep-desc">Accept an invite and set a password — requires terms_accepted: true</span></div><div class="code-block" tabindex="0" role="region" aria-label="Code example"><pre>{ "token": "...", "full_name": "Jane Smith", "password": "...", "terms_accepted": true }</pre></div></div>
           </div>
 
           <div class="doc-block">
             <h3>Account recovery &amp; verification</h3>
-            <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/auth/forgot-password</code><span class="ep-desc">Request a reset link — always returns the same generic message, no email enumeration</span></div><div class="code-block"><pre>{ "email": "you@example.com" }</pre></div></div>
-            <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/auth/reset-password</code><span class="ep-desc">Complete a password reset — single-use token, 30 min expiry</span></div><div class="code-block"><pre>{ "token": "...", "new_password": "..." }</pre></div></div>
-            <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/auth/verify-email</code><span class="ep-desc">Confirm an email address — single-use token, 24h expiry</span></div><div class="code-block"><pre>{ "token": "..." }</pre></div></div>
+            <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/auth/forgot-password</code><span class="ep-desc">Request a reset link — always returns the same generic message, no email enumeration</span></div><div class="code-block" tabindex="0" role="region" aria-label="Code example"><pre>{ "email": "you@example.com" }</pre></div></div>
+            <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/auth/reset-password</code><span class="ep-desc">Complete a password reset — single-use token, 30 min expiry</span></div><div class="code-block" tabindex="0" role="region" aria-label="Code example"><pre>{ "token": "...", "new_password": "..." }</pre></div></div>
+            <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/auth/verify-email</code><span class="ep-desc">Confirm an email address — single-use token, 24h expiry</span></div><div class="code-block" tabindex="0" role="region" aria-label="Code example"><pre>{ "token": "..." }</pre></div></div>
             <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/auth/resend-verification</code><span class="ep-desc">Re-issue a verification email (authenticated) — invalidates any prior unused token</span></div></div>
             <div class="ep-note">Both <code>/auth/token</code> and <code>/auth/forgot-password</code> are rate-limited (10/min and 5/min respectively) — repeated calls in quick succession return <code>429</code>.</div>
           </div>
@@ -702,18 +702,18 @@ username=admin@example.com&password=secret</pre></div>
             <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/domains/{'{'}domain_id{'}'}/sync-dns</code><span class="ep-desc">Re-probe live DNS and update published flags</span></div></div>
             <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/domains/{'{'}domain_id{'}'}/verify-ownership</code><span class="ep-desc">Check DNS for the reporting address slug</span></div></div>
             <h4 class="sub-head">Wizard</h4>
-            <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/domains/wizard/start</code><span class="ep-desc">Step 1 — check DNS, generate DMARC records</span></div><div class="code-block"><pre>{ "names": ["example.com"] }</pre></div></div>
+            <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/domains/wizard/start</code><span class="ep-desc">Step 1 — check DNS, generate DMARC records</span></div><div class="code-block" tabindex="0" role="region" aria-label="Code example"><pre>{ "names": ["example.com"] }</pre></div></div>
             <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/domains/wizard/tls-info</code><span class="ep-desc">Step 2 — generate TLS-RPT and MTA-STS records</span></div></div>
-            <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/domains/wizard/confirm</code><span class="ep-desc">Step 3 — activate domains</span></div><div class="code-block"><pre>{ "names": ["example.com"] }</pre></div></div>
+            <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/domains/wizard/confirm</code><span class="ep-desc">Step 3 — activate domains</span></div><div class="code-block" tabindex="0" role="region" aria-label="Code example"><pre>{ "names": ["example.com"] }</pre></div></div>
             <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/domains/{'{'}domain_id{'}'}/recommendations</code><span class="ep-desc">Rule-based advance/hold/regression outcomes for this domain, including HOLD blocking reasons (the alert bell omits HOLD; this endpoint doesn't)</span></div></div>
           </div>
 
           <div class="doc-block">
-            <h3>Overview &amp; Sentinel Score</h3>
-            <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/overview</code><span class="ep-desc">Full portfolio summary including Sentinel Score, per-domain KPIs, cert alerts</span></div></div>
-            <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/overview/threat-surface</code><span class="ep-desc">Portfolio-wide impersonation attempt summary</span></div><div class="code-block"><pre>GET /overview/threat-surface?days=30</pre></div></div>
-            <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/overview/report-data</code><span class="ep-desc">All data required for the PDF report, as JSON</span></div><div class="code-block"><pre>GET /overview/report-data?period_days=30</pre></div></div>
-            <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/overview/report-pdf</code><span class="ep-desc">The same report data, rendered to an actual PDF (headless Chromium) — what scheduled report emails attach</span></div><div class="code-block"><pre>GET /overview/report-pdf?period_days=30</pre></div></div>
+            <h3>Overview &amp; ZoneProof Score</h3>
+            <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/overview</code><span class="ep-desc">Full portfolio summary including ZoneProof Score, per-domain KPIs, cert alerts</span></div></div>
+            <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/overview/threat-surface</code><span class="ep-desc">Portfolio-wide impersonation attempt summary</span></div><div class="code-block" tabindex="0" role="region" aria-label="Code example"><pre>GET /overview/threat-surface?days=30</pre></div></div>
+            <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/overview/report-data</code><span class="ep-desc">All data required for the PDF report, as JSON</span></div><div class="code-block" tabindex="0" role="region" aria-label="Code example"><pre>GET /overview/report-data?period_days=30</pre></div></div>
+            <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/overview/report-pdf</code><span class="ep-desc">The same report data, rendered to an actual PDF (headless Chromium) — what scheduled report emails attach</span></div><div class="code-block" tabindex="0" role="region" aria-label="Code example"><pre>GET /overview/report-pdf?period_days=30</pre></div></div>
             <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/overview/certs</code><span class="ep-desc">All SSL/TLS certificates across all domains, sorted by urgency</span></div></div>
             <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/overview/tls-summary</code><span class="ep-desc">Per-domain TLS session pass rates</span></div></div>
             <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/overview/narrative/regenerate</code><span class="ep-desc">Force-regenerate the AI narrative for the current week</span></div></div>
@@ -742,8 +742,8 @@ username=admin@example.com&password=secret</pre></div>
 
           <div class="doc-block">
             <h3>DNS Timeline</h3>
-            <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/domains/{'{'}domain_id{'}'}/dns-timeline</code><span class="ep-desc">DNS change history for one domain</span></div><div class="code-block"><pre>GET /domains/{id}/dns-timeline?limit=50&offset=0</pre></div></div>
-            <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/tenant/dns-timeline</code><span class="ep-desc">DNS change history across all tenant domains</span></div><div class="code-block"><pre>GET /tenant/dns-timeline?limit=100&record_type=DMARC</pre></div></div>
+            <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/domains/{'{'}domain_id{'}'}/dns-timeline</code><span class="ep-desc">DNS change history for one domain</span></div><div class="code-block" tabindex="0" role="region" aria-label="Code example"><pre>GET /domains/{id}/dns-timeline?limit=50&offset=0</pre></div></div>
+            <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/tenant/dns-timeline</code><span class="ep-desc">DNS change history across all tenant domains</span></div><div class="code-block" tabindex="0" role="region" aria-label="Code example"><pre>GET /tenant/dns-timeline?limit=100&record_type=DMARC</pre></div></div>
             <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/domains/{'{'}domain_id{'}'}/dns-timeline/count</code><span class="ep-desc">Total change count for a domain</span></div></div>
             <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/tenant/dns-timeline/count</code><span class="ep-desc">Total change count across all tenant domains</span></div></div>
           </div>
@@ -752,11 +752,11 @@ username=admin@example.com&password=secret</pre></div>
             <h3>AI Advisor</h3>
             <div class="endpoint-card">
               <div class="ep-line"><span class="method get">GET</span><code class="ep-path">/advisor</code><span class="ep-desc">Contextual advisory message for a given screen</span></div>
-              <div class="code-block"><pre>GET /advisor?screen=overview
+              <div class="code-block" tabindex="0" role="region" aria-label="Code example"><pre>GET /advisor?screen=overview
 GET /advisor?screen=dmarc&domain_id=uuid&cached_only=true</pre></div>
               <div class="ep-note"><strong>screen</strong> values: <code>overview</code> · <code>dmarc</code> · <code>tls</code> · <code>posture</code> · <code>posture_dmarc</code> · <code>posture_tls</code> · <code>roadmap</code> · <code>certs</code> · <code>dns_timeline</code></div>
             </div>
-            <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/advisor/chat</code><span class="ep-desc">Conversational chat grounded in live workspace data</span></div><div class="code-block"><pre>{ "message": "Why is Mailchimp failing alignment?", "screen": "dmarc", "domain_id": "uuid", "history": [] }</pre></div></div>
+            <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/advisor/chat</code><span class="ep-desc">Conversational chat grounded in live workspace data</span></div><div class="code-block" tabindex="0" role="region" aria-label="Code example"><pre>{ "message": "Why is Mailchimp failing alignment?", "screen": "dmarc", "domain_id": "uuid", "history": [] }</pre></div></div>
             <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/advisor/cert-summary</code><span class="ep-desc">AI certificate posture summary — portfolio or per-domain</span></div></div>
             <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/advisor/dns-summary</code><span class="ep-desc">AI DNS timeline change summary</span></div></div>
           </div>
@@ -767,7 +767,7 @@ GET /advisor?screen=dmarc&domain_id=uuid&cached_only=true</pre></div>
             <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/billing/checkout</code><span class="ep-desc">Create a Stripe Checkout session for a paid plan upgrade</span></div></div>
             <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/billing/portal</code><span class="ep-desc">Create a Stripe Customer Portal session (manage card, invoices, cancel)</span></div></div>
             <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/billing/plan</code><span class="ep-desc">Change plan directly — downgrades and free tier only; paid upgrades go through /billing/checkout</span></div></div>
-            <div class="endpoint-card"><div class="ep-line"><span class="method patch">PATCH</span><code class="ep-path">/billing/report-schedule</code><span class="ep-desc">Set automated PDF report delivery — off | weekly | monthly. Requires the scheduled_reports plan feature</span></div><div class="code-block"><pre>{ "schedule": "weekly" }</pre></div></div>
+            <div class="endpoint-card"><div class="ep-line"><span class="method patch">PATCH</span><code class="ep-path">/billing/report-schedule</code><span class="ep-desc">Set automated PDF report delivery — off | weekly | monthly. Requires the scheduled_reports plan feature</span></div><div class="code-block" tabindex="0" role="region" aria-label="Code example"><pre>{ "schedule": "weekly" }</pre></div></div>
             <div class="ep-note">A client tenant created via <code>/msp/clients</code> can call these same endpoints on its own behalf — billing is independent of the parent MSP's plan unless you choose to manage it for them.</div>
           </div>
 
@@ -775,7 +775,7 @@ GET /advisor?screen=dmarc&domain_id=uuid&cached_only=true</pre></div>
             <h3>MSP</h3>
             <p>Available on MSP and Enterprise plans only. Returns <code>403</code> on other plans.</p>
             <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/msp/clients</code><span class="ep-desc">List all client tenants with summary scores</span></div></div>
-            <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/msp/clients</code><span class="ep-desc">Create a new client tenant</span></div><div class="code-block"><pre>{ "name": "Client Co", "billing_email": "billing@client.com", "brand_name": "Client Co IT" }</pre></div></div>
+            <div class="endpoint-card"><div class="ep-line"><span class="method post">POST</span><code class="ep-path">/msp/clients</code><span class="ep-desc">Create a new client tenant</span></div><div class="code-block" tabindex="0" role="region" aria-label="Code example"><pre>{ "name": "Client Co", "billing_email": "billing@client.com", "brand_name": "Client Co IT" }</pre></div></div>
             <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/msp/clients/{'{'}id{'}'}</code><span class="ep-desc">Full detail for one client including domains</span></div></div>
             <div class="endpoint-card"><div class="ep-line"><span class="method patch">PATCH</span><code class="ep-path">/msp/clients/{'{'}id{'}'}</code><span class="ep-desc">Update client name, billing email, or brand settings</span></div></div>
             <div class="endpoint-card"><div class="ep-line"><span class="method delete">DELETE</span><code class="ep-path">/msp/clients/{'{'}id{'}'}</code><span class="ep-desc">Remove client tenant and all its data — irreversible. If the client has its own active Stripe subscription, it's cancelled first</span></div></div>
@@ -785,7 +785,7 @@ GET /advisor?screen=dmarc&domain_id=uuid&cached_only=true</pre></div>
           <div class="doc-block">
             <h3>Audit Log</h3>
             <p>Available on the Enterprise plan only. Returns <code>403</code> on other plans, and to non-admin users.</p>
-            <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/audit-log</code><span class="ep-desc">Paginated audit entries, newest first</span></div><div class="code-block"><pre>GET /audit-log?limit=50&offset=0&action=auth.password_changed</pre></div></div>
+            <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/audit-log</code><span class="ep-desc">Paginated audit entries, newest first</span></div><div class="code-block" tabindex="0" role="region" aria-label="Code example"><pre>GET /audit-log?limit=50&offset=0&action=auth.password_changed</pre></div></div>
             <div class="endpoint-card"><div class="ep-line"><span class="method get">GET</span><code class="ep-path">/audit-log/count</code><span class="ep-desc">Total entry count for this tenant</span></div></div>
           </div>
 
@@ -898,13 +898,14 @@ GET /advisor?screen=dmarc&domain_id=uuid&cached_only=true</pre></div>
                 <tr><td><code>409</code></td><td>Conflict</td><td>Domain already registered, duplicate invite</td></tr>
                 <tr><td><code>410</code></td><td>Gone</td><td>Invite already used or expired</td></tr>
                 <tr><td><code>422</code></td><td>Unprocessable Entity</td><td>Request body failed schema validation</td></tr>
+                <tr><td><code>429</code></td><td>Too Many Requests</td><td>Rate limit reached on a limited endpoint such as sign-in; the limit is per client address, wait and retry</td></tr>
               </tbody>
             </table></div>
           </div>
 
           <div class="doc-block">
-            <h3>Example: Pull the Sentinel Score</h3>
-            <div class="code-block"><pre>import httpx
+            <h3>Example: Pull the ZoneProof Score</h3>
+            <div class="code-block" tabindex="0" role="region" aria-label="Code example"><pre>import httpx
 
 BASE = "http://localhost:8000"
 
@@ -922,20 +923,20 @@ print(f"Score: {s['score']}/100  Grade: {s['grade']}  Delta: {s['delta']:+d}")</
         </template>
 
         <!-- ═══════════════════════════════════════════════════════════════════
-             08 · Sentinel Score Reference
+             08 · ZoneProof Score Reference
              ════════════════════════════════════════════════════════════════ -->
         <template v-else-if="activeSection === 'score-ref'">
           <div class="section-header">
             <div class="sec-num">08</div>
             <div>
-              <h2>Sentinel Score Reference</h2>
+              <h2>ZoneProof Score Reference</h2>
               <p class="sec-sub">Exact calculation, grade bands, pillar weights, and what moves the score.</p>
             </div>
           </div>
 
           <div class="doc-block">
             <h3>How the score is calculated</h3>
-            <p>The Sentinel Score is a portfolio-level number (0–100) computed from three pillars. When domains have mail volume data, the score is <strong>volume-weighted</strong> — higher-traffic domains count more because a security gap on a high-volume domain is more consequential than the same gap on a low-traffic domain.</p>
+            <p>The ZoneProof Score is a portfolio-level number (0–100) computed from three pillars. When domains have mail volume data, the score is <strong>volume-weighted</strong> — higher-traffic domains count more because a security gap on a high-volume domain is more consequential than the same gap on a low-traffic domain.</p>
             <div class="pillar-breakdown">
               <div class="pb-pillar">
                 <div class="pb-head"><span class="pb-max">60 pts</span> DMARC Pillar</div>
@@ -970,14 +971,14 @@ print(f"Score: {s['score']}/100  Grade: {s['grade']}  Delta: {s['delta']:+d}")</
 
           <div class="doc-block">
             <h3>Per-domain grade vs portfolio score</h3>
-            <p>There are two related but distinct scoring systems in Sentinel:</p>
+            <p>There are two related but distinct scoring systems in ZoneProof:</p>
             <div class="two-col">
               <div class="info-card">
                 <div class="ic-head">Per-domain grade (A–F)</div>
                 <p>Shown on the domain table and domain detail. Scored out of 100 using slightly different pillar weights (DMARC max 65, TLS max 25, Certs max 10). Gives a grade for each individual domain regardless of its mail volume.</p>
               </div>
               <div class="info-card">
-                <div class="ic-head">Portfolio Sentinel Score</div>
+                <div class="ic-head">Portfolio ZoneProof Score</div>
                 <p>The headline number shown on the Overview. Scored out of 100 using pillar weights (DMARC 60, TLS 25, Certs 15), averaged across all domains, weighted by their mail volume. This is the number in the weekly report.</p>
               </div>
             </div>
@@ -987,7 +988,7 @@ print(f"Score: {s['score']}/100  Grade: {s['grade']}  Delta: {s['delta']:+d}")</
             <h3>Grade bands</h3>
             <div class="grade-bands">
               <div class="gb-row"><span class="gb-grade" style="color:#34e0a1">A</span><span class="gb-range">90–100</span><span class="gb-label">Fully protected</span><p>All (or nearly all) domains at p=reject with MTA-STS enforce and healthy certificates. Threat surface is effectively zero for compliant senders.</p></div>
-              <div class="gb-row"><span class="gb-grade" style="color:#5b6ef5">B</span><span class="gb-range">75–89</span><span class="gb-label">Strong posture</span><p>Most domains at enforcement. Typically one or two domains not yet at reject, or MTA-STS not yet at enforce on some domains. Minor gaps remain.</p></div>
+              <div class="gb-row"><span class="gb-grade" style="color:#5b5cf0">B</span><span class="gb-range">75–89</span><span class="gb-label">Strong posture</span><p>Most domains at enforcement. Typically one or two domains not yet at reject, or MTA-STS not yet at enforce on some domains. Minor gaps remain.</p></div>
               <div class="gb-row"><span class="gb-grade" style="color:#f5c542">C</span><span class="gb-range">55–74</span><span class="gb-label">Partial coverage</span><p>A mix of domains at different stages. Some protected, some still in monitoring. Significant impersonation risk remains on unprotected domains.</p></div>
               <div class="gb-row"><span class="gb-grade" style="color:#ff8c42">D</span><span class="gb-range">35–54</span><span class="gb-label">Significant gaps</span><p>Most domains unprotected or at p=none. High impersonation risk. Active remediation needed.</p></div>
               <div class="gb-row"><span class="gb-grade" style="color:#ff4d6d">F</span><span class="gb-range">0–34</span><span class="gb-label">At risk</span><p>No meaningful enforcement. Domains are fully open to impersonation. Immediate action required.</p></div>
@@ -1019,7 +1020,7 @@ print(f"Score: {s['score']}/100  Grade: {s['grade']}  Delta: {s['delta']:+d}")</
 
           <div class="doc-block">
             <h3>Using the score in client reports</h3>
-            <p>The Sentinel Score is designed to be the single number you put in front of a non-technical client. To explain it:</p>
+            <p>The ZoneProof Score is designed to be the single number you put in front of a non-technical client. To explain it:</p>
             <ul class="bullet-list">
               <li><strong>Grade A / Score 90+:</strong> "Your email security is fully enforced. We are blocking impersonation attempts and inbound delivery is protected."</li>
               <li><strong>Grade B / Score 75–89:</strong> "Strong posture with minor gaps. We are working through the remaining domains to reach full enforcement."</li>
@@ -1074,7 +1075,7 @@ print(f"Score: {s['score']}/100  Grade: {s['grade']}  Delta: {s['delta']:+d}")</
 
           <div class="doc-block">
             <h3>What changing your password actually does to your session</h3>
-            <p>Sentinel's sign-in tokens are stateless — there's no server-side list of "currently valid" tokens to check on every request. Instead, each account carries an internal counter that's embedded in every token it issues. Changing your password, resetting it, or enabling/disabling two-factor authentication increments that counter, which makes <strong>every previously issued token for that account stop working immediately</strong> — including the one you're using right now.</p>
+            <p>ZoneProof's sign-in tokens are stateless — there's no server-side list of "currently valid" tokens to check on every request. Instead, each account carries an internal counter that's embedded in every token it issues. Changing your password, resetting it, or enabling/disabling two-factor authentication increments that counter, which makes <strong>every previously issued token for that account stop working immediately</strong> — including the one you're using right now.</p>
             <p>In practice: after changing your password from your account settings, you'll be signed out and asked to sign in again with the new one. This is correct behavior, not a bug — it's what makes "change your password" actually mean something if your account was compromised, rather than just changing the password while a stolen session token keeps working.</p>
           </div>
 
@@ -1152,7 +1153,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 25px; letter-spacing
 .nav-label { font-family: var(--mono); font-size: 9px; letter-spacing: 1.4px; color: var(--faint); text-transform: uppercase; padding: 0 10px 8px; }
 .nav-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 10px; font-size: 12.5px; font-weight: 500; color: var(--muted); cursor: pointer; transition: all .14s ease; }
 .nav-item:hover { background: rgba(255,255,255,.05); color: var(--txt); }
-.nav-item.active { background: rgba(91,110,245,.15); color: var(--indigo); font-weight: 600; }
+.nav-item.active { background: rgba(91,92,240,.15); color: var(--indigo); font-weight: 600; }
 .n { font-family: var(--mono); font-size: 9px; opacity: .55; flex: none; }
 
 /* Content */
@@ -1179,13 +1180,13 @@ a:hover { text-decoration: underline; }
 /* Steps */
 .steps { display: flex; flex-direction: column; gap: 12px; margin: 14px 0; }
 .step { display: flex; gap: 14px; align-items: flex-start; }
-.step-num { flex: none; width: 26px; height: 26px; border-radius: 50%; background: rgba(91,110,245,.18); color: var(--indigo); font-family: var(--mono); font-size: 11px; font-weight: 700; display: grid; place-items: center; margin-top: 1px; }
+.step-num { flex: none; width: 26px; height: 26px; border-radius: 50%; background: rgba(91,92,240,.18); color: var(--indigo); font-family: var(--mono); font-size: 11px; font-weight: 700; display: grid; place-items: center; margin-top: 1px; }
 .step > div { font-size: 13px; color: var(--muted); line-height: 1.6; flex: 1; }
 .step > div strong { color: var(--txt); }
 
 /* Callout */
 .callout { padding: 12px 14px; border-radius: 10px; font-size: 12.5px; color: var(--muted); margin: 14px 0; line-height: 1.6; }
-.callout.info { background: rgba(91,110,245,.08); border-left: 3px solid var(--indigo); }
+.callout.info { background: rgba(91,92,240,.08); border-left: 3px solid var(--indigo); }
 .callout.warn { background: rgba(245,165,0,.08); border-left: 3px solid #f5a500; }
 .callout strong { color: var(--txt); }
 
@@ -1213,13 +1214,13 @@ a:hover { text-decoration: underline; }
 .stage-none { background: rgba(255,255,255,.03); }
 .stage-q    { background: rgba(245,165,0,.05); border-color: rgba(245,165,0,.2); }
 .stage-r    { background: rgba(46,230,197,.05); border-color: rgba(46,230,197,.2); }
-.stage-bimi { background: rgba(91,110,245,.05); border-color: rgba(91,110,245,.2); }
+.stage-bimi { background: rgba(91,92,240,.05); border-color: rgba(91,92,240,.2); }
 .sc-head { display: flex; align-items: center; gap: 10px; font-family: var(--disp); font-weight: 700; font-size: 13.5px; margin-bottom: 8px; color: var(--txt); }
 .sc-badge { font-family: var(--mono); font-size: 10px; font-weight: 700; padding: 2px 9px; border-radius: 8px; }
 .badge-none { background: rgba(255,255,255,.08); color: var(--faint); }
 .badge-q    { background: rgba(245,165,0,.18); color: #f5a500; }
 .badge-r    { background: rgba(46,230,197,.18); color: var(--teal); }
-.badge-b    { background: rgba(91,110,245,.18); color: var(--indigo); }
+.badge-b    { background: rgba(91,92,240,.18); color: var(--indigo); }
 
 /* Blockers */
 .blocker-list { display: flex; flex-direction: column; gap: 12px; margin: 14px 0; }
@@ -1275,7 +1276,7 @@ tbody tr:last-child td { border-bottom: none; }
 .ep-line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .method { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .5px; padding: 2px 8px; border-radius: 6px; flex: none; }
 .method.get    { background: rgba(46,230,197,.14); color: var(--teal); }
-.method.post   { background: rgba(91,110,245,.16); color: var(--indigo); }
+.method.post   { background: rgba(91,92,240,.16); color: var(--indigo); }
 .method.patch  { background: rgba(245,165,0,.14);  color: #f5a500; }
 .method.delete { background: rgba(255,77,109,.14); color: var(--bad); }
 .ep-path { font-family: var(--mono); font-size: 12.5px; color: var(--txt); background: rgba(255,255,255,.05); padding: 2px 8px; border-radius: 6px; }
@@ -1284,7 +1285,7 @@ tbody tr:last-child td { border-bottom: none; }
 .ep-note.warn { color: #f5a500; background: rgba(245,165,0,.07); padding: 8px 10px; border-radius: 8px; border-left: 2px solid #f5a500; margin-top: 8px; }
 .ep-note code, .ep-note strong { font-family: var(--mono); font-size: 11px; }
 .response-label { font-family: var(--mono); font-size: 9.5px; color: var(--faint); letter-spacing: 1px; text-transform: uppercase; margin-top: 10px; margin-bottom: 4px; }
-.usage-note { background: rgba(91,110,245,.08); border: 1px solid rgba(91,110,245,.2); border-radius: 12px; padding: 14px 16px; font-size: 13px; color: var(--muted); margin-top: 14px; }
+.usage-note { background: rgba(91,92,240,.08); border: 1px solid rgba(91,92,240,.2); border-radius: 12px; padding: 14px 16px; font-size: 13px; color: var(--muted); margin-top: 14px; }
 .usage-note strong { color: var(--txt); }
 
 /* Pillar breakdown */

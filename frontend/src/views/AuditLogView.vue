@@ -135,19 +135,19 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 25px; letter-spacing
 /* Upgrade card */
 .upgrade-card {
   display: flex; align-items: center; gap: 16px;
-  background: linear-gradient(160deg, rgba(91,110,245,.1), rgba(255,255,255,.02));
-  border: 1px solid rgba(91,110,245,.25); border-radius: 16px; padding: 20px 22px;
+  background: linear-gradient(160deg, rgba(91,92,240,.1), rgba(255,255,255,.02));
+  border: 1px solid rgba(91,92,240,.25); border-radius: 16px; padding: 20px 22px;
 }
 .uc-icon {
   width: 44px; height: 44px; border-radius: 12px; flex: none; display: grid; place-items: center;
-  background: rgba(91,110,245,.15); color: var(--indigo);
+  background: rgba(91,92,240,.15); color: var(--indigo);
 }
 .uc-icon svg { width: 22px; height: 22px; }
 .uc-body { flex: 1; }
 .uc-title { font-family: var(--disp); font-weight: 700; font-size: 14.5px; margin-bottom: 4px; }
 .uc-text { font-size: 12.5px; color: var(--muted); line-height: 1.55; }
 .uc-btn {
-  background: linear-gradient(90deg, #5b6ef5, #8b5cf6); color: #fff; border: none;
+  background: linear-gradient(90deg, #5b5cf0, #4b4ce0); color: #fff; border: none;
   border-radius: 11px; padding: 10px 18px; font-family: var(--disp); font-weight: 700;
   font-size: 12.5px; cursor: pointer; flex: none;
 }

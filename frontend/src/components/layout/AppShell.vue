@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import AppSidebar from './AppSidebar.vue'
 import AppTopbar from './AppTopbar.vue'
 import AppDrawer from './AppDrawer.vue'
@@ -9,10 +9,32 @@ import AppToast from './AppToast.vue'
 import AlertMenu from '../alerts/AlertMenu.vue'
 import AssistantPanel from '../assistant/AssistantPanel.vue'
 import { useUiStore } from '@/stores/ui'
+import { useScopeStore, SCOPED_ROUTES } from '@/stores/scope'
+import { useDomainsStore } from '@/stores/domains'
 import { api, upgradeRequired } from '@/api/client'
 
 const ui     = useUiStore()
 const router = useRouter()
+const route  = useRoute()
+const scope  = useScopeStore()
+const domainsStore = useDomainsStore()
+
+// A ?domain= in the address (deep links, shared URLs) wins and becomes the scope.
+function adoptFromUrl() {
+  const q = route.query.domain
+  if (typeof q === 'string' && q && q !== scope.domain) scope.set(q)
+}
+// On a scoped page, the address reflects the scope so it can be shared or reloaded.
+function reflectInUrl() {
+  if (!SCOPED_ROUTES.includes(String(route.name))) return
+  const want = scope.domain || undefined
+  if ((route.query.domain as string | undefined) === want) return
+  router.replace({ query: { ...route.query, domain: want } })
+}
+watch(() => route.query.domain, adoptFromUrl, { immediate: true })
+watch(() => scope.domain, reflectInUrl)
+watch(() => route.name, reflectInUrl, { immediate: true })
+watch(() => domainsStore.list, (list) => scope.reconcile(list.map((d: any) => d.domain)))
 
 const showBanner = ref(false)
 const resending  = ref(false)
@@ -46,6 +68,10 @@ async function resendVerification() {
   finally { resending.value = false }
 }
 
+function focusMain() {
+  document.getElementById('main-content')?.focus()
+}
+
 function goUpgrade() {
   upgradePrompt.value = null
   router.push({ name: 'billing' })
@@ -56,11 +82,12 @@ function goUpgrade() {
   <div class="app">
     <!-- Overlay backdrop (mobile only) -->
     <Transition name="fade">
-      <div v-if="ui.navOpen" class="nav-backdrop" @click="ui.closeNav()" />
+      <div v-if="ui.navOpen" class="nav-backdrop" aria-hidden="true" @click="ui.closeNav()" />
     </Transition>
 
+    <a class="skip-link" href="#main-content" @click.prevent="focusMain">Skip to main content</a>
     <AppSidebar />
-    <main class="main">
+    <main id="main-content" class="main" tabindex="-1">
       <div v-if="showBanner" class="verify-banner">
         <span>Please verify your email address to secure your account.</span>
         <button v-if="!resent" class="verify-btn" :disabled="resending" @click="resendVerification">
@@ -100,6 +127,7 @@ function goUpgrade() {
 </template>
 
 <style scoped>
+#main-content:focus { outline: none; }
 .app { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; }
 .main { padding: 14px 22px 60px; overflow: hidden; }
 
@@ -141,14 +169,14 @@ function goUpgrade() {
 }
 .upgrade-modal {
   width: 400px; max-width: 94vw;
-  background: #0f1118; border: 1px solid rgba(91,110,245,.35);
+  background: #0f1118; border: 1px solid rgba(91,92,240,.35);
   border-radius: 20px; padding: 32px; text-align: center;
-  box-shadow: 0 40px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(91,110,245,.1);
+  box-shadow: 0 40px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(91,92,240,.1);
 }
 .upgrade-icon {
   width: 52px; height: 52px; border-radius: 16px; margin: 0 auto 18px;
   display: grid; place-items: center;
-  background: rgba(91,110,245,.12); border: 1px solid rgba(91,110,245,.3);
+  background: rgba(91,92,240,.12); border: 1px solid rgba(91,92,240,.3);
   color: #9aa6ff;
 }
 .upgrade-icon svg { width: 22px; height: 22px; }
@@ -167,7 +195,7 @@ function goUpgrade() {
 }
 .upgrade-btn-cancel:hover { color: var(--txt); }
 .upgrade-btn-cta {
-  flex: 2; background: linear-gradient(90deg,#5b6ef5,#8b5cf6); color: #fff;
+  flex: 2; background: linear-gradient(90deg,#5b5cf0,#4b4ce0); color: #fff;
   border: none; border-radius: 11px; padding: 11px;
   font-family: var(--disp); font-weight: 700; font-size: 13px; cursor: pointer;
 }

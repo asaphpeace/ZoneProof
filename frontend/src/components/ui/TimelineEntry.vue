@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import AiBadge from './AiBadge.vue'
+import { useScopeStore } from '@/stores/scope'
+import NextStep from '@/components/ui/NextStep.vue'
 
 const props = defineProps<{
   entry: {
@@ -22,6 +24,16 @@ const props = defineProps<{
 }>()
 
 const expanded = ref(false)
+const scope = useScopeStore()
+
+// The page that explains what a change of this record type means in practice.
+const evidence = computed(() => {
+  const t = props.entry.record_type
+  if (['DMARC', 'SPF', 'DKIM'].includes(t)) return { to: 'dmarc', label: 'See who is sending' }
+  if (['MTA-STS', 'TLS-RPT', 'MX'].includes(t)) return { to: 'tls', label: 'See TLS delivery' }
+  return null
+})
+const linkDomain = computed(() => props.entry.domain_name || scope.domain)
 
 const TYPE_COLOR: Record<string, string> = {
   DMARC:    '#9aa6ff',
@@ -89,7 +101,7 @@ const hasDiff = computed(() =>
   (addedTokens.value.length > 0 || removedTokens.value.length > 0)
 )
 
-// One-click rollback (#1 in GUIDED_ONBOARDING_PLAN.md Part 3) — Sentinel doesn't
+// One-click rollback (#1 in GUIDED_ONBOARDING_PLAN.md Part 3) — ZoneProof doesn't
 // write DNS directly yet (no Domain Connect/Entri integration), so "rollback"
 // means making the previous value trivially easy to republish: copy it to the
 // clipboard with the exact host it belongs to, instead of asking the user to
@@ -134,7 +146,7 @@ const riskBg    = computed(() => RISK_BG[props.entry.risk_severity ?? ''] ?? 'tr
     </div>
 
     <!-- Content -->
-    <div class="body" @click="expanded = !expanded">
+    <div class="body" @click="expanded = !expanded" tabindex="0" role="button" :aria-expanded="expanded" @keydown.enter.prevent="expanded = !expanded" @keydown.space.prevent="expanded = !expanded">
       <!-- Top row -->
       <div class="top-row">
         <div class="top-left">
@@ -247,12 +259,19 @@ const riskBg    = computed(() => RISK_BG[props.entry.risk_severity ?? ''] ?? 'tr
           </span>
           <span v-else>This change may weaken your email security posture. Review carefully.</span>
         </div>
+
+        <!-- Where this change shows up in real traffic, and what it does to the plan -->
+        <div class="entry-links">
+          <NextStep v-if="evidence" :to="evidence.to" :label="evidence.label" :domain="linkDomain" />
+          <NextStep to="roadmap" label="Open the roadmap" :domain="linkDomain" />
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
+.entry-links { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; }
 .entry {
   display: flex; gap: 0; padding: 0;
 }

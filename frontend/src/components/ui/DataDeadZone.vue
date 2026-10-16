@@ -90,14 +90,14 @@ const isOverdue = computed(() => daysElapsed.value !== null && daysElapsed.value
   font-size: 16px; font-weight: 700; margin-bottom: 4px;
 }
 .dz-icon-muted { background: rgba(255,255,255,.06); color: var(--faint); }
-.dz-icon-pulse { background: rgba(91,110,245,.12); color: #9aa6ff; animation: dz-pulse 2.2s ease-in-out infinite; }
+.dz-icon-pulse { background: rgba(91,92,240,.12); color: #9aa6ff; animation: dz-pulse 2.2s ease-in-out infinite; }
 .dz-icon-warn  { background: rgba(245,197,66,.14); color: var(--amber); }
 @keyframes dz-pulse { 50% { opacity: .45; } }
 .dz-title { font-family: var(--disp); font-weight: 700; font-size: 14.5px; color: var(--txt); }
 .dz-body { font-size: 12.5px; color: var(--muted); line-height: 1.6; max-width: 420px; }
 .dz-elapsed { display: block; margin-top: 6px; font-family: var(--mono); font-size: 10.5px; color: var(--faint); }
 .dz-cta {
-  margin-top: 10px; background: linear-gradient(90deg, #5b6ef5, #8b5cf6); color: #fff; border: none;
+  margin-top: 10px; background: linear-gradient(90deg, #5b5cf0, #4b4ce0); color: #fff; border: none;
   border-radius: 10px; padding: 8px 16px; font-family: var(--disp); font-weight: 700;
   font-size: 12px; cursor: pointer;
 }

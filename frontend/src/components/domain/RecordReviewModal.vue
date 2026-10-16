@@ -118,7 +118,7 @@ async function sendInstructionsEmail() {
     <DiffBlock :current="diff.current" :proposed="diff.proposed" :host="diff.host" />
 
     <!-- Hand-holding: registrar-specific publishing steps -->
-    <div class="steps-toggle" @click="showSteps = !showSteps">
+    <div class="steps-toggle" @click="showSteps = !showSteps" tabindex="0" role="button" :aria-expanded="showSteps" @keydown.enter.prevent="showSteps = !showSteps" @keydown.space.prevent="showSteps = !showSteps">
       <span>{{ registrarLoading ? 'Detecting your DNS provider…' : `How to publish this on ${registrar?.name ?? 'your DNS provider'}` }}</span>
       <span class="steps-caret" :class="showSteps ? 'open' : ''">▾</span>
     </div>
@@ -151,7 +151,7 @@ async function sendInstructionsEmail() {
            as an open cost/build decision; this is the honest version of
            "talk to a human" the current architecture actually supports. -->
       <a class="help-link" href="mailto:support@foundationcraft.co.za?subject=Stuck%20publishing%20a%20DNS%20record">
-        Still stuck? Email Sentinel support →
+        Still stuck? Email ZoneProof support →
       </a>
     </div>
 
@@ -171,13 +171,13 @@ async function sendInstructionsEmail() {
     </div>
 
     <div style="font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:14px;padding-top:12px;border-top:1px solid var(--line)">
-      Record drafted by Sentinel · you publish manually to your DNS provider.
+      Record drafted by ZoneProof · you publish manually to your DNS provider.
     </div>
   </div>
 </template>
 
 <style scoped>
-.btn { background: linear-gradient(90deg,#5b6ef5,#8b5cf6); color:#fff; border:none; border-radius:12px; padding:11px 18px; font-family:var(--disp); font-weight:700; font-size:13px; cursor:pointer; }
+.btn { background: linear-gradient(90deg,#5b5cf0,#4b4ce0); color:#fff; border:none; border-radius:12px; padding:11px 18px; font-family:var(--disp); font-weight:700; font-size:13px; cursor:pointer; }
 .btn.ghost { background:rgba(255,255,255,.04); border:1px solid var(--line2); color:var(--txt); box-shadow:none; }
 .btn.ghost:hover { border-color:var(--indigo); }
 .btn.small { padding: 7px 13px; font-size: 11.5px; border-radius: 9px; }
@@ -189,7 +189,7 @@ async function sendInstructionsEmail() {
   border-radius: 11px; font-size: 12px; margin-bottom: 14px;
 }
 .detect-good { background: rgba(52,224,161,.1); border: 1px solid rgba(52,224,161,.3); color: var(--good); }
-.detect-wait { background: rgba(91,110,245,.08); border: 1px solid rgba(91,110,245,.22); color: #9aa6ff; }
+.detect-wait { background: rgba(91,92,240,.08); border: 1px solid rgba(91,92,240,.22); color: #9aa6ff; }
 .detect-icon { font-weight: 800; }
 .detect-pulse {
   width: 8px; height: 8px; border-radius: 50%; background: #9aa6ff; flex: none;

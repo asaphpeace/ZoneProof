@@ -6,7 +6,10 @@
   --muted:   #9098b5;
   --faint:   #5b6285;
   --pink:    #f5417a;
-  --indigo:  #5b6ef5;
+  --indigo:  #5b5cf0;
+  --accent:  #5b5cf0;   /* ZoneProof indigo: primary actions, links, active states */
+  --accent-hover: #4b4ce0;
+  --accent-soft:  #a5a6ff;   /* wordmark, links on dark */
   --indigo2: #8b5cf6;
   --amber:   #f5c542;
   --teal:    #2ee6c5;
@@ -33,7 +36,7 @@ body {
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
   background:
-    radial-gradient(620px 420px at 6% 4%,   rgba(46,230,197,.07),  transparent 60%),
+    radial-gradient(620px 420px at 6% 4%,   rgba(91,92,240,.08),   transparent 60%),
     radial-gradient(720px 520px at 96% 8%,   rgba(91,110,245,.10),  transparent 60%),
     radial-gradient(680px 600px at 50% 118%, rgba(245,65,122,.06),  transparent 55%),
     radial-gradient(520px 520px at 102% 88%, rgba(139,92,246,.07),  transparent 60%),
@@ -74,4 +77,18 @@ body {
 /* ── Blink cursor ── */
 @keyframes blink {
   50% { opacity: 0; }
+}
+
+
+/* ── Accessibility ── */
+/* Keyboard focus is always visible. Mouse clicks do not trigger it. */
+:focus-visible { outline: 2px solid var(--indigo, #7b7dff); outline-offset: 2px; }
+.skip-link {
+  position: absolute; left: -9999px; top: 8px; z-index: 1000;
+  padding: 9px 16px; border-radius: 10px; background: #14162a; color: #fff; font-weight: 600; text-decoration: none;
+  border: 1px solid var(--indigo, #7b7dff);
+}
+.skip-link:focus { left: 12px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }

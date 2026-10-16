@@ -5,19 +5,26 @@ import { useDomainsStore } from '@/stores/domains'
 import TimelineEntry from '@/components/ui/TimelineEntry.vue'
 import AdvisorBanner from '@/components/ui/AdvisorBanner.vue'
 import DateRangeFilter from '@/components/ui/DateRangeFilter.vue'
+import LoadError from '@/components/ui/LoadError.vue'
+import { useScopeStore } from '@/stores/scope'
 
 const domains      = useDomainsStore()
 const timeline     = ref<any[]>([])
 const loading      = ref(false)
 const syncing      = ref(false)
 const filterType   = ref<string>('all')
-const domainFilter = ref<string>('all')
+const scope = useScopeStore()
+const domainFilter = computed<string>({
+  get: () => scope.domain ?? 'all',
+  set: (v) => scope.set(v === 'all' ? null : v),
+})
 const days         = ref<number | null>(null)
 const offset       = ref(0)
 const totalCount   = ref(0)
 const lastSyncedAt = ref<string | null>(null)
 const advisor        = ref<any>(null)
 const advisorLoading = ref(false)
+const loadError = ref('')
 
 const PAGE_SIZE = 50
 const RECORD_TYPES = ['all', 'DMARC', 'SPF', 'MX', 'MTA-STS', 'TLS-RPT', 'DKIM', 'CNAME']
@@ -44,6 +51,7 @@ async function loadAdvisor(domainId?: string, cachedOnly = false, force = false)
 
 onMounted(async () => {
   await domains.fetch()
+  if (domains.error) { loadError.value = domains.error; advisorLoading.value = false; loading.value = false; return }
   await loadTimeline()
   const dom = selectedDomain()
   await loadAdvisor(dom?.id, true)
@@ -60,6 +68,7 @@ function selectedDomain() {
 
 async function loadTimeline(append = false) {
   loading.value = true
+  loadError.value = ''
   try {
     const dom = selectedDomain()
     const [entries, countRes] = await Promise.all([
@@ -77,6 +86,8 @@ async function loadTimeline(append = false) {
       offset.value = 0
     }
     totalCount.value = countRes.count ?? 0
+  } catch (e: any) {
+    loadError.value = e?.message || 'The timeline request failed.'
   } finally {
     loading.value = false
   }
@@ -92,6 +103,7 @@ async function changeDomain() {
   filterType.value = 'all'
   await loadTimeline()
 }
+watch(domainFilter, () => { changeDomain() })
 
 watch(days, () => {
   offset.value = 0
@@ -155,6 +167,7 @@ const grouped = computed(() => {
 
 <template>
   <div>
+    <LoadError v-if="loadError" :message="loadError" @retry="$router.go(0)" />
     <!-- Title row -->
     <div class="titlerow">
       <div>
@@ -222,7 +235,7 @@ const grouped = computed(() => {
         <svg class="sel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
         </svg>
-        <select v-model="domainFilter" class="domain-select" @change="changeDomain">
+        <select v-model="domainFilter" class="domain-select" aria-label="Domain">
           <option value="all">All domains</option>
           <option v-for="d in domains.list" :key="d.domain" :value="d.domain">{{ d.domain }}</option>
         </select>
@@ -255,7 +268,7 @@ const grouped = computed(() => {
         </svg>
         <div v-if="timeline.length > 0 && filterType !== 'all'">
           No <b>{{ filterType }}</b> events match the current filter.
-          <span class="empty-hint" @click="filterType = 'all'">Show all {{ totalCount }} events →</span>
+          <span class="empty-hint" @click="filterType = 'all'" tabindex="0" role="button" @keydown.enter.prevent="filterType = 'all'" @keydown.space.prevent="filterType = 'all'">Show all {{ totalCount }} events →</span>
         </div>
         <div v-else>No DNS change events found.</div>
         <div class="empty-sub">
@@ -268,7 +281,7 @@ const grouped = computed(() => {
         <div v-for="(group, gi) in grouped" :key="group.date">
           <div class="date-divider">
             <span class="date-label">{{ group.date }}</span>
-            <span v-if="gi === grouped.length - 1 && group.entries.every(e => e.change_type === 'added')" class="baseline-badge" title="These are the records Sentinel found when this domain was first scanned — not changes from a prior state.">Initial scan</span>
+            <span v-if="gi === grouped.length - 1 && group.entries.every(e => e.change_type === 'added')" class="baseline-badge" title="These are the records ZoneProof found when this domain was first scanned — not changes from a prior state.">Initial scan</span>
           </div>
           <TimelineEntry
             v-for="entry in group.entries"
@@ -301,7 +314,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 25px; letter-spacing
 .synced-at { font-family: var(--mono); font-size: 10.5px; color: var(--faint); }
 .btn {
   display: flex; align-items: center; gap: 7px;
-  background: linear-gradient(90deg,#5b6ef5,#8b5cf6); color: #fff; border: none;
+  background: linear-gradient(90deg,#5b5cf0,#4b4ce0); color: #fff; border: none;
   border-radius: 12px; padding: 10px 18px; font-family: var(--disp); font-weight: 700;
   font-size: 13px; cursor: pointer; transition: opacity .15s;
 }
@@ -341,8 +354,8 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 25px; letter-spacing
   border: 1px solid var(--line2); background: transparent; color: var(--muted);
   cursor: pointer; transition: .13s;
 }
-.type-pill:hover { color: var(--txt); border-color: rgba(91,110,245,.5); }
-.type-pill.active { background: rgba(91,110,245,.18); border-color: rgba(91,110,245,.5); color: #9aa6ff; }
+.type-pill:hover { color: var(--txt); border-color: rgba(91,92,240,.5); }
+.type-pill.active { background: rgba(91,92,240,.18); border-color: rgba(91,92,240,.5); color: #9aa6ff; }
 
 /* ── Card ────────────────────────────────────────────────────── */
 .card {

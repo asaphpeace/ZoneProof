@@ -65,7 +65,7 @@ const verdictStyle: Record<string, { color: string; bg: string; border: string }
 <template>
   <!-- Backdrop -->
   <Teleport to="body">
-    <div class="backdrop" @click="emit('close')" />
+    <div class="backdrop" aria-hidden="true" @click="emit('close')" />
 
     <div class="drawer">
       <!-- Drawer header -->

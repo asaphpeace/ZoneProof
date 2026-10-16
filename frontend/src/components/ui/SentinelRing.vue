@@ -28,7 +28,7 @@ const deltaSign = computed(() => props.delta == null ? null : props.delta >= 0 ?
 const deltaColor = computed(() => props.delta == null ? 'var(--faint)' : props.delta > 0 ? 'var(--good)' : props.delta < 0 ? 'var(--bad)' : 'var(--muted)')
 
 // Score anchoring (GUIDED_ONBOARDING_PLAN.md Part 3 #8) — deliberately NOT a
-// fabricated "most businesses your size score X" claim, since Sentinel has
+// fabricated "most businesses your size score X" claim, since ZoneProof has
 // no real peer/benchmark dataset to back that. Instead: an honest, derived
 // answer to "what's pulling this down" — whichever pillar has the largest
 // gap between its current points and its max, computed from the same
@@ -171,7 +171,7 @@ const biggestOpportunity = computed(() => {
 .pillar-fill {
   height: 100%; border-radius: 4px; transition: width .7s ease;
 }
-.pillar-fill.dmarc { background: linear-gradient(90deg, #5b6ef5, #8b5cf6); }
+.pillar-fill.dmarc { background: linear-gradient(90deg, #5b5cf0, #4b4ce0); }
 .pillar-fill.tls   { background: linear-gradient(90deg, #2ee6c5, #34e0a1); }
 .pillar-fill.certs { background: linear-gradient(90deg, #f5c542, #ff8c42); }
 

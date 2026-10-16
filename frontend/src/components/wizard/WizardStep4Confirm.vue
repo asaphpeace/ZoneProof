@@ -136,7 +136,7 @@ const gates = (r: any) => [
 .error-box { padding: 12px 16px; background: rgba(255,80,80,.07); border: 1px solid rgba(255,80,80,.25); border-radius: 12px; font-size: 13px; color: var(--bad); margin-bottom: 12px; }
 .notice { display: flex; gap: 10px; padding: 13px 15px; background: rgba(46,230,197,.07); border: 1px solid rgba(46,230,197,.25); border-radius: 12px; font-size: 12.5px; color: var(--muted); line-height: 1.6; margin-top: 8px; }
 .actions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; }
-.btn { background: linear-gradient(90deg,#5b6ef5,#8b5cf6); color:#fff; border:none; border-radius:12px; padding:11px 24px; font-family:var(--disp); font-weight:700; font-size:13px; cursor:pointer; }
+.btn { background: linear-gradient(90deg,#5b5cf0,#4b4ce0); color:#fff; border:none; border-radius:12px; padding:11px 24px; font-family:var(--disp); font-weight:700; font-size:13px; cursor:pointer; }
 .btn.ghost { background: rgba(255,255,255,.04); border: 1px solid var(--line2); color: var(--txt); }
 .btn:disabled { opacity:.6; cursor:not-allowed; }
 </style>

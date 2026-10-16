@@ -69,7 +69,8 @@ export const api = {
   syncDomainDns: (id: string) => request<any>(`/domains/${id}/sync-dns`, { method: 'POST' }),
   domainRecommendations: (id: string) => request<any[]>(`/domains/${id}/recommendations`),
   simulateDmarcPolicy: (id: string) => request<any>(`/domains/${id}/simulate-policy`),
-  discoverSubdomains: (id: string) => request<any[]>(`/domains/${id}/discover-subdomains`),
+  sourcesHealth: () => request<any>('/sources/health'),
+  discoverSubdomains: (id: string) => request<{ subdomains: any[]; sources: Record<string, string>; coverage: any | null }>(`/domains/${id}/discover-subdomains`),
   setSubdomainDisposition: (id: string, hostname: string, disposition: string, reason?: string) =>
     request<any>(`/domains/${id}/subdomain-dispositions`, {
       method: 'POST',
@@ -250,12 +251,130 @@ export const api = {
   disable2fa:     (code: string) => request<void>('/auth/2fa/disable', { method: 'POST', body: JSON.stringify({ code }) }),
 
   // MSP
+  mspBrandRollup:  () => request<{ clients: any[]; totals: any }>('/msp/brand-guard'),
+  mspClientBrandCases: (clientId: string) => request<any[]>(`/msp/clients/${clientId}/brand-guard/cases`),
+  /** White-label evidence pack for a client's look-alike, downloaded as a file. */
+  mspClientEvidencePack: async (clientId: string, candidateId: string, format: 'pdf' | 'json') => {
+    const res = await fetch(`${BASE}/msp/clients/${clientId}/brand-guard/candidates/${candidateId}/evidence-pack?format=${format}`, { headers: _token ? { Authorization: `Bearer ${_token}` } : {} })
+    if (res.status === 401) { clearToken(); window.location.href = '/login'; throw new Error('Unauthorized') }
+    if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(typeof e.detail === 'string' ? e.detail : e.detail?.message || 'Could not build the evidence pack') }
+    const name = /filename="([^"]+)"/.exec(res.headers.get('content-disposition') || '')?.[1] ?? `evidence.${format}`
+    const url = URL.createObjectURL(await res.blob())
+    const a = document.createElement('a')
+    a.href = url
+    a.download = name
+    a.click()
+    URL.revokeObjectURL(url)
+  },
   mspClients:      () => request<any[]>('/msp/clients'),
   mspCreateClient: (payload: any) => request<any>('/msp/clients', { method: 'POST', body: JSON.stringify(payload) }),
   mspGetClient:    (id: string) => request<any>(`/msp/clients/${id}`),
   mspUpdateClient: (id: string, patch: any) => request<any>(`/msp/clients/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
   mspDeleteClient: (id: string) => request<void>(`/msp/clients/${id}`, { method: 'DELETE' }),
   mspInviteToClient: (clientId: string, payload: any) => request<any>(`/msp/clients/${clientId}/invite`, { method: 'POST', body: JSON.stringify(payload) }),
+
+  // Brand Guard
+  brandGuardSummary:   (profileId?: string) => request<any>(`/brand-guard/summary${profileId ? `?profile_id=${profileId}` : ''}`),
+  brandProfiles:       () => request<any[]>('/brand-guard/profiles'),
+  brandCreateProfile:  (payload: any) => request<any>('/brand-guard/profiles', { method: 'POST', body: JSON.stringify(payload) }),
+  brandUpdateProfile:  (id: string, patch: any) => request<any>(`/brand-guard/profiles/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  brandDeleteProfile:  (id: string) => request<void>(`/brand-guard/profiles/${id}`, { method: 'DELETE' }),
+  brandScan:           (id: string) => request<any>(`/brand-guard/profiles/${id}/scan`, { method: 'POST' }),
+  brandFingerprint:    (id: string) => request<any>(`/brand-guard/profiles/${id}/fingerprint`, { method: 'POST' }),
+  brandSources:        () => request<any[]>('/brand-guard/sources'),
+  brandScanRun:        (runId: string) => request<any>(`/brand-guard/scan-runs/${runId}`),
+  brandCandidates:     (params: { profile_id?: string; status?: string; assigned_to?: string; limit?: number } = {}) => {
+    const q = new URLSearchParams(Object.entries(params).filter(([, v]) => v).map(([k, v]) => [k, String(v)] as [string, string])).toString()
+    return request<any[]>(`/brand-guard/candidates${q ? `?${q}` : ''}`)
+  },
+  brandCampaigns:      (profileId?: string) => request<any[]>(`/brand-guard/campaigns${profileId ? `?profile_id=${profileId}` : ''}`),
+  brandCampaign:       (id: string) => request<any>(`/brand-guard/campaigns/${id}`),
+  brandCampaignRemove: (id: string, candidateId: string) => request<void>(`/brand-guard/campaigns/${id}/members/${candidateId}/remove`, { method: 'POST' }),
+  brandCandidate:      (id: string) => request<any>(`/brand-guard/candidates/${id}`),
+  brandAssign:         (id: string, userId: string | null) => request<any>(`/brand-guard/candidates/${id}/assignee`, { method: 'PATCH', body: JSON.stringify({ user_id: userId }) }),
+  /** Downloads the hash-stamped evidence pack as a file (the API sends it as an attachment, so it cannot go through request()). */
+  brandEvidencePack:   async (id: string, format: 'pdf' | 'json') => {
+    const res = await fetch(`${BASE}/brand-guard/candidates/${id}/evidence-pack?format=${format}`, { headers: _token ? { Authorization: `Bearer ${_token}` } : {} })
+    if (res.status === 401) { clearToken(); window.location.href = '/login'; throw new Error('Unauthorized') }
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || 'Could not build the evidence pack')
+    const name = /filename="([^"]+)"/.exec(res.headers.get('content-disposition') || '')?.[1] ?? `evidence.${format}`
+    const url = URL.createObjectURL(await res.blob())
+    const a = document.createElement('a')
+    a.href = url
+    a.download = name
+    a.click()
+    URL.revokeObjectURL(url)
+  },
+  brandTakedownRoutes: (id: string) => request<{ routes: any[] }>(`/brand-guard/candidates/${id}/takedown-routes`),
+  brandTakedowns:      (id: string) => request<any[]>(`/brand-guard/candidates/${id}/takedowns`),
+  brandTakedownCreate: (id: string, route: any) => request<any>(`/brand-guard/candidates/${id}/takedowns`, { method: 'POST', body: JSON.stringify({ route }) }),
+  brandTakedownEdit:   (id: string, subject: string, body: string) => request<any>(`/brand-guard/takedowns/${id}`, { method: 'PATCH', body: JSON.stringify({ subject, body }) }),
+  brandTakedownMove:   (id: string, status: string, note?: string) => request<any>(`/brand-guard/takedowns/${id}/status`, { method: 'POST', body: JSON.stringify({ status, note }) }),
+  /** The rule file as text (for preview or copy). Not audit-logged: nothing leaves the product until it is downloaded. */
+  brandBlocklist: async (format: string, include: string, profileId?: string, _download = false) => {
+    const q = new URLSearchParams({ format, include, ...(profileId ? { profile_id: profileId } : {}) })
+    const res = await fetch(`${BASE}/brand-guard/blocklist?${q}`, { headers: _token ? { Authorization: `Bearer ${_token}` } : {} })
+    if (res.status === 401) { clearToken(); window.location.href = '/login'; throw new Error('Unauthorized') }
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || 'Could not build the list')
+    return { text: await res.text(), count: Number(res.headers.get('x-entry-count') || 0) }
+  },
+  brandBlocklistDownload: async (format: string, include: string, profileId?: string) => {
+    const q = new URLSearchParams({ format, include, download: 'true', ...(profileId ? { profile_id: profileId } : {}) })
+    const res = await fetch(`${BASE}/brand-guard/blocklist?${q}`, { headers: _token ? { Authorization: `Bearer ${_token}` } : {} })
+    if (res.status === 401) { clearToken(); window.location.href = '/login'; throw new Error('Unauthorized') }
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || 'Could not build the list')
+    const name = /filename="([^"]+)"/.exec(res.headers.get('content-disposition') || '')?.[1] ?? `blocklist.${format}`
+    const url = URL.createObjectURL(await res.blob())
+    const a = document.createElement('a')
+    a.href = url
+    a.download = name
+    a.click()
+    URL.revokeObjectURL(url)
+  },
+  brandDefensive:      (profileId: string) => request<any>(`/brand-guard/defensive-registrations?profile_id=${profileId}`),
+  brandReportLinks:    (id: string) => request<any[]>(`/brand-guard/candidates/${id}/report-links`),
+  brandSubmissionCreate: (id: string, service: string) => request<any>(`/brand-guard/candidates/${id}/submissions`, { method: 'POST', body: JSON.stringify({ service }) }),
+  brandSubmissionMove: (id: string, status: string, note?: string) => request<any>(`/brand-guard/submissions/${id}/status`, { method: 'POST', body: JSON.stringify({ status, note }) }),
+  brandChannels:       () => request<any[]>('/brand-guard/notification-channels'),
+  brandChannelCreate:  (body: any) => request<any>('/brand-guard/notification-channels', { method: 'POST', body: JSON.stringify(body) }),
+  brandChannelUpdate:  (id: string, body: any) => request<any>(`/brand-guard/notification-channels/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  brandChannelDelete:  (id: string) => request<void>(`/brand-guard/notification-channels/${id}`, { method: 'DELETE' }),
+  brandChannelTest:    (id: string) => request<{ ok: boolean; error: string | null }>(`/brand-guard/notification-channels/${id}/test`, { method: 'POST' }),
+  brandNotificationLog: () => request<any[]>('/brand-guard/notification-log'),
+  brandSiemExport: async (format: 'jsonl' | 'cef') => {
+    const res = await fetch(`${BASE}/brand-guard/siem-export?format=${format}`, { headers: _token ? { Authorization: `Bearer ${_token}` } : {} })
+    if (res.status === 401) { clearToken(); window.location.href = '/login'; throw new Error('Unauthorized') }
+    if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(typeof e.detail === 'string' ? e.detail : e.detail?.message || 'Could not export') }
+    const url = URL.createObjectURL(await res.blob())
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `zoneproof-brand-guard-${new Date().toISOString().slice(0, 10)}.${format === 'cef' ? 'cef' : 'jsonl'}`
+    a.click()
+    URL.revokeObjectURL(url)
+  },
+  brandTimeline:       (id: string) => request<any>(`/brand-guard/candidates/${id}/timeline`),
+  /** How many items entered and left each stage of Brand Guard (counts only), for one brand or all of them. */
+  brandFunnel:         (days = 30, profileId?: string) => request<any>(`/brand-guard/funnel?days=${days}${profileId ? `&profile_id=${profileId}` : ''}`),
+  /** What the sandboxed renderer saw on this look-alike's page (facts and a text excerpt), or { available: false }. */
+  brandCapture:        (id: string) => request<any>(`/brand-guard/candidates/${id}/capture`),
+  /** The captured screenshot as an object URL for an <img> (an <img> cannot send the login token itself). The caller revokes it. */
+  brandCaptureImage:   async (id: string): Promise<string | null> => {
+    const res = await fetch(`${BASE}/brand-guard/candidates/${id}/capture/screenshot`, { headers: _token ? { Authorization: `Bearer ${_token}` } : {} })
+    if (res.status === 401) { clearToken(); window.location.href = '/login'; throw new Error('Unauthorized') }
+    if (!res.ok) return null
+    const blob = await res.blob()
+    return blob.type.startsWith('image/') ? URL.createObjectURL(blob) : null
+  },
+  /** The customer's own page as the renderer saw it, for the side-by-side comparison. Same rules as brandCaptureImage. */
+  brandReferenceImage: async (profileId: string): Promise<string | null> => {
+    const res = await fetch(`${BASE}/brand-guard/profiles/${profileId}/reference/screenshot`, { headers: _token ? { Authorization: `Bearer ${_token}` } : {} })
+    if (res.status === 401) { clearToken(); window.location.href = '/login'; throw new Error('Unauthorized') }
+    if (!res.ok) return null
+    const blob = await res.blob()
+    return blob.type.startsWith('image/') ? URL.createObjectURL(blob) : null
+  },
+  brandSetStatus:      (id: string, status: string, note?: string) =>
+    request<any>(`/brand-guard/candidates/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status, note }) }),
 
   // Generic escape hatches for one-off requests
   get:  <T = any>(path: string) => request<T>(path),

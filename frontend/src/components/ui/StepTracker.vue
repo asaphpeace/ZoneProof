@@ -29,11 +29,11 @@ defineProps<{ steps: string[]; current: number }>()
 }
 .node svg { width: 15px; height: 15px; }
 .step.done .node { background: linear-gradient(135deg,#34e0a1,#2ee6c5); border-color: transparent; color: #04201b; }
-.step.now  .node { background: linear-gradient(135deg,#5b6ef5,#8b5cf6); border-color: transparent; color: #fff; box-shadow: 0 0 18px rgba(91,110,245,.6); }
+.step.now  .node { background: linear-gradient(135deg,#5b5cf0,#4b4ce0); border-color: transparent; color: #fff; box-shadow: 0 0 18px rgba(91,92,240,.6); }
 .lbl { font-size: 11.5px; font-weight: 600; }
 .step.lock .lbl { color: var(--muted); }
 .step::before { content:""; position:absolute; top:16px; left:-50%; width:100%; height:3px; background:var(--line2); z-index:1; }
 .step:first-child::before { display: none; }
 .step.done::before { background: #34e0a1; }
-.step.now::before  { background: linear-gradient(90deg, #34e0a1, #5b6ef5); }
+.step.now::before  { background: linear-gradient(90deg, #34e0a1, #5b5cf0); }
 </style>

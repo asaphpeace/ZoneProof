@@ -1,15 +1,37 @@
 <script setup lang="ts">
+import { ref, watch, nextTick } from 'vue'
 import { useUiStore } from '@/stores/ui'
+
 const ui = useUiStore()
+const panel = ref<HTMLElement | null>(null)
+let opener: HTMLElement | null = null
+
+watch(() => ui.drawerOpen, async (open) => {
+  if (open) {
+    opener = document.activeElement as HTMLElement | null
+    await nextTick()
+    panel.value?.focus()
+  } else {
+    opener?.focus?.()
+    opener = null
+  }
+})
+
+function onKey(e: KeyboardEvent) {
+  if (e.key === 'Escape') { e.stopPropagation(); ui.closeDrawer() }
+}
 </script>
 
 <template>
   <Teleport to="body">
-    <div v-if="ui.drawerOpen" class="backdrop" @click="ui.closeDrawer()" />
-    <aside :class="['drawer', ui.drawerOpen ? 'show' : '']">
+    <div v-if="ui.drawerOpen" class="backdrop" aria-hidden="true" @click="ui.closeDrawer()" />
+    <aside
+      v-if="ui.drawerOpen" ref="panel" class="drawer show" role="dialog" aria-modal="true"
+      :aria-label="ui.drawerTitle || 'Details'" tabindex="-1" @keydown="onKey"
+    >
       <div class="drhead">
         <span>{{ ui.drawerTitle }}</span>
-        <span class="drx" @click="ui.closeDrawer()">✕</span>
+        <button type="button" class="drx" aria-label="Close panel" @click="ui.closeDrawer()">✕</button>
       </div>
       <div class="dr-body">
         <component :is="ui.drawerContent?.component" v-bind="ui.drawerContent?.props" v-if="ui.drawerContent?.component" />
@@ -25,12 +47,14 @@ const ui = useUiStore()
   position: fixed; top: 0; right: 0; height: 100vh; width: 430px; max-width: 92vw;
   background: linear-gradient(160deg, #0c0e1c, #070710);
   border-left: 1px solid var(--line2); z-index: 70;
-  transform: translateX(100%); transition: transform .28s ease;
+  animation: drawer-in .28s ease;
   padding: 22px; overflow-y: auto; box-shadow: -20px 0 60px rgba(0,0,0,.55);
 }
-.drawer.show { transform: none; }
+.drawer:focus { outline: none; }
+@keyframes drawer-in { from { transform: translateX(100%); } to { transform: none; } }
 .drhead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .drhead > span:first-child { font-family: var(--disp); font-weight: 800; font-size: 17px; }
 .drx { cursor: pointer; color: var(--muted); font-size: 15px; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; border: 1px solid var(--line); }
 .drx:hover { color: var(--txt); border-color: var(--line2); }
+button.drx { background: transparent; font: inherit; padding: 0; }
 </style>

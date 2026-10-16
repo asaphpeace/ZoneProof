@@ -5,8 +5,10 @@ import { api } from '@/api/client'
 import { useDomainsStore } from '@/stores/domains'
 import { useUiStore } from '@/stores/ui'
 import AdvisorBanner from '@/components/ui/AdvisorBanner.vue'
+import LoadError from '@/components/ui/LoadError.vue'
 import SplitBar from '@/components/ui/SplitBar.vue'
 import RecordReviewModal from '@/components/domain/RecordReviewModal.vue'
+import { useScopeStore } from '@/stores/scope'
 
 const router  = useRouter()
 const domains = useDomainsStore()
@@ -14,6 +16,7 @@ const ui      = useUiStore()
 const overview       = ref<any>(null)
 const advisor        = ref<any>(null)
 const advisorLoading = ref(false)
+const loadError = ref('')
 const loading        = ref(true)
 const diff     = ref<any>(null)
 const diffDomainId = ref<string>('')
@@ -21,15 +24,20 @@ const diffTrack    = ref<'dmarc' | 'tls'>('dmarc')
 
 // View state
 const tab        = ref<'dmarc' | 'tls'>('dmarc')
-const selected   = ref<string>('__all__')   // '__all__' = tenant-wide
+const scope = useScopeStore()
+const selected = computed<string>({
+  get: () => scope.domain ?? '__all__',
+  set: (v) => scope.set(v === '__all__' ? null : v),
+})   // '__all__' = tenant-wide
 const search     = ref('')
 
 onMounted(async () => {
   advisorLoading.value = true
   try {
     await domains.fetch()
+    if (domains.error) throw new Error(domains.error)
     overview.value = await api.overview()
-  } finally { loading.value = false }
+  } catch (e: any) { loadError.value = e?.message || 'The data request failed.' } finally { loading.value = false }
 
   // Advisor: load cached content immediately, then refresh in background
   try {
@@ -145,6 +153,7 @@ async function openTlsReview(d: any) {
 
 <template>
   <div>
+    <LoadError v-if="loadError" :message="loadError" @retry="$router.go(0)" />
     <!-- Header -->
     <div class="titlerow">
       <div>
@@ -174,7 +183,7 @@ async function openTlsReview(d: any) {
       <!-- Domain selector -->
       <div class="domain-select-wrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="select-icon"><circle cx="12" cy="12" r="3"/><path d="M3 12h3m12 0h3M12 3v3m0 12v3"/></svg>
-        <select v-model="selected" class="domain-select">
+        <select v-model="selected" class="domain-select" aria-label="Domain">
           <option value="__all__">All domains</option>
           <option v-for="d in allDomains" :key="d.domain" :value="d.domain">{{ d.domain }}</option>
         </select>
@@ -198,7 +207,7 @@ async function openTlsReview(d: any) {
     <!-- Aggregate panels -->
     <div v-if="!loading && overview" class="agg-row">
       <!-- DMARC aggregate -->
-      <div class="card agg-card" :class="{ dimmed: tab === 'tls' }" @click="tab = 'dmarc'; switchAdvisor()">
+      <div class="card agg-card" :class="{ dimmed: tab === 'tls' }" @click="tab = 'dmarc'; switchAdvisor()" tabindex="0" role="button" @keydown.enter.prevent="tab = 'dmarc'; switchAdvisor()" @keydown.space.prevent="tab = 'dmarc'; switchAdvisor()">
         <div class="agg-head">
           <span class="agg-label">DMARC aggregate</span>
           <span class="agg-scope">{{ selected === '__all__' ? 'ALL DOMAINS' : selected }}</span>
@@ -216,7 +225,7 @@ async function openTlsReview(d: any) {
       </div>
 
       <!-- TLS aggregate -->
-      <div class="card agg-card" :class="{ dimmed: tab === 'dmarc' }" @click="tab = 'tls'; switchAdvisor()">
+      <div class="card agg-card" :class="{ dimmed: tab === 'dmarc' }" @click="tab = 'tls'; switchAdvisor()" tabindex="0" role="button" @keydown.enter.prevent="tab = 'tls'; switchAdvisor()" @keydown.space.prevent="tab = 'tls'; switchAdvisor()">
         <div class="agg-head">
           <span class="agg-label">MTA-STS / TLS aggregate</span>
           <span class="agg-scope">{{ selected === '__all__' ? 'ALL DOMAINS' : selected }}</span>
@@ -237,7 +246,7 @@ async function openTlsReview(d: any) {
     <!-- Domain breakdown table -->
     <div v-if="!loading && overview" class="card" style="margin-top:14px">
       <div class="ct">
-        <h3>By domain</h3>
+        <h3 aria-level="2">By domain</h3>
         <div class="ct-right">
           <span class="sectag">EXPAND → SOURCES → IP → VOLUME</span>
         </div>
@@ -347,7 +356,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 23px; letter-spacing
 
 .tabs { display: flex; background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 12px; padding: 3px; gap: 2px; flex: none; }
 .tab { background: none; border: none; color: var(--muted); font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .5px; padding: 7px 16px; border-radius: 9px; cursor: pointer; transition: .15s; }
-.tab.active { background: rgba(91,110,245,.25); color: var(--txt); }
+.tab.active { background: rgba(91,92,240,.25); color: var(--txt); }
 .tab:hover:not(.active) { color: var(--txt); }
 
 .search-wrap { position: relative; display: flex; align-items: center; flex: none; }

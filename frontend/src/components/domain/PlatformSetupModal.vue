@@ -35,7 +35,7 @@ async function markDone() {
   // generic check-dns-live endpoint is extended to take an arbitrary host
   // (today it only knows about dmarc/mta-sts/tlsrpt) — until then, this is
   // an explicit, honest confirmation step rather than a fake green check.
-  if (!confirm('Sentinel hasn\'t independently confirmed this DNS change is live yet. Mark as done anyway?')) return
+  if (!confirm('ZoneProof hasn\'t independently confirmed this DNS change is live yet. Mark as done anyway?')) return
   markingDone.value = true
   try {
     ui.toast(`${card.value?.name} marked as set up`)
@@ -49,7 +49,7 @@ async function sendEmail() {
   if (!emailTo.value) return
   emailSending.value = true
   try {
-    // Sent server-side via Sentinel's own email service — not a mailto:
+    // Sent server-side via ZoneProof's own email service — not a mailto:
     // link. mailto: only works if the person clicking it has a desktop
     // mail client configured as the OS/browser default, which silently
     // does nothing otherwise (webmail-only setups, mobile, locked-down
@@ -158,7 +158,7 @@ async function sendEmail() {
             </div>
             <p class="section-text muted">
               Replace &lt;selector&gt; with the exact selector {{ card.name }} gave you above, and use the value
-              {{ card.name }} showed you — Sentinel never sees this value, it's generated per-account.
+              {{ card.name }} showed you — ZoneProof never sees this value, it's generated per-account.
             </p>
             <ol class="steps-list">
               <li v-for="(step, i) in card.registrar_steps_dkim" :key="i">{{ step }}</li>
@@ -212,7 +212,7 @@ async function sendEmail() {
 
 .selector-row { display: flex; gap: 10px; align-items: center; }
 .selector-label { font-family: var(--mono); font-size: 10px; color: var(--faint); }
-.selector-val { font-family: var(--mono); font-size: 11px; color: #9aa6ff; background: rgba(91,110,245,.1); padding: 2px 8px; border-radius: 5px; }
+.selector-val { font-family: var(--mono); font-size: 11px; color: #9aa6ff; background: rgba(91,92,240,.1); padding: 2px 8px; border-radius: 5px; }
 
 .steps-list { display: flex; flex-direction: column; gap: 6px; padding-left: 20px; font-size: 12px; color: var(--muted); line-height: 1.55; }
 .steps-link { display: inline-block; margin-top: 8px; font-size: 12px; color: #9aa6ff; text-decoration: none; }
@@ -224,7 +224,7 @@ async function sendEmail() {
 .email-input:focus { border-color: var(--indigo); }
 
 .footer { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
-.btn { background: linear-gradient(90deg,#5b6ef5,#8b5cf6); color: #fff; border: none; border-radius: 12px; padding: 11px 18px; font-family: var(--disp); font-weight: 700; font-size: 13px; cursor: pointer; }
+.btn { background: linear-gradient(90deg,#5b5cf0,#4b4ce0); color: #fff; border: none; border-radius: 12px; padding: 11px 18px; font-family: var(--disp); font-weight: 700; font-size: 13px; cursor: pointer; }
 .btn.ghost { background: rgba(255,255,255,.04); border: 1px solid var(--line2); color: var(--txt); box-shadow: none; }
 .btn.ghost:hover { border-color: var(--indigo); }
 .btn.small { padding: 7px 13px; font-size: 11.5px; border-radius: 9px; }

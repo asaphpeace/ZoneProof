@@ -6,11 +6,18 @@ import { useDomainsStore } from '@/stores/domains'
 import RoadmapTrack from '@/components/domain/RoadmapTrack.vue'
 import RecordReviewModal from '@/components/domain/RecordReviewModal.vue'
 import EnforcementReadinessCard from '@/components/domain/EnforcementReadinessCard.vue'
+import LoadError from '@/components/ui/LoadError.vue'
+import { useScopeStore } from '@/stores/scope'
 
 const route   = useRoute()
 const domains = useDomainsStore()
 
-const selected    = ref<string>('')
+const scope = useScopeStore()
+const fallbackDomain = ref('')
+const selected = computed<string>({
+  get: () => scope.domain && domains.list.some(d => d.domain === scope.domain) ? scope.domain : fallbackDomain.value,
+  set: (v) => scope.set(v || null),
+})
 const dmarcData   = ref<any>(null)
 const tlsData     = ref<any>(null)
 const diff        = ref<any>(null)
@@ -20,6 +27,10 @@ const recommendations = ref<any[]>([])
 const simulation  = ref<any>(null)
 const simulationLoading = ref(false)
 const loading     = ref(false)
+const loadError   = ref('')
+// Per-source readiness for the checklist. Loaded with the page so the checklist is there
+// before anyone asks for a preview; null when there is nothing to simulate (for example at reject).
+const readiness   = ref<any[] | null>(null)
 
 const DMARC_STAGE_IDX = { none: 0, monitor: 1, quarantine: 2, reject: 3, bimi: 4 } as Record<string,number>
 const MTA_STAGE_IDX   = { none: 0, testing: 1, enforce: 2 } as Record<string,number>
@@ -59,12 +70,11 @@ const tlsFailReason = computed<string | null>(() =>
 
 onMounted(async () => {
   await domains.fetch()
-  const fromQuery = route.query.domain as string | undefined
-  if (fromQuery && domains.list.some(d => d.domain === fromQuery)) {
-    selected.value = fromQuery
-  } else if (domains.list.length) {
-    selected.value = domains.list[0].domain
-  }
+  if (domains.error) { loadError.value = domains.error; loading.value = false; return }
+  // The shared scope (including a ?domain= link) is applied by the shell. With
+  // "all domains" this page still needs one, so it shows the first without
+  // changing what the other pages are showing.
+  if (domains.list.length) fallbackDomain.value = domains.list[0].domain
   await loadData()
 })
 
@@ -85,7 +95,9 @@ async function loadData() {
   const dom = selectedDomain.value
   if (!dom) return
   loading.value = true
+  loadError.value = ''
   advisor.value = null
+  readiness.value = null
   try {
     [dmarcData.value, tlsData.value, advisor.value, recommendations.value] = await Promise.all([
       api.dmarcData(dom.id),
@@ -93,7 +105,11 @@ async function loadData() {
       api.advisor('roadmap', dom.id),
       api.domainRecommendations(dom.id),
     ])
-  } finally { loading.value = false }
+    // Not part of the page's own load: a domain at reject has nothing to simulate and answers 400.
+    api.simulateDmarcPolicy(dom.id)
+      .then((sim: any) => { if (selectedDomain.value?.id === dom.id) readiness.value = sim?.source_readiness ?? null })
+      .catch(() => { readiness.value = null })
+  } catch (e: any) { loadError.value = e?.message || 'The data request failed.' } finally { loading.value = false }
 }
 
 async function reviewDmarc() {
@@ -128,6 +144,7 @@ async function reloadAdvisor() {
 
 <template>
   <div>
+    <LoadError v-if="loadError" :message="loadError" @retry="$router.go(0)" />
     <div class="titlerow">
       <div>
         <div class="crumb">05 / Roadmap</div>
@@ -178,7 +195,7 @@ async function reloadAdvisor() {
       <svg class="ds-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/>
       </svg>
-      <select v-model="selected" class="domain-select">
+      <select v-model="selected" class="domain-select" aria-label="Domain">
         <option v-for="d in domains.list" :key="d.domain" :value="d.domain">
           {{ d.domain }}
         </option>
@@ -212,9 +229,9 @@ async function reloadAdvisor() {
     />
 
     <EnforcementReadinessCard
-      v-if="simulation?.source_readiness?.length && selectedDomain"
+      v-if="(simulation?.source_readiness ?? readiness)?.length && selectedDomain"
       :domain-id="selectedDomain.id"
-      :source-readiness="simulation.source_readiness"
+      :source-readiness="(simulation?.source_readiness ?? readiness)!"
     />
 
     <div v-if="loading && !dmarcData" class="loading-state">Loading roadmap…</div>
@@ -281,7 +298,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 25px; letter-spacing
   cursor: pointer; outline: none; transition: border-color .15s;
 }
 .domain-select:hover  { border-color: var(--indigo); }
-.domain-select:focus  { border-color: var(--indigo); box-shadow: 0 0 0 3px rgba(91,110,245,.18); }
+.domain-select:focus  { border-color: var(--indigo); box-shadow: 0 0 0 3px rgba(91,92,240,.18); }
 .domain-select option { background: #0c0e1c; color: var(--txt); }
 .ds-caret {
   position: absolute; right: 12px; width: 15px; height: 15px;

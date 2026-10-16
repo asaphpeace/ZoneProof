@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { api } from '@/api/client'
 import { useDomainsStore } from '@/stores/domains'
 import AdvisorBanner from '@/components/ui/AdvisorBanner.vue'
+import LoadError from '@/components/ui/LoadError.vue'
 import SourceTable from '@/components/domain/SourceTable.vue'
 import DmarcAuthDrawer from '@/components/domain/DmarcAuthDrawer.vue'
 import RecordReviewModal from '@/components/domain/RecordReviewModal.vue'
@@ -11,13 +12,18 @@ import DataDeadZone from '@/components/ui/DataDeadZone.vue'
 import ConceptCardButton from '@/components/ui/ConceptCardButton.vue'
 import DateRangeFilter from '@/components/ui/DateRangeFilter.vue'
 import ReportTimeline from '@/components/ui/ReportTimeline.vue'
+import { useScopeStore } from '@/stores/scope'
 
 const route   = useRoute()
 const router  = useRouter()
 const domains = useDomainsStore()
 
 const ALL = '__all__'
-const selected = ref<string>((route.query.domain as string) ?? ALL)
+const scope = useScopeStore()
+const selected = computed<string>({
+  get: () => scope.domain ?? ALL,
+  set: (v) => scope.set(v === ALL ? null : v),
+})
 const days            = ref(30)
 const timelineFilter  = ref<{ fromDate: string | null, toDate: string | null, reporters: string[] }>({ fromDate: null, toDate: null, reporters: [] })
 const data            = ref<any>(null)
@@ -25,11 +31,13 @@ const diff            = ref<any>(null)
 const advisor         = ref<any>(null)
 const advisorLoading  = ref(false)
 const loading         = ref(false)
+const loadError       = ref('')
 const drawerIp        = ref<any>(null)
 
 onMounted(async () => {
   advisorLoading.value = true
   await domains.fetch()
+  if (domains.error) { loadError.value = domains.error; advisorLoading.value = false; loading.value = false; return }
   await loadData(true)
 })
 
@@ -64,6 +72,7 @@ const filteredSubdomainGroups = computed(() => {
 
 async function loadData(initialLoad = false) {
   loading.value = true
+  loadError.value = ''
   data.value = null
   if (!initialLoad) advisorLoading.value = true
   const capturedSelection = selected.value
@@ -77,7 +86,7 @@ async function loadData(initialLoad = false) {
       if (!dom) { loading.value = false; advisorLoading.value = false; return }
       data.value = await api.dmarcData(dom.id, { fromDate, toDate })
     }
-  } finally { loading.value = false }
+  } catch (e: any) { loadError.value = e?.message || 'The data request failed.'; return } finally { loading.value = false }
 
   // Advisor loads independently — never blocks main content
   // On initial load: use cache so advisor shows instantly; then fire a background refresh
@@ -208,6 +217,7 @@ async function monitorSubdomain(hostname: string) {
 
 <template>
   <div>
+    <LoadError v-if="loadError" :message="loadError" @retry="$router.go(0)" />
     <!-- Header -->
     <div class="titlerow">
       <div>
@@ -235,7 +245,7 @@ async function monitorSubdomain(hostname: string) {
     <div class="domain-bar">
       <div class="domain-select-wrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sel-icon"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-        <select v-model="selected" class="domain-select">
+        <select v-model="selected" class="domain-select" aria-label="Domain">
           <option value="__all__">All domains</option>
           <option disabled style="color:var(--faint)">──────────</option>
           <option v-for="d in domains.list" :key="d.domain" :value="d.domain">{{ d.domain }}</option>
@@ -333,7 +343,7 @@ async function monitorSubdomain(hostname: string) {
     <!-- Sending sources table -->
     <div class="card" style="margin-top:14px">
       <div class="ct">
-        <h3>Sending sources</h3>
+        <h3 aria-level="2">Sending sources</h3>
         <span class="sectag">SOURCE → IP → AUTH PER VOLUME</span>
       </div>
       <div v-if="loading" style="padding:28px;color:var(--muted);text-align:center">Loading…</div>
@@ -342,7 +352,7 @@ async function monitorSubdomain(hostname: string) {
            since most subdomains never need to be separately monitored. -->
       <div v-else-if="hasSubdomainFold" class="subfold-list">
         <div v-for="g in filteredSubdomainGroups" :key="g.header_from" class="subfold">
-          <div class="subfold-head" @click="toggleGroup(g.header_from)">
+          <div class="subfold-head" @click="toggleGroup(g.header_from)" tabindex="0" role="button" @keydown.enter.prevent="toggleGroup(g.header_from)" @keydown.space.prevent="toggleGroup(g.header_from)">
             <svg class="subfold-chev" :class="{ open: openGroups.has(g.header_from) }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <path d="M9 18l6-6-6-6"/>
             </svg>
@@ -404,7 +414,7 @@ async function monitorSubdomain(hostname: string) {
 .crumb { font-family: var(--mono); font-size: 10px; color: var(--faint); letter-spacing: 1.4px; text-transform: uppercase; }
 h1 { font-family: var(--disp); font-weight: 800; font-size: 23px; letter-spacing: -.6px; margin-top: 4px; }
 .sub { color: var(--muted); margin-top: 4px; font-size: 13px; }
-.btn { background: linear-gradient(90deg,#5b6ef5,#8b5cf6); color:#fff; border:none; border-radius:12px; padding:10px 18px; font-family:var(--disp); font-weight:700; font-size:13px; cursor:pointer; flex:none; }
+.btn { background: linear-gradient(90deg,#5b5cf0,#4b4ce0); color:#fff; border:none; border-radius:12px; padding:10px 18px; font-family:var(--disp); font-weight:700; font-size:13px; cursor:pointer; flex:none; }
 
 /* Domain dropdown */
 .domain-bar { margin-bottom: 16px; }
@@ -478,12 +488,12 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 23px; letter-spacing
   font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: .4px;
   padding: 3px 9px; border-radius: 8px; flex: none;
 }
-.subfold-tag.primary     { background: rgba(91,110,245,.16); color: #9aa6ff; }
+.subfold-tag.primary     { background: rgba(91,92,240,.16); color: #9aa6ff; }
 .subfold-tag.monitored   { background: rgba(52,224,161,.14); color: var(--good); }
 .subfold-tag.unmonitored { background: rgba(245,197,66,.14); color: var(--amber); }
 .subfold-vol { font-family: var(--mono); font-size: 11px; color: var(--faint); margin-left: auto; }
 .subfold-add {
-  background: rgba(91,110,245,.16); border: 1px solid rgba(91,110,245,.35); color: #9aa6ff;
+  background: rgba(91,92,240,.16); border: 1px solid rgba(91,92,240,.35); color: #9aa6ff;
   border-radius: 8px; padding: 5px 12px; font-size: 11px; font-weight: 700; cursor: pointer; flex: none;
 }
 .subfold-add:disabled { opacity: .6; cursor: not-allowed; }
