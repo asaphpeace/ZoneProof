@@ -130,7 +130,7 @@ Shape taken from the vendor setup screenshot, **not yet agreed**. Each integrati
 | E8 | 3.2 calibration | Needs E7 labels |
 | E9 | Stage 5 generator and discriminator; Stage 6 constrained LLM layer | Provider, budget, attacker-text handling decisions |
 | E10 | Deferred register (executives, fake apps, ads, marketplaces, dark web, BEC) | After Stage 8, new scope |
-| E11 | 0.1 Commit Phase 1 | Your decision; scripted staging approach exists |
+| E11 | 0.1 Commit Phase 1 | **DONE 2026-10-16.** Branch `v2-foundations`, 4 commits by layer (docs, core, backend, frontend), 505 files. Not pushed. Left out: `zp-worker.tgz`, `policy.json`, `.claude/settings*` |
 | E12 | 2.5 paid sources and 2.6b CZDS | Skipped or parked by you |
 
 ### F. Other plans
