@@ -59,3 +59,12 @@ backend/reports/
 # ── Logs ──────────────────────────────────────────────────────────────────────
 *.log
 logs/
+
+# ── Personal dev journal (not for version control) ────────────────────────────
+.dev-journal.md
+
+# Brand Guard evaluation snapshots (third-party data + licences; never commit)
+backend/data/brand_guard_corpus/
+
+# Generated local-only logins for the dev_live scratch schema
+backend/data/dev_live_users.txt

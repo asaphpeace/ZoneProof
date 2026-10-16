@@ -157,6 +157,32 @@ class DiscoveredSubdomainOut(BaseModel):
     disposition_reason: str | None = None
 
 
+
+class SubdomainCoverageOut(BaseModel):
+    """
+    What the parent DMARC policy does to a subdomain nobody listed. Needs no
+    enumeration: unlisted subdomains inherit sp= (or p=, or np= where published).
+    """
+    dmarc_found: bool
+    policy: str | None = None
+    subdomain_policy: str | None = None
+    np_policy: str | None = None
+    effective_subdomain_policy: str | None = None
+    level: str                    # protected | partial | open
+    summary: str
+
+
+class DiscoveredSubdomainsOut(BaseModel):
+    """
+    Discovery result plus the state of each source, so "none found" can be told
+    apart from "a source could not be asked" (for example a certificate-log
+    timeout). Source states: ok | cached | timed_out | failed |
+    skipped_unverified | wildcard_filtered.
+    """
+    subdomains: list[DiscoveredSubdomainOut]
+    sources: dict[str, str]
+    coverage: SubdomainCoverageOut | None = None
+
 class SubdomainDispositionIn(BaseModel):
     hostname: str
     disposition: str   # monitor | exclude | inherited_sp

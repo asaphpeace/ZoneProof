@@ -35,8 +35,67 @@ class Tenant(Base):
     report_schedule: Mapped[str] = mapped_column(String(20), default="off")  # off | weekly | monthly
     last_report_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    users: Mapped[list["User"]] = relationship(back_populates="tenant")
-    domains: Mapped[list["Domain"]] = relationship(back_populates="tenant")  # type: ignore[name-defined]
+    # Tenant-wide Tier B kill switch — an admin can halt every phishing
+    # send (manual launch and the recurring scheduler both check this)
+    # without revoking individual engagements one at a time.
+    phishing_paused: Mapped[bool] = mapped_column(default=False, server_default="false")
+
+    # Scheduled phishing/Human-Risk PDF report delivery — deliberately a
+    # parallel column pair mirroring report_schedule/last_report_sent_at
+    # above rather than a generalized report_type table, matching how
+    # phishing_paused above already chose a dedicated column over
+    # generalizing an existing one (Phishing Simulation roadmap Phase 22).
+    phishing_report_schedule: Mapped[str] = mapped_column(String(20), default="off")  # off | weekly | monthly
+    last_phishing_report_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Default language for phishing-simulation content sent to this
+    # tenant's recipients, used whenever a target-list entry has no
+    # per-recipient locale of its own (Phishing Simulation roadmap Phase
+    # 19 — South African language localization). "en" | "af" | "zu" | "st"
+    # | "ve" — see app/services/phishing_locale_content.SUPPORTED_LOCALES.
+    default_locale: Mapped[str] = mapped_column(String(10), default="en", server_default="en")
+
+    # Real forwarding address for employee-reported suspicious emails
+    # (Phishing Simulation roadmap Phase 26) — <slug>@mailsentry.co.za,
+    # same slug format and generator as Domain.reporting_slug, but
+    # tenant-scoped rather than domain-scoped (a distinct concern from
+    # DMARC/TLS-RPT reporting) and lazily provisioned on first read
+    # (get_phishing_meta) rather than eagerly at some creation moment,
+    # since there's no obvious "this tenant now exists" trigger point
+    # the way there is for a newly-added Domain.
+    phishing_report_slug: Mapped[str | None] = mapped_column(String(64), unique=True, nullable=True)
+
+    # Training defaults (Phishing Simulation roadmap Phase 24). When set,
+    # a phishing-simulation failure (click/credential-entry) assigns this
+    # real course instead of the single built-in micro-lesson — null
+    # means "keep using the micro-lesson," the original, always-available
+    # default. Reminder interval/cap are real config, not hardcoded, so a
+    # tenant can tune nag frequency (or disable it via max_count=0)
+    # instead of every tenant getting the same cadence.
+    # use_alter + a matching name: tenants -> training_courses (this FK)
+    # and training_courses -> tenants (its own tenant_id FK) form a real
+    # two-table cycle that SQLAlchemy's metadata create_all/drop_all (used
+    # by the test suite) can't sort without an explicitly named,
+    # separately-alterable constraint — matches the migration's own
+    # two-step create-table-then-add-constraint shape.
+    auto_assign_training_course_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey(
+            "training_courses.id", ondelete="SET NULL", use_alter=True,
+            name="fk_tenants_auto_assign_training_course_id",
+        ),
+        nullable=True,
+    )
+    training_reminder_interval_days: Mapped[int] = mapped_column(Integer, default=14, server_default="14")
+    training_reminder_max_count: Mapped[int] = mapped_column(Integer, default=2, server_default="2")
+
+    # passive_deletes=True on both: tenant_id on users/domains is NOT NULL
+    # with ondelete="CASCADE" at the DB level. Without this, SQLAlchemy's
+    # own unit-of-work tries to "help" by UPDATEing each child's FK to NULL
+    # before the parent DELETE — which then fails that NOT NULL constraint
+    # instead of ever reaching the DB, which would have cascaded correctly
+    # on its own. This is what delete_account()'s admin path relies on.
+    users: Mapped[list["User"]] = relationship(back_populates="tenant", passive_deletes=True)
+    domains: Mapped[list["Domain"]] = relationship(back_populates="tenant", passive_deletes=True)  # type: ignore[name-defined]
     clients: Mapped[list["Tenant"]] = relationship(
         "Tenant", foreign_keys="Tenant.parent_tenant_id", back_populates="parent"
     )

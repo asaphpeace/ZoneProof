@@ -18,8 +18,21 @@ from app.models.engagement import Engagement
 from app.models.cloud_asset import CloudAsset
 from app.models.cloud_priv_esc_path import CloudPrivEscPath
 from app.models.finding import Finding
+from app.models.host_connection import HostConnection
+from app.models.actor import Actor, ActorIdentity
+from app.models.investigation import Investigation, InvestigationEvent
+from app.models.phishing import PhishingTargetList, PhishingExemption, PhishingCampaign, PhishingEvent, TrainingAssignment
+from app.models.oauth_app_connection import OAuthAppConnection, OAuthGrant
+from app.models.email_suppression import EmailSuppression
+from app.models.tenant_erasure_log import TenantErasureLog
+from app.models.phishing_custom_template import PhishingCustomTemplate
+from app.models.training_course import TrainingCourse, TrainingCourseModule, TrainingCourseAssignment
+from app.models.reported_email import ReportedEmail
+from app.models.domain_reputation_cache import DomainReputationCache
+from app.models.brand_guard import BrandProfile, BrandCandidate, CandidateEvidence, BrandScanRun, BrandSourceHealth, BrandCandidateObservation, BrandCandidateEvent, BrandRegistrationCache, BrandCampaign, CtStreamCursor, BrandGraphNode, BrandGraphEdge, BrandTakedown, BrandSubmission, BrandNotifyChannel, BrandNotifyLog, BrandProbeJob, BrandPageCapture, BrandReferenceCapture, BrandFunnelCount
 
 __all__ = [
+    "BrandProfile", "BrandCandidate", "CandidateEvidence", "BrandScanRun", "BrandSourceHealth", "BrandCandidateObservation", "BrandCandidateEvent", "BrandRegistrationCache", "BrandCampaign", "CtStreamCursor", "BrandGraphNode", "BrandGraphEdge", "BrandTakedown", "BrandSubmission", "BrandNotifyChannel", "BrandNotifyLog", "BrandProbeJob", "BrandPageCapture", "BrandReferenceCapture", "BrandFunnelCount",
     "Tenant", "User", "Domain", "Invite",
     "DmarcReport", "DmarcRecord", "DmarcAggregate",
     "TlsReport", "TlsPolicy", "TlsFailureDetail", "TlsAggregate",
@@ -27,4 +40,11 @@ __all__ = [
     "SentinelSnapshot", "SenderRecommendation", "AuditLogEntry", "PasswordResetToken",
     "EmailVerificationToken", "SubdomainDisposition", "ServiceAccount",
     "CloudAccountConnection", "Engagement", "CloudAsset", "CloudPrivEscPath", "Finding",
+    "HostConnection", "Actor", "ActorIdentity", "Investigation", "InvestigationEvent",
+    "PhishingTargetList", "PhishingExemption", "PhishingCampaign", "PhishingEvent", "TrainingAssignment",
+    "OAuthAppConnection", "OAuthGrant", "EmailSuppression", "TenantErasureLog",
+    "PhishingCustomTemplate",
+    "TrainingCourse", "TrainingCourseModule", "TrainingCourseAssignment",
+    "ReportedEmail",
+    "DomainReputationCache",
 ]

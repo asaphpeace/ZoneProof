@@ -36,7 +36,7 @@ class HandoffExchangeRequest(BaseModel):
 
 class InviteRequest(BaseModel):
     email: str
-    role: str = "viewer"  # admin | viewer
+    role: str = "viewer"  # admin | approver | viewer
 
 
 class InviteOut(BaseModel):
@@ -90,6 +90,13 @@ class UpdateMeRequest(BaseModel):
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
+
+
+class DeleteAccountRequest(BaseModel):
+    # Admin path only: must exactly match the tenant's current name. Real
+    # friction, deliberately — this action is irreversible and destroys
+    # every domain, user, and audit-log entry in the workspace.
+    confirm_tenant_name: str | None = None
 
 
 class ForgotPasswordRequest(BaseModel):

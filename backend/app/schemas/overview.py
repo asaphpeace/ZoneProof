@@ -12,6 +12,10 @@ class SentinelScoreOut(BaseModel):
     pillar_certs: float         # weighted points earned, max 15
     volume_weighted: bool
     delta: int | None           # change vs last week's snapshot (None = no history)
+    pillar_cloud_posture: float | None = None  # 0-100 on its own scale; None = no connected cloud account (Sentinel Command)
+    pillar_human_risk: float | None = None  # 0-100 on its own scale; None = no phishing campaign history yet (Phase 9)
+    pillar_verified_exploitability: float | None = None  # 0-100 real per-Finding exploitability rollup; None = nothing scored yet
+    pillar_brand_exposure: float | None = None  # 0-100 look-alike domain exposure; None = no active, scanned brand
 
 
 class DomainKpiOut(BaseModel):
@@ -167,6 +171,7 @@ class ReportDataOut(BaseModel):
     threat: ThreatSurfaceOut
     domains: list[ReportDomainRow]
     cert_expiry_list: list[CertAlertOut]
+    brand_guard: dict | None = None   # brand exposure section for the report (brand_exposure.compute); None = not using Brand Guard
 
 
 class TenantOverviewOut(BaseModel):

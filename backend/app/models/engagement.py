@@ -50,6 +50,17 @@ class Engagement(Base):
     roe_signature_request_id: Mapped[str | None] = mapped_column(String(200), nullable=True)
     roe_doc_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
+    # Generic recurring-scan tracking, first used by tier='impersonation'
+    # (PHISHING_DESIGN.md Section 2) but deliberately not tier-specific —
+    # unlike CloudAccountConnection/HostConnection, Engagement itself had no
+    # place to record "did the thing that runs periodically for this
+    # engagement last succeed," even though every tier now has some
+    # recurring pipeline behind it.
+    last_scanned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_scan_status: Mapped[str] = mapped_column(String(20), default="never_run", server_default="never_run")
+    # never_run | success | failed
+    last_scan_error: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     tenant: Mapped["Tenant"] = relationship()  # type: ignore[name-defined]

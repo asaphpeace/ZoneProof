@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Index, String, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -35,5 +35,20 @@ class CloudAsset(Base):
 
     first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    # Customer-facing "this asset matters" signal for the Attack Path Graph
+    # (distinct from graph_service.py's own unrelated "crown jewel cards" —
+    # that term means "any node reached by >=1 edge," pure topology; this
+    # is a real customer/heuristic judgment about asset value). Starts as
+    # a heuristic default (resource_inventory_service.py's _infer_high_value,
+    # recomputed on every rescan) and is permanently protected from that
+    # recomputation the moment high_value_set_by_user_id is populated —
+    # same "manual override can never be silently clobbered" guarantee as
+    # ReportedEmail.disposition.
+    is_high_value: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    high_value_set_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    high_value_set_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     connection: Mapped["CloudAccountConnection"] = relationship()  # type: ignore[name-defined]
