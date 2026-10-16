@@ -20,7 +20,7 @@ Done: 21 of 53 (plus two partly: C5, D1). Everything is committed on branch `v2-
 
 Also done outside the plan: IMAP poll no longer crashes when unconfigured, SendGrid verified end to end, the Vite proxy port mismatch diagnosed.
 
-Test status: the full backend suite last passed on 2026-10-15 (2453 passed, 2 skipped); a re-run after the 2026-10-16 changes is in progress. Frontend: 87 tests pass.
+Test status: the full backend suite last passed on 2026-10-15 (2453 passed, 2 skipped); after the 2026-10-16 changes a full run gave 2471 passed, 1 skipped, 1 failed and 1 error (test_dev_isolation, test_webhooks_router); both pass when run alone (20 passed), most likely because another pytest was using the same test database at the time. A clean re-run is still owed. Frontend: 87 tests pass.
 
 ## 1. Verified starting point
 
