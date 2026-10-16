@@ -24,6 +24,7 @@ from app.routers import auth, domains, dmarc, tls, overview, certs, dns, alerts,
 # actual risk.
 
 from app.routers import sources as sources_router
+from app.routers import integrations as integrations_router
 
 configure_logging()
 log = logging.getLogger(__name__)
@@ -357,6 +358,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(sources_router.router)
+app.include_router(integrations_router.router)
 app.include_router(domains.router)
 app.include_router(dmarc.router)
 app.include_router(tls.router)

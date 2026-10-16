@@ -112,7 +112,7 @@ Shape taken from the vendor setup screenshot, **not yet agreed**. Each integrati
 
 | # | Item | Open question |
 |---|---|---|
-| D1 | Integration framework (feeds, schedule, status, credentials vault) | Reuses the A5 health model |
+| D1 | Integration framework (feeds, schedule, status, credentials vault) | **BACKEND DONE 2026-10-16; screen not started.** Tables `integration_connections` / `integration_feeds` (migration `b3d8f1a6c2e9`), adapter contract (`test`, `pull(cursor)`), service (encrypted credentials, manual run, fixed error kinds, `run_due` for the scheduler) and admin API `/integrations`. Credentials never returned, not even masked. No vendor registered (D2); scheduler not wired until one exists; export-upload fallback and the screen wait for the prototype. Vault uses the existing app-level key; KMS-backed is a C-band follow-up |
 | D2 | First vendor | Which platform first? (Mimecast and Microsoft 365 are the candidates) |
 | D3 | Join telemetry to DMARC per sender and domain | What question should the join answer? |
 

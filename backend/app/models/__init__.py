@@ -30,6 +30,7 @@ from app.models.training_course import TrainingCourse, TrainingCourseModule, Tra
 from app.models.reported_email import ReportedEmail
 from app.models.domain_reputation_cache import DomainReputationCache
 from app.models.job_run import JobRun
+from app.models.integration import IntegrationConnection, IntegrationFeed
 from app.models.brand_guard import BrandProfile, BrandCandidate, CandidateEvidence, BrandScanRun, BrandSourceHealth, BrandCandidateObservation, BrandCandidateEvent, BrandRegistrationCache, BrandCampaign, CtStreamCursor, BrandGraphNode, BrandGraphEdge, BrandTakedown, BrandSubmission, BrandNotifyChannel, BrandNotifyLog, BrandProbeJob, BrandPageCapture, BrandReferenceCapture, BrandFunnelCount
 
 __all__ = [
@@ -47,5 +48,5 @@ __all__ = [
     "PhishingCustomTemplate",
     "TrainingCourse", "TrainingCourseModule", "TrainingCourseAssignment",
     "ReportedEmail",
-    "DomainReputationCache", "JobRun",
+    "DomainReputationCache", "JobRun", "IntegrationConnection", "IntegrationFeed",
 ]
