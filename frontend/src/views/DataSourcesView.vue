@@ -159,8 +159,8 @@ const every = (s: number) => s % 86400 === 0 ? `${s / 86400} d` : s % 3600 === 0
       <section class="block">
         <h2>Background jobs</h2>
         <p class="hint">
-          The scheduled work that keeps the data above fresh. Counted since this server started
-          ({{ ago(serverStarted) }}); a restart clears the history. Jobs that are overdue, or that only act on work that is due, run shortly after start; the rest wait one interval.
+          The scheduled work that keeps the data above fresh. History is kept across restarts and shared by all servers; this server started
+          {{ ago(serverStarted) }}. Jobs that are overdue, or that only act on work that is due, run shortly after start; the rest wait one interval.
         </p>
         <p v-if="scheduler.role === 'leader'" class="role good">
           This server is running the background jobs{{ scheduler.since ? ` (since ${ago(scheduler.since)})` : '' }}.

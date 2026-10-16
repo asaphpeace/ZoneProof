@@ -3,10 +3,11 @@ What the background jobs have actually done.
 
 The jobs in main.py run inside the API process and used to leave no trace
 beyond a log line, so "is the cert probe running?" had no answer in the app.
-This keeps the last run of each in memory. It is per process: a restart clears
-it, and with more than one API instance each has its own view. That is
-deliberate for now (no new table on the shared backend) and is called out in
-the Data sources page ("since this server started").
+This keeps the last run of each in memory and, after every run, writes it to
+the job_runs table (persist). The Data sources page overlays the stored row on
+the in-memory state (overlay), so a restart does not wipe the history and a
+standby instance shows what the leader did. If the write fails the job is not
+affected and the page falls back to this process's own view.
 
 Exception text is never stored. A job failure is reduced to a short, fixed
 kind so the page can say what went wrong without exposing hostnames, paths or
@@ -15,10 +16,13 @@ stack frames to the browser. The full text stays in the server log.
 from __future__ import annotations
 
 import asyncio
+import logging
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from typing import Callable
+
+log = logging.getLogger(__name__)
 
 PROCESS_STARTED_AT = datetime.now(timezone.utc)
 
@@ -135,3 +139,51 @@ def reset() -> None:
     global _role, _role_since
     _jobs.clear()
     _role, _role_since = "unknown", None
+
+
+async def persist(key: str, session_factory=None) -> None:
+    """Write this job's just-finished run to job_runs. Never raises: history must not break a job."""
+    j = _jobs.get(key)
+    if not j or j.last_finished is None:
+        return
+    try:
+        from sqlalchemy.dialects.postgresql import insert
+        from app.models import JobRun
+        if session_factory is None:
+            from app.database import AsyncSessionLocal as session_factory
+        failed = 1 if j.last_ok is False else 0
+        values = dict(
+            job_key=key, runs=1, failures=failed, last_started=j.last_started, last_finished=j.last_finished,
+            last_ok=j.last_ok, last_failure_kind=j.last_failure_kind, last_duration_s=j.last_duration_s,
+        )
+        stmt = insert(JobRun).values(**values)
+        stmt = stmt.on_conflict_do_update(
+            index_elements=[JobRun.job_key],
+            set_=dict(
+                runs=JobRun.runs + 1,
+                failures=JobRun.failures + failed,
+                last_started=stmt.excluded.last_started,
+                last_finished=stmt.excluded.last_finished,
+                last_ok=stmt.excluded.last_ok,
+                last_failure_kind=stmt.excluded.last_failure_kind,
+                last_duration_s=stmt.excluded.last_duration_s,
+                updated_at=datetime.now(timezone.utc),
+            ),
+        )
+        async with session_factory() as db:
+            await db.execute(stmt)
+            await db.commit()
+    except Exception as e:
+        log.warning("could not store job history for %s: %s", key, type(e).__name__)
+
+
+def overlay(j: JobState, row) -> JobState:
+    """This job's state with the stored history applied. A local run newer than the stored one wins."""
+    if row is None:
+        return j
+    if j.last_finished and row.last_finished and j.last_finished > row.last_finished:
+        return j
+    return replace(
+        j, runs=row.runs, failures=row.failures, last_started=row.last_started, last_finished=row.last_finished,
+        last_ok=row.last_ok, last_failure_kind=row.last_failure_kind, last_duration_s=row.last_duration_s,
+    )

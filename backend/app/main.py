@@ -131,6 +131,7 @@ def _tracked(key: str, label: str, provides: str, interval_attr: str):
                 await fn()
             finally:
                 job_registry.finish(key)
+                await job_registry.persist(key)
         run._job_key = key
         return run
     return deco

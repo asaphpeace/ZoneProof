@@ -9,7 +9,7 @@ Three parts, each answering a different question:
   integrations  -- is each outside service configured at all? Booleans only;
                    nothing about hosts or keys.
   jobs          -- the background jobs that keep that data fresh, from the
-                   in-memory registry (since this server started).
+                   in-memory registry, with the stored history (job_runs) applied.
 
 Admin only. Failures are reduced to a fixed kind (see job_registry), never raw
 exception text.
@@ -24,7 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.database import get_db
-from app.models import DmarcReport, Domain, SslCert, TlsReport
+from app.models import DmarcReport, Domain, JobRun, SslCert, TlsReport
 from app.models.user import User
 from app.routers.auth import _require_admin, get_current_user
 from app.services import job_registry
@@ -152,8 +152,10 @@ async def sources_health(
     # ── background jobs ───────────────────────────────────────────────────────
     needs = {"imap_poll": imap_configured, "brand_guard": bool(settings.brand_guard_enabled)}
     role, role_since = job_registry.role()
+    stored = {r.job_key: r for r in (await db.execute(select(JobRun))).scalars().all()}
     jobs = []
     for j in job_registry.snapshot():
+        j = job_registry.overlay(j, stored.get(j.key))
         interval = j.interval()
         configured = needs.get(j.key, True)
         status, note = _job_status(j, interval, configured, now)
