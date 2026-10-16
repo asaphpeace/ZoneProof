@@ -27,6 +27,30 @@ from tests.factories import make_tenant, make_user
 
 
 @pytest.fixture(autouse=True)
+def _brand_mail_probe_is_offline(monkeypatch):
+    """Brand Guard's email-intent probe (plan 2.3) reads DNS; no test may reach the real network by accident.
+    Tests of the probe itself install their own fake."""
+    from app.services import brand_guard_service
+
+    async def offline(domain, mx_hosts):
+        return None
+
+    async def offline_one(arg):
+        return None
+    from app.services import brand_feeds
+
+    async def no_feeds(db, **kw):
+        return None
+    monkeypatch.setattr(brand_feeds, "refresh", no_feeds)                         # public abuse feeds (plan 2.5)
+    from app.services import brand_nrd
+    monkeypatch.setattr(brand_nrd, "refresh", no_feeds)                           # new-registration lists (plan 2.6b)
+    monkeypatch.setattr(brand_nrd.FEED, "days", {})
+    monkeypatch.setattr(brand_guard_service, "_probe_mail", offline)
+    monkeypatch.setattr(brand_guard_service, "_probe_hosting", offline_one)      # www CNAME lookups (plan 2.4)
+    monkeypatch.setattr(brand_guard_service, "_ip_owner", offline_one)           # ASN lookups for campaign clustering (plan 2.4)
+
+
+@pytest.fixture(autouse=True)
 def _reset_rate_limiter():
     """
     The login/forgot-password/scan rate limits (see app/rate_limit.py) use

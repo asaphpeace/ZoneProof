@@ -22,7 +22,7 @@ from app.routers.auth import get_current_user
 from app.schemas.domain import (
     DomainCreate, DomainDetail, DomainOut, WizardStep2Out, WizardStep3Out,
     OwnershipVerifyOut, RecommendationOut, SimulationOut, SourceImpactOut, SourceReadinessOut,
-    DiscoveredSubdomainOut, RegistrarInstructionsOut, DnsLiveCheckOut, EmailInstructionsIn,
+    DiscoveredSubdomainOut, DiscoveredSubdomainsOut, SubdomainCoverageOut, RegistrarInstructionsOut, DnsLiveCheckOut, EmailInstructionsIn,
     SubdomainDispositionIn,
 )
 from app.services.dmarc_service import check_dmarc_dns, generate_dmarc_record
@@ -240,8 +240,8 @@ async def wizard_tls_info(
             # Per RFC 8461 §3.2, the policy MUST be fetched from
             # https://mta-sts.<domain>/.well-known/mta-sts.txt — there is no
             # mechanism for a sender to ever look it up anywhere else (e.g.
-            # a Sentinel-branded host). This is true whether the customer
-            # self-hosts the file or Sentinel hosts it for them via a CNAME
+            # a ZoneProof-branded host). This is true whether the customer
+            # self-hosts the file or ZoneProof hosts it for them via a CNAME
             # (see MTA_STS_RESOLUTION_PLAN — managed hosting still serves
             # from this exact hostname, it doesn't relocate the URL).
             policy_url=f"https://mta-sts.{name}/.well-known/mta-sts.txt",
@@ -686,7 +686,7 @@ async def email_dns_instructions(
     "Email these instructions to whoever manages my website" — the delegated-
     setup case the plan calls out as unaddressed by any competitor found in
     research. Builds the exact record + registrar-specific steps server-side
-    so the recipient doesn't need a Sentinel login to act on it.
+    so the recipient doesn't need a ZoneProof login to act on it.
     """
     result = await db.execute(select(Domain).where(Domain.id == domain_id, Domain.tenant_id == user.tenant_id))
     domain = result.scalar_one_or_none()
@@ -723,7 +723,7 @@ async def email_dns_instructions(
 
     steps_html = "".join(f"<li style='margin-bottom:8px'>{html.escape(s)}</li>" for s in instructions.steps_for("TXT"))
     body_html = f"""
-    <p>{safe_user_email} uses Sentinel to monitor email security for <b>{safe_domain_name}</b> and
+    <p>{safe_user_email} uses ZoneProof to monitor email security for <b>{safe_domain_name}</b> and
     needs the following DNS record published to continue protecting it.</p>
     <p><b>Detected DNS provider:</b> {html.escape(instructions.name)}</p>
     <ol>{steps_html}</ol>
@@ -735,6 +735,7 @@ async def email_dns_instructions(
     """
 
     sent = await send_email(
+        db,
         to=payload.to_email,
         subject=f"DNS record needed for {domain.name} — {label} setup",
         title=f"{label} record needed for {domain.name}",
@@ -743,7 +744,7 @@ async def email_dns_instructions(
     return {"sent": sent}
 
 
-@router.get("/{domain_id}/discover-subdomains", response_model=list[DiscoveredSubdomainOut])
+@router.get("/{domain_id}/discover-subdomains", response_model=DiscoveredSubdomainsOut)
 async def discover_subdomains_endpoint(
     domain_id: str,
     db: AsyncSession = Depends(get_db),
@@ -763,16 +764,16 @@ async def discover_subdomains_endpoint(
     if not domain:
         raise HTTPException(status_code=404, detail="Domain not found")
 
-    from app.services.subdomain_discovery_service import discover_subdomains
+    from app.services.subdomain_discovery_service import discover_subdomains_with_status, check_subdomain_coverage
     from app.models import SubdomainDisposition
 
-    found = await discover_subdomains(db, domain, allow_active=domain.ownership_verified)
+    found, source_status = await discover_subdomains_with_status(db, domain, allow_active=domain.ownership_verified)
     disposition_rows = (await db.execute(
         select(SubdomainDisposition).where(SubdomainDisposition.domain_id == domain.id)
     )).scalars().all()
     disposition_map = {d.hostname.lower(): d for d in disposition_rows}
 
-    return [
+    items = [
         DiscoveredSubdomainOut(
             hostname=f.hostname,
             sources=f.sources,
@@ -784,6 +785,11 @@ async def discover_subdomains_endpoint(
         )
         for f in found
     ]
+    try:
+        coverage = SubdomainCoverageOut(**await check_subdomain_coverage(domain.name))
+    except Exception:
+        coverage = None   # an unanswered lookup is not a verdict
+    return DiscoveredSubdomainsOut(subdomains=items, sources=source_status, coverage=coverage)
 
 
 @router.post("/{domain_id}/subdomain-dispositions")

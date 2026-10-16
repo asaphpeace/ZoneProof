@@ -17,6 +17,31 @@ from app.services.reporting_address import rua_mailto
 from app.config import settings
 
 
+DEFAULT_TLS_WINDOW_DAYS = 30
+
+
+async def tls_window_totals(db: AsyncSession, domain_id, days: int = DEFAULT_TLS_WINDOW_DAYS) -> tuple[int, int, int]:
+    """
+    (total, successful, failed) sessions from reports whose period ends in the last `days`.
+
+    TlsAggregate rows are rebuilt from every policy ever received and stamped with the
+    month start, so they cannot be windowed; the raw policies carry the real period.
+    """
+    from datetime import timedelta
+    from app.models import TlsReport
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    row = (await db.execute(
+        select(
+            func.coalesce(func.sum(TlsPolicy.total_successful_session_count), 0),
+            func.coalesce(func.sum(TlsPolicy.total_failure_session_count), 0),
+        )
+        .join(TlsReport, TlsPolicy.report_id == TlsReport.id)
+        .where(TlsPolicy.domain_id == domain_id, TlsReport.period_end >= cutoff)
+    )).one()
+    ok, bad = int(row[0]), int(row[1])
+    return ok + bad, ok, bad
+
+
 # ── Record / policy generation ─────────────────────────────────────────────────
 
 def generate_tlsrpt_record(domain_name: str, slug: str) -> str:
@@ -194,10 +219,12 @@ async def rebuild_tls_aggregates(db: AsyncSession, domain_id: uuid.UUID) -> None
 # ── Plain-English TLS failure reason ──────────────────────────────────────────
 
 FAILURE_REASONS: dict[str, str] = {
-    "starttls-not-supported":       "The sending server did not offer STARTTLS. It cannot upgrade to an encrypted connection.",
-    "certificate-host-mismatch":    "The server's TLS certificate hostname does not match the MX hostname being connected to.",
-    "certificate-expired":          "The server's TLS certificate has expired. Renew it immediately.",
-    "certificate-not-trusted":      "The certificate is not signed by a trusted Certificate Authority.",
+    # RFC 8460 failure types describe the RECEIVING side as the sender saw it: these
+    # reports are about mail delivered to your domain, so "the server" is your MX.
+    "starttls-not-supported":       "A sender connected to your mail server and could not start encryption: your server did not offer STARTTLS to it. If only one sender reports this, the cause is more likely on the network path than on your server.",
+    "certificate-host-mismatch":    "The certificate your mail server presented does not match the MX hostname the sender connected to.",
+    "certificate-expired":          "The certificate your mail server presented has expired. Renew it immediately.",
+    "certificate-not-trusted":      "The certificate your mail server presented is not signed by a trusted Certificate Authority.",
     "validation-failure":           "TLS certificate validation failed for an unspecified reason.",
     "tlsa-invalid":                 "The TLSA (DANE) record doesn't match the certificate presented.",
     "dnssec-invalid":               "DNSSEC validation failed for this domain.",

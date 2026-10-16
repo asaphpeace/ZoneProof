@@ -11,7 +11,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models import Domain, DmarcAggregate, TlsAggregate, SslCert, SentinelSnapshot
+from app.services.tls_service import tls_window_totals
 from app.models.user import User, Tenant
+from app.services import brand_exposure as brand_exposure_service
 from app.routers.auth import get_current_user
 from app.schemas.overview import (
     TenantOverviewOut, DomainKpiOut, CertAlertOut, SentinelScoreOut,
@@ -22,6 +24,9 @@ from app.schemas.overview import (
 )
 from app.schemas.tls import TlsDomainSummaryOut
 from app.services.posture_service import compute_posture, compute_sentinel_score, DomainSentinelInput
+from app.services.cloud_scan_service import compute_tenant_cloud_posture_score
+from app.services.exploitability_service import compute_tenant_verified_exploitability_score
+from app.services.phishing_service import compute_tenant_human_risk_score
 from app.services.advisor_service import generate_report_narrative
 from app.services.recommendation_data import build_domain_input
 from app.services.recommendation_engine import evaluate_domain, Direction, Recommendation
@@ -82,15 +87,7 @@ async def get_tenant_overview(
         total_volume += vol
 
         # ── TLS aggregates ─────────────────────────────────────────────────────
-        ta_result = await db.execute(
-            select(
-                func.sum(TlsAggregate.total_sessions),
-                func.sum(TlsAggregate.successful_sessions),
-            ).where(TlsAggregate.domain_id == d.id)
-        )
-        ta_row = ta_result.one()
-        tls_total = int(ta_row[0] or 0)
-        tls_pass = int(ta_row[1] or 0)
+        tls_total, tls_pass, _ = await tls_window_totals(db, d.id)
         tls_pct = round(tls_pass / tls_total * 100, 1) if tls_total else None
         total_tls += tls_total
 
@@ -169,7 +166,7 @@ async def get_tenant_overview(
     avg_comp = round(sum(comp_vals) / len(comp_vals), 1) if comp_vals else None
     avg_tls = round(sum(tls_pass_vals) / len(tls_pass_vals), 1) if tls_pass_vals else None
 
-    # ── Sentinel Score ─────────────────────────────────────────────────────────
+    # ── ZoneProof Score ─────────────────────────────────────────────────────────
     sentinel_inputs = [
         DomainSentinelInput(
             dmarc_stage=kpi.dmarc_stage,
@@ -181,7 +178,15 @@ async def get_tenant_overview(
         )
         for kpi in domain_kpis
     ]
-    sentinel = compute_sentinel_score(sentinel_inputs)
+    cloud_posture_score = await compute_tenant_cloud_posture_score(db, user.tenant_id)
+    human_risk_score = await compute_tenant_human_risk_score(db, user.tenant_id)
+    verified_exploitability_score = await compute_tenant_verified_exploitability_score(db, user.tenant_id)
+    brand_exposure = await brand_exposure_service.compute(db, user.tenant_id)
+    sentinel = compute_sentinel_score(
+        sentinel_inputs, cloud_posture_score=cloud_posture_score, human_risk_score=human_risk_score,
+        verified_exploitability_score=verified_exploitability_score,
+        brand_exposure_score=float(brand_exposure["score"]) if brand_exposure else None,
+    )
 
     # Fetch last week's snapshot for delta
     this_monday = _iso_monday(date.today())
@@ -273,6 +278,10 @@ async def get_tenant_overview(
         pillar_certs=sentinel.pillar_certs,
         volume_weighted=sentinel.volume_weighted,
         delta=delta,
+        pillar_cloud_posture=sentinel.pillar_cloud_posture,
+        pillar_human_risk=sentinel.pillar_human_risk,
+        pillar_verified_exploitability=sentinel.pillar_verified_exploitability,
+        pillar_brand_exposure=sentinel.pillar_brand_exposure,
     )
 
     # Legacy compat fields
@@ -372,7 +381,7 @@ async def get_readiness_rollup(
         if domain.mta_sts_hosting_mode == "managed" and not domain.mta_sts_published:
             mta_sts_pending.append(ReadinessBlockerDomainOut(
                 domain_id=str(domain.id), domain_name=domain.name,
-                detail="Sentinel-hosted chosen, CNAME not yet detected",
+                detail="ZoneProof-hosted chosen, CNAME not yet detected",
             ))
 
         declared = (await db.execute(
@@ -547,17 +556,7 @@ async def get_tls_domain_summary(
 
     summaries = []
     for d in domains:
-        ta_result = await db.execute(
-            select(
-                func.sum(TlsAggregate.total_sessions),
-                func.sum(TlsAggregate.successful_sessions),
-                func.sum(TlsAggregate.failed_sessions),
-            ).where(TlsAggregate.domain_id == d.id)
-        )
-        row = ta_result.one()
-        total = int(row[0] or 0)
-        succ = int(row[1] or 0)
-        fail = int(row[2] or 0)
+        total, succ, fail = await tls_window_totals(db, d.id)
         summaries.append(TlsDomainSummaryOut(
             domain_id=str(d.id),
             domain=d.name,
@@ -677,13 +676,7 @@ async def get_report_data(
         dkim_pass_pct = round(dk_pass / dk_total * 100, 1) if dk_total else None
 
         # ── TLS aggregates (period-scoped) ─────────────────────────────────────
-        ta = await db.execute(
-            select(func.sum(TlsAggregate.total_sessions), func.sum(TlsAggregate.successful_sessions))
-            .where(TlsAggregate.domain_id == d.id)
-        )
-        ta_row = ta.one()
-        tls_total = int(ta_row[0] or 0)
-        tls_pass = int(ta_row[1] or 0)
+        tls_total, tls_pass, _ = await tls_window_totals(db, d.id, period_days)
         tls_pct = round(tls_pass / tls_total * 100, 1) if tls_total else None
         total_tls += tls_total
 
@@ -743,7 +736,15 @@ async def get_report_data(
         ))
 
     domain_rows.sort(key=lambda x: {"F": 0, "D": 1, "C": 2, "B": 3, "A": 4}.get(x.grade, 0))
-    sentinel = compute_sentinel_score(sentinel_inputs)
+    cloud_posture_score = await compute_tenant_cloud_posture_score(db, user.tenant_id)
+    human_risk_score = await compute_tenant_human_risk_score(db, user.tenant_id)
+    verified_exploitability_score = await compute_tenant_verified_exploitability_score(db, user.tenant_id)
+    brand_exposure = await brand_exposure_service.compute(db, user.tenant_id)
+    sentinel = compute_sentinel_score(
+        sentinel_inputs, cloud_posture_score=cloud_posture_score, human_risk_score=human_risk_score,
+        verified_exploitability_score=verified_exploitability_score,
+        brand_exposure_score=float(brand_exposure["score"]) if brand_exposure else None,
+    )
 
     # ── Score trend (last 8 weekly snapshots) ─────────────────────────────────
     trend_result = await db.execute(
@@ -766,6 +767,10 @@ async def get_report_data(
         pillar_dmarc=sentinel.pillar_dmarc, pillar_tls=sentinel.pillar_tls,
         pillar_certs=sentinel.pillar_certs, volume_weighted=sentinel.volume_weighted,
         delta=trend_delta,
+        pillar_cloud_posture=sentinel.pillar_cloud_posture,
+        pillar_human_risk=sentinel.pillar_human_risk,
+        pillar_verified_exploitability=sentinel.pillar_verified_exploitability,
+        pillar_brand_exposure=sentinel.pillar_brand_exposure,
     )
 
     # ── Sender inventory (three-bucket model) ─────────────────────────────────
@@ -1091,6 +1096,7 @@ async def get_report_data(
         )
 
     return ReportDataOut(
+        brand_guard=brand_exposure,
         generated_at=datetime.now(timezone.utc).isoformat(),
         workspace_name=tenant.name,
         period_days=period_days,

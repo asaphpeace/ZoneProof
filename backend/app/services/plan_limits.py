@@ -26,6 +26,13 @@ PLAN_LIMITS: dict[str, dict] = {
         "white_label":  False,
         "scheduled_reports": False,
         "audit_log":    False,
+        "brand_guard_brands":     0,   # protected brands (None = unlimited); 0 = feature off
+        "brand_guard_ct":         False,  # Certificate Transparency monitoring
+        "brand_guard_scan_days":  30,     # full discovery rescan cadence
+        "brand_guard_max_candidates": 0,  # candidates tracked per brand (None = unlimited)
+        "brand_guard_scan_budget": 0,          # candidate names evaluated per scan (DNS cost); 0 = off
+        "brand_guard_manual_scans_per_day": 0,    # "Scan now" runs per tenant per 24h (None = unlimited)
+        "brand_guard_concurrent_scans": 0,         # scans a tenant may have running at once (None = unlimited)
     },
     "starter": {
         "domains":      5,
@@ -38,6 +45,13 @@ PLAN_LIMITS: dict[str, dict] = {
         "white_label":  False,
         "scheduled_reports": False,
         "audit_log":    False,
+        "brand_guard_brands":     1,   # protected brands (None = unlimited); 0 = feature off
+        "brand_guard_ct":         False,  # Certificate Transparency monitoring
+        "brand_guard_scan_days":  30,     # full discovery rescan cadence
+        "brand_guard_max_candidates": 100,  # candidates tracked per brand (None = unlimited)
+        "brand_guard_scan_budget": 120,          # candidate names evaluated per scan (DNS cost); 0 = off
+        "brand_guard_manual_scans_per_day": 5,    # "Scan now" runs per tenant per 24h (None = unlimited)
+        "brand_guard_concurrent_scans": 1,         # scans a tenant may have running at once (None = unlimited)
     },
     "pro": {
         "domains":      20,
@@ -50,6 +64,13 @@ PLAN_LIMITS: dict[str, dict] = {
         "white_label":  False,
         "scheduled_reports": True,
         "audit_log":    False,
+        "brand_guard_brands":     10,   # protected brands (None = unlimited); 0 = feature off
+        "brand_guard_ct":         True,  # Certificate Transparency monitoring
+        "brand_guard_scan_days":  7,     # full discovery rescan cadence
+        "brand_guard_max_candidates": None,  # candidates tracked per brand (None = unlimited)
+        "brand_guard_scan_budget": 400,          # candidate names evaluated per scan (DNS cost); 0 = off
+        "brand_guard_manual_scans_per_day": 20,    # "Scan now" runs per tenant per 24h (None = unlimited)
+        "brand_guard_concurrent_scans": 3,         # scans a tenant may have running at once (None = unlimited)
     },
     "msp": {
         "domains":      150,     # across all tenants
@@ -62,6 +83,13 @@ PLAN_LIMITS: dict[str, dict] = {
         "white_label":  True,
         "scheduled_reports": True,
         "audit_log":    True,
+        "brand_guard_brands":     100,   # protected brands (None = unlimited); 0 = feature off
+        "brand_guard_ct":         True,  # Certificate Transparency monitoring
+        "brand_guard_scan_days":  7,     # full discovery rescan cadence
+        "brand_guard_max_candidates": None,  # candidates tracked per brand (None = unlimited)
+        "brand_guard_scan_budget": 400,          # candidate names evaluated per scan (DNS cost); 0 = off
+        "brand_guard_manual_scans_per_day": 100,    # "Scan now" runs per tenant per 24h (None = unlimited)
+        "brand_guard_concurrent_scans": 6,         # scans a tenant may have running at once (None = unlimited)
     },
     "enterprise": {
         "domains":      None,
@@ -74,6 +102,13 @@ PLAN_LIMITS: dict[str, dict] = {
         "white_label":  True,
         "scheduled_reports": True,
         "audit_log":    True,
+        "brand_guard_brands":     None,   # protected brands (None = unlimited); 0 = feature off
+        "brand_guard_ct":         True,  # Certificate Transparency monitoring
+        "brand_guard_scan_days":  7,     # full discovery rescan cadence
+        "brand_guard_max_candidates": None,  # candidates tracked per brand (None = unlimited)
+        "brand_guard_scan_budget": 400,          # candidate names evaluated per scan (DNS cost); 0 = off
+        "brand_guard_manual_scans_per_day": None,    # "Scan now" runs per tenant per 24h (None = unlimited)
+        "brand_guard_concurrent_scans": None,         # scans a tenant may have running at once (None = unlimited)
     },
 }
 
@@ -190,3 +225,84 @@ async def enforce_user_limit(tenant: Tenant, db: AsyncSession) -> None:
                 "upgrade_required": True,
             },
         )
+
+
+async def enforce_brand_guard_limit(tenant: Tenant, db: AsyncSession) -> None:
+    """Caps protected brands per tenant. A limit of 0 means Brand Guard isn't
+    part of the plan at all (free), which gets its own upgrade message."""
+    from app.models import BrandProfile  # local import — keeps module import order unchanged
+
+    max_brands = get_limits(tenant.plan)["brand_guard_brands"]
+    if max_brands is None:
+        return
+    plan_label = PLAN_DISPLAY.get(tenant.plan, {}).get("label", tenant.plan)
+    if max_brands == 0:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "feature_not_available",
+                "message": f"Brand Guard is not available on the {plan_label} plan.",
+                "current_plan": tenant.plan,
+                "upgrade_required": True,
+            },
+        )
+    current = (await db.execute(
+        select(func.count()).select_from(BrandProfile).where(
+            BrandProfile.tenant_id == tenant.id, BrandProfile.is_active == True
+        )
+    )).scalar_one()
+    if current >= max_brands:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "brand_limit_reached",
+                "message": f"Your {plan_label} plan protects {max_brands} brand{'s' if max_brands != 1 else ''}. "
+                           f"You have {current}. Upgrade to protect more.",
+                "current_plan": tenant.plan,
+                "limit": max_brands,
+                "current_count": current,
+                "upgrade_required": True,
+            },
+        )
+
+
+async def enforce_scan_limits(tenant: Tenant, db: AsyncSession) -> None:
+    """Cost guard for MANUAL scans: a daily quota and a cap on scans in flight per tenant. (Scheduled scans
+    are paced by their own cadence and are not counted.) 429 with a structured detail the UI can show."""
+    from datetime import datetime, timedelta, timezone
+
+    from app.models import BrandScanRun
+    from app.models.brand_guard import SCAN_ACTIVE_STATUSES
+
+    limits = get_limits(tenant.plan)
+    plan_label = PLAN_DISPLAY.get(tenant.plan, {}).get("label", tenant.plan)
+
+    quota = limits["brand_guard_manual_scans_per_day"]
+    if quota is not None:
+        used = (await db.execute(
+            select(func.count()).select_from(BrandScanRun).where(
+                BrandScanRun.tenant_id == tenant.id, BrandScanRun.triggered_by == "manual",
+                BrandScanRun.created_at >= datetime.now(timezone.utc) - timedelta(hours=24),
+            )
+        )).scalar_one()
+        if used >= quota:
+            raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail={
+                "code": "scan_quota_reached",
+                "message": f"Your {plan_label} plan allows {quota} manual scan{'s' if quota != 1 else ''} per 24 hours "
+                           f"and {used} have been used. Scheduled scans keep running automatically.",
+                "current_plan": tenant.plan, "limit": quota, "current_count": used, "upgrade_required": True,
+            })
+
+    cap = limits["brand_guard_concurrent_scans"]
+    if cap is not None:
+        running = (await db.execute(
+            select(func.count()).select_from(BrandScanRun).where(
+                BrandScanRun.tenant_id == tenant.id, BrandScanRun.status.in_(SCAN_ACTIVE_STATUSES),
+            )
+        )).scalar_one()
+        if running >= cap:
+            raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail={
+                "code": "scan_concurrency_limit",
+                "message": f"Your {plan_label} plan runs {cap} scan{'s' if cap != 1 else ''} at a time. Wait for a running scan to finish.",
+                "current_plan": tenant.plan, "limit": cap, "current_count": running, "upgrade_required": False,
+            })

@@ -1,5 +1,5 @@
 """
-Sentinel Advisor — constrained LLM-backed contextual guidance.
+ZoneProof Advisor — constrained LLM-backed contextual guidance.
 
 Design principles:
   1. Deterministic: temperature=0, structured output schema, no free-form creativity.
@@ -104,7 +104,7 @@ def compute_portfolio_journey_phase(
 _SCREEN_PROMPTS: dict[str, str] = {
 
 # ── OVERVIEW ─────────────────────────────────────────────────────────────────
-"overview": """You are the Sentinel Advisor — a senior managed services engineer and portfolio project manager who has deployed DMARC and MTA-STS for hundreds of organisations.
+"overview": """You are the ZoneProof Advisor — a senior managed services engineer and portfolio project manager who has deployed DMARC and MTA-STS for hundreds of organisations.
 
 OUTPUT FORMAT (strict):
 {"message": "...", "commend": false, "citations": []}
@@ -116,7 +116,7 @@ LENGTH: 2-3 sentences maximum. Every sentence must move the reader toward an act
 
 HARD RULES — violations destroy user trust:
 1. NEVER expose internal phase labels in your output. The strings "phase_0_dark", "phase_1_monitoring", "phase_2_pre_enforcement", "phase_3_enforced", "phase_4_hardened", "portfolio_critical", "portfolio_in_progress", "portfolio_dmarc_complete", "portfolio_hardened" are internal briefing identifiers. Never write them in the message field. Describe the state in plain English instead.
-2. NEVER invent navigation paths for the Sentinel UI or any other application. Do not write "Admin → Security → MTA-STS → Set to enforce" or any similar invented menu path. If directing the user to act in Sentinel, say which Sentinel view to go to (e.g. "open the MTA-STS view for that domain") — nothing more. You do not know the exact UI layout.
+2. NEVER invent navigation paths for the ZoneProof UI or any other application. Do not write "Admin → Security → MTA-STS → Set to enforce" or any similar invented menu path. If directing the user to act in ZoneProof, say which ZoneProof view to go to (e.g. "open the MTA-STS view for that domain") — nothing more. You do not know the exact UI layout.
 3. NEVER advise advancing MTA-STS from testing to enforce at the portfolio level without the TLS pass rate for that specific domain. At overview level you do not have per-domain TLS data. Direct the user to check the MTA-STS or Posture view first: "Check the MTA-STS pass rate in the Posture view before advancing to enforce — if it's below 99%, advancing will start rejecting inbound mail."
 
 THREAT SURFACE INTEGRATION (most important):
@@ -148,7 +148,7 @@ JOURNEY PHASE DECISION TREE:
 - Always quote exact numbers from the briefing.""",
 
 # ── DMARC ANALYTICS ──────────────────────────────────────────────────────────
-"dmarc": """You are the Sentinel Advisor — a DMARC implementation specialist with deep expertise in SPF alignment, DKIM selector deployment, and third-party ESP authentication. You have guided hundreds of organisations from p=none to p=reject.
+"dmarc": """You are the ZoneProof Advisor — a DMARC implementation specialist with deep expertise in SPF alignment, DKIM selector deployment, and third-party ESP authentication. You have guided hundreds of organisations from p=none to p=reject.
 
 OUTPUT FORMAT (strict):
 {"message": "...", "commend": false, "citations": []}
@@ -175,7 +175,7 @@ JOURNEY PHASE DECISION TREE:
 - phase_4_hardened → brief commend. Mention DKIM key rotation monitoring.""",
 
 # ── MTA-STS / TLS ────────────────────────────────────────────────────────────
-"tls": """You are the Sentinel Advisor — a TLS and MTA-STS implementation engineer. You know the exact mechanics: policy file served via HTTPS at mta-sts.[domain]/.well-known/mta-sts.txt, _mta-sts DNS TXT record pointing to the policy version, TLS-RPT for delivery failure visibility, and every MX host needing a valid matching certificate before enforce mode is safe.
+"tls": """You are the ZoneProof Advisor — a TLS and MTA-STS implementation engineer. You know the exact mechanics: policy file served via HTTPS at mta-sts.[domain]/.well-known/mta-sts.txt, _mta-sts DNS TXT record pointing to the policy version, TLS-RPT for delivery failure visibility, and every MX host needing a valid matching certificate before enforce mode is safe.
 
 OUTPUT FORMAT (strict):
 {"message": "...", "commend": false, "citations": []}
@@ -186,7 +186,7 @@ AUDIENCE: IT administrator or MSP engineer. They understand DNS, TLS, STARTTLS, 
 LENGTH: 2-3 sentences. Quote TLS pass rate every time — it's the key metric.
 
 EXAMPLE OUTPUT PATTERNS (match this register):
-- No MTA-STS: "This domain has no MTA-STS policy — inbound mail can be delivered over plaintext with no enforcement or warning. Start by publishing a testing-mode policy at https://mta-sts.acme.co.za/.well-known/mta-sts.txt and a _mta-sts DNS TXT record, then add a TLS-RPT record so delivery failures are reported to Sentinel."
+- No MTA-STS: "This domain has no MTA-STS policy — inbound mail can be delivered over plaintext with no enforcement or warning. Start by publishing a testing-mode policy at https://mta-sts.acme.co.za/.well-known/mta-sts.txt and a _mta-sts DNS TXT record, then add a TLS-RPT record so delivery failures are reported to ZoneProof."
 - Testing, clean: "MTA-STS is in testing mode at 99.4% TLS pass rate — the data is clean and enforce mode is safe. Before flipping, verify your certificate doesn't expire within 30 days: an expired cert in enforce mode immediately starts rejecting inbound mail from enforcing senders."
 - Testing, failing: "Testing mode shows 87.3% TLS pass rate — do not advance to enforce at this level, or 12.7% of inbound mail will be rejected. Check the MX hosts listed in the TLS failure report: the most common causes are missing STARTTLS support and expired or hostname-mismatched certificates."
 - Enforce, clean: "MTA-STS is enforced at 99.8% — inbound TLS is fully protected. Keep a close watch on certificate renewals: a cert expiry in enforce mode starts silently rejecting mail, with no bounce to the sender."
@@ -200,7 +200,7 @@ JOURNEY PHASE DECISION TREE:
 - Enforce, tls_pass_pct < 99% → urgent. Mail being rejected. Check certs immediately.""",
 
 # ── POSTURE — DMARC TAB ──────────────────────────────────────────────────────
-"posture": """You are the Sentinel Advisor — an MSP account manager running a portfolio DMARC review across a client's domain fleet. You think in project milestones, not individual DNS records.
+"posture": """You are the ZoneProof Advisor — an MSP account manager running a portfolio DMARC review across a client's domain fleet. You think in project milestones, not individual DNS records.
 
 OUTPUT FORMAT (strict):
 {"message": "...", "commend": false, "citations": []}
@@ -222,7 +222,7 @@ JOURNEY PHASE DECISION TREE:
 - portfolio_dmarc_complete → DMARC done, pivot to MTA-STS with no_mta_sts_count.
 - portfolio_hardened → brief commend + maintenance action.""",
 
-"posture_dmarc": """You are the Sentinel Advisor — an MSP account manager running a portfolio DMARC review across a client's domain fleet. You think in project milestones, not individual DNS records.
+"posture_dmarc": """You are the ZoneProof Advisor — an MSP account manager running a portfolio DMARC review across a client's domain fleet. You think in project milestones, not individual DNS records.
 
 OUTPUT FORMAT (strict):
 {"message": "...", "commend": false, "citations": []}
@@ -245,7 +245,7 @@ JOURNEY PHASE DECISION TREE:
 - portfolio_hardened → commend + maintenance.""",
 
 # ── POSTURE — MTA-STS TAB ────────────────────────────────────────────────────
-"posture_tls": """You are the Sentinel Advisor — a TLS security specialist reviewing inbound mail protection across a domain portfolio. You know MTA-STS adoption is below 5% globally despite being a 2019 standard.
+"posture_tls": """You are the ZoneProof Advisor — a TLS security specialist reviewing inbound mail protection across a domain portfolio. You know MTA-STS adoption is below 5% globally despite being a 2019 standard.
 
 OUTPUT FORMAT (strict):
 {"message": "...", "commend": false, "citations": []}
@@ -268,7 +268,7 @@ JOURNEY PHASE DECISION TREE:
 - mixed → report split, prioritise the none-domains.""",
 
 # ── ROADMAP ──────────────────────────────────────────────────────────────────
-"roadmap": """You are the Sentinel Advisor — a project manager who has run the full email security implementation dozens of times. You know the critical path cold: DMARC monitoring → source alignment → quarantine → reject → MTA-STS testing → MTA-STS enforce. You know where teams stall and how to keep momentum.
+"roadmap": """You are the ZoneProof Advisor — a project manager who has run the full email security implementation dozens of times. You know the critical path cold: DMARC monitoring → source alignment → quarantine → reject → MTA-STS testing → MTA-STS enforce. You know where teams stall and how to keep momentum.
 
 OUTPUT FORMAT (strict):
 {"message": "...", "commend": false, "citations": []}
@@ -295,7 +295,7 @@ JOURNEY PHASE DECISION TREE:
 - phase_4_hardened → project complete, maintenance mode.""",
 
 # ── CERTIFICATES ─────────────────────────────────────────────────────────────
-"certs": """You are the Sentinel Advisor — a TLS certificate and mail infrastructure specialist. You know the critical dependency: in MTA-STS enforce mode, every MX host must present a valid, non-expired certificate matching its hostname. A cert expiry means sending servers refuse delivery — silently, with no bounce to the sender.
+"certs": """You are the ZoneProof Advisor — a TLS certificate and mail infrastructure specialist. You know the critical dependency: in MTA-STS enforce mode, every MX host must present a valid, non-expired certificate matching its hostname. A cert expiry means sending servers refuse delivery — silently, with no bounce to the sender.
 
 OUTPUT FORMAT (strict):
 {"message": "...", "commend": false, "citations": []}
@@ -322,7 +322,7 @@ SEVERITY DECISION TREE:
 6. All healthy → confirm + 30-day review cadence.""",
 
 # ── DNS TIMELINE ─────────────────────────────────────────────────────────────
-"dns_timeline": """You are the Sentinel Advisor — a DNS security auditor. You review DNS change history for accidental misconfiguration, unauthorised modification, and security posture regressions. You know the most damaging changes are often the quiet ones: a DMARC record removed during a migration, an SPF record modified to include +all, an MX record pointing to an unfamiliar host.
+"dns_timeline": """You are the ZoneProof Advisor — a DNS security auditor. You review DNS change history for accidental misconfiguration, unauthorised modification, and security posture regressions. You know the most damaging changes are often the quiet ones: a DMARC record removed during a migration, an SPF record modified to include +all, an MX record pointing to an unfamiliar host.
 
 OUTPUT FORMAT (strict):
 {"message": "...", "commend": false, "citations": []}
@@ -599,7 +599,7 @@ def _known_risks(ctx: AdvisorContext) -> list[str]:
 def _build_prompt(ctx: AdvisorContext) -> str:
     phase_label = _JOURNEY_PHASE_LABELS.get(ctx.journey_phase, ctx.journey_phase)
     sections: list[str] = [
-        f"=== SENTINEL ADVISOR BRIEFING ===",
+        f"=== ZONEPROOF ADVISOR BRIEFING ===",
         f"Screen: {ctx.screen}",
         f"Journey phase: {phase_label}",
     ]
@@ -776,7 +776,7 @@ def _rule_based(ctx: AdvisorContext) -> dict:
             }
         # no MTA-STS policy
         return {
-            "message": f"{name} has no MTA-STS policy — inbound mail can be delivered over plaintext with no warning. Publish a policy in testing mode and add a TLS-RPT record so Sentinel can surface delivery failures.",
+            "message": f"{name} has no MTA-STS policy — inbound mail can be delivered over plaintext with no warning. Publish a policy in testing mode and add a TLS-RPT record so ZoneProof can surface delivery failures.",
             "commend": False,
             "citations": ["RFC 8461"],
         }
@@ -921,8 +921,8 @@ async def generate_dns_risk_assessment(
             _platform_targets = (settings.reporting_domain, settings.mta_sts_hosting_cname_target)
             if current_value and any(t in current_value for t in _platform_targets):
                 sev = "info"
-                exp = f"CNAME added for {domain_name} pointing to Sentinel infrastructure ({current_value.strip()})."
-                act = "No action needed — this is expected Sentinel managed-hosting configuration."
+                exp = f"CNAME added for {domain_name} pointing to ZoneProof infrastructure ({current_value.strip()})."
+                act = "No action needed — this is expected ZoneProof managed-hosting configuration."
                 return {"severity": sev, "explanation": exp, "action": act, "is_ai": False}
         elif record_type == "SPF":
             if current_value and ("+all" in current_value or " all" in current_value.lower()):
@@ -950,14 +950,14 @@ async def generate_dns_risk_assessment(
                 exp = f"DMARC policy on {domain_name} was downgraded from p={prev_pol} to p={curr_pol}. Enforcement has been weakened."
                 act = "Investigate the reason for the downgrade. Restore p=" + prev_pol + " if not intentional."
             else:
-                # If the only material change was adding/updating the Sentinel reporting address,
+                # If the only material change was adding/updating the ZoneProof reporting address,
                 # this is expected onboarding activity — classify as info and short-circuit to
                 # avoid the LLM recommending to remove our own reporting address.
                 sentinel_rua = f"@{settings.reporting_domain}"
                 if current_value and sentinel_rua in current_value:
                     sev = "info"
-                    exp = f"DMARC record on {domain_name} was updated to include Sentinel reporting (p={curr_pol})."
-                    act = "No action needed — this is expected Sentinel onboarding."
+                    exp = f"DMARC record on {domain_name} was updated to include ZoneProof reporting (p={curr_pol})."
+                    act = "No action needed — this is expected ZoneProof onboarding."
                     return {"severity": sev, "explanation": exp, "action": act, "is_ai": False}
                 sev = "info"
                 exp = f"DMARC record on {domain_name} was updated (p={curr_pol})."
@@ -966,8 +966,8 @@ async def generate_dns_risk_assessment(
             _platform_targets = (settings.reporting_domain, settings.mta_sts_hosting_cname_target)
             if current_value and any(t in current_value for t in _platform_targets):
                 sev = "info"
-                exp = f"CNAME on {domain_name} updated to point to Sentinel infrastructure ({current_value.strip()})."
-                act = "No action needed — this is expected Sentinel managed-hosting configuration."
+                exp = f"CNAME on {domain_name} updated to point to ZoneProof infrastructure ({current_value.strip()})."
+                act = "No action needed — this is expected ZoneProof managed-hosting configuration."
                 return {"severity": sev, "explanation": exp, "action": act, "is_ai": False}
             sev = "warn"
             exp = f"CNAME on {domain_name} was changed to point to {current_value or 'an unknown target'}."
@@ -997,7 +997,7 @@ async def generate_dns_risk_assessment(
         "current_value": current_value,
     })
 
-    system = f"""You are Sentinel, an email security platform. Classify the security risk of a DNS record change.
+    system = f"""You are ZoneProof, an email security platform. Classify the security risk of a DNS record change.
 
 Rules:
 - Output ONLY valid JSON: {{"severity": "info|warn|critical", "explanation": "...", "action": "..."}}
@@ -1006,10 +1006,10 @@ Rules:
 - action: 1 sentence. The single most important thing to do right now.
 - Do not invent facts. Use only the provided values.
 - Audience: IT administrator.
-- IMPORTANT: {settings.reporting_domain} is Sentinel's own platform domain. Any of the following are expected onboarding activity — classify as info and do NOT flag them as suspicious:
+- IMPORTANT: {settings.reporting_domain} is ZoneProof's own platform domain. Any of the following are expected onboarding activity — classify as info and do NOT flag them as suspicious:
   * DMARC rua= or ruf= addresses at @{settings.reporting_domain}
-  * CNAME records pointing to {settings.mta_sts_hosting_cname_target} (Sentinel managed MTA-STS hosting)
-  * Any DNS record that references {settings.reporting_domain} as part of Sentinel onboarding"""
+  * CNAME records pointing to {settings.mta_sts_hosting_cname_target} (ZoneProof managed MTA-STS hosting)
+  * Any DNS record that references {settings.reporting_domain} as part of ZoneProof onboarding"""
 
     try:
         async with httpx.AsyncClient(timeout=10) as client:
@@ -1079,7 +1079,7 @@ async def generate_report_narrative(report_data: dict) -> dict:
             delta_str = f" The score declined by {abs(delta)} points — review recent changes to sending infrastructure."
 
     rb_summary = (
-        f"{workspace} has a Sentinel Score of {score}/100 (Grade {grade}), indicating {grade_desc} "
+        f"{workspace} has a ZoneProof Score of {score}/100 (Grade {grade}), indicating {grade_desc} "
         f"across {total_domains} monitored domain{'s' if total_domains != 1 else ''} "
         f"over the past {period_days} days.{delta_str}"
     )
@@ -1139,7 +1139,7 @@ async def generate_report_narrative(report_data: dict) -> dict:
         "cert_alerts": cert_alerts,
     })
 
-    system = """You are Sentinel, an email security intelligence platform. Write an executive narrative for an IT security report.
+    system = """You are ZoneProof, an email security intelligence platform. Write an executive narrative for an IT security report.
 
 Rules:
 - Output ONLY valid JSON: {"summary": "...", "threats": "...", "actions": "..."}
@@ -1258,7 +1258,7 @@ async def generate_sender_recommendation(
         "dmarc_pass_rate_pct": round(pass_rate, 1),
     })
 
-    system = """You are Sentinel, an email security platform. Classify a new DMARC sending source for a domain.
+    system = """You are ZoneProof, an email security platform. Classify a new DMARC sending source for a domain.
 
 Rules:
 - Output ONLY valid JSON: {"classification": "...", "recommendation": "...", "dns_fix": "..."}
@@ -1313,7 +1313,7 @@ Rules:
 # existing storage/dismiss machinery untouched — no migration, no new table.
 
 _TLS_FIX_ACTIONS: dict[str, str] = {
-    "starttls-not-supported":    "Enable STARTTLS on the sending server, or contact the sender if this is inbound mail you don't control.",
+    "starttls-not-supported":    "Check from outside that your mail server offers STARTTLS. If only one sender sees this failure, compare with other senders before changing anything: the cause may be on the path to your server.",
     "certificate-host-mismatch": "Reissue the MX host's certificate with the correct hostname in its Subject/SAN fields.",
     "certificate-expired":       "Renew the MX host's TLS certificate immediately — this is actively blocking secure delivery.",
     "certificate-not-trusted":   "Replace the certificate with one signed by a publicly trusted CA (e.g. Let's Encrypt, DigiCert).",
@@ -1462,7 +1462,7 @@ async def generate_cert_summary(certs: list[dict], domain_name: str | None = Non
         f"Certificates (sorted by urgency):\n" + "\n".join(cert_lines[:20])
     )
 
-    system = """You are Sentinel Advisor acting as a TLS certificate health specialist for email infrastructure. You know that in MTA-STS enforce mode, an expired or hostname-mismatched certificate on an MX host will silently reject inbound mail.
+    system = """You are ZoneProof Advisor acting as a TLS certificate health specialist for email infrastructure. You know that in MTA-STS enforce mode, an expired or hostname-mismatched certificate on an MX host will silently reject inbound mail.
 Output ONLY valid JSON: {"message": "...", "commend": false}
 
 Rules:
@@ -1569,7 +1569,7 @@ async def chat_with_context(
     else:
         data_block = (
             f"Workspace: {workspace}\n"
-            f"Sentinel Score: {score}/100 (Grade {grade})\n"
+            f"ZoneProof Score: {score}/100 (Grade {grade})\n"
             f"Total domains: {total_domains}\n"
             f"DMARC — reject: {dmarc_reject}, quarantine: {dmarc_quarantine}, "
             f"monitor: {dmarc_monitor}, none: {dmarc_none}\n"
@@ -1584,7 +1584,7 @@ async def chat_with_context(
         if facts_block else ""
     )
 
-    system = f"""You are Sentinel AI, an email security assistant embedded in the Sentinel platform.
+    system = f"""You are ZoneProof AI, an email security assistant embedded in the ZoneProof platform.
 You have access to live security data for this workspace. Use it to give specific, grounded answers.
 
 LIVE SECURITY DATA (current, from the platform):
@@ -1623,8 +1623,8 @@ Rules:
             return f"MTA-STS enforces TLS on inbound mail. You have {tls_enforce} domain(s) enforcing and {tls_testing} in testing mode. Move testing domains to enforce once you've confirmed no delivery failures."
         if "score" in msg_lower:
             if score is not None:
-                return f"Your Sentinel Score is {score}/100 (Grade {grade}). It's a weighted combination of DMARC enforcement, MTA-STS posture, and certificate health across all domains."
-            return "Your Sentinel Score is calculated from DMARC enforcement, MTA-STS posture, and certificate health."
+                return f"Your ZoneProof Score is {score}/100 (Grade {grade}). It's a weighted combination of DMARC enforcement, MTA-STS posture, and certificate health across all domains."
+            return "Your ZoneProof Score is calculated from DMARC enforcement, MTA-STS posture, and certificate health."
         return "I can help with DMARC, SPF, DKIM, MTA-STS, certificates, and your overall email security posture. What would you like to know?"
 
     if not settings.advisor_enabled:
@@ -1819,7 +1819,7 @@ async def generate_dns_summary(
     if not settings.advisor_enabled:
         return {"message": rb_msg, "commend": rb_commend, "is_ai": False, "model": ""}
 
-    system = """You are Sentinel Advisor acting as a DNS security auditor. Output ONLY valid JSON:
+    system = """You are ZoneProof Advisor acting as a DNS security auditor. Output ONLY valid JSON:
 {"message": "...", "commend": false, "citations": []}
 
 Rules:
@@ -1883,6 +1883,308 @@ Rules:
     except Exception as e:
         log.warning("DNS summary LLM failed (%s), using rule-based fallback", e)
         return {"message": rb_msg, "commend": rb_commend, "is_ai": False, "model": ""}
+
+
+async def generate_graph_insight(
+    node_count: int,
+    edge_count: int,
+    open_path_count: int,
+    targets: list[dict],
+    chokepoint: dict | None,
+) -> dict:
+    """Pathproof's Attack Path Graph "AI Analyst" (Phase 39c) — same
+    rule-based-fallback-first, degrade-honestly discipline as
+    generate_dns_summary/generate_cert_summary, reusing this file's own
+    Claude/Ollama call pattern rather than a new LLM integration. Every
+    fact the LLM is allowed to reference is injected into the prompt from
+    real graph data (targets/chokepoint, both computed in
+    graph_service.py) — the system prompt explicitly forbids inventing a
+    policy name, ARN, or remediation step not present in the briefing."""
+    # Rule-based fallback
+    if open_path_count == 0:
+        rb_msg = (
+            "No open privilege-escalation paths detected — the attack graph is currently clear."
+            if node_count > 0 else
+            "No privilege-escalation paths discovered yet. Connect and scan an AWS account to populate this."
+        )
+        rb_commend = True
+    elif chokepoint:
+        policy_label = chokepoint.get("policy_name") or chokepoint["policy_arn"].rsplit("/", 1)[-1]
+        rb_msg = (
+            f"{chokepoint['closes_count']} of {chokepoint['total_open_count']} verified paths route through one "
+            f"policy — patch \"{policy_label}\" and re-scan to confirm closure on the rest."
+        )
+        rb_commend = False
+    else:
+        rb_msg = (
+            f"{open_path_count} open privilege-escalation path{'s' if open_path_count != 1 else ''} detected, "
+            f"each on a distinct policy — no single fix closes more than one."
+        )
+        rb_commend = False
+
+    if not settings.advisor_enabled:
+        return {"message": rb_msg, "commend": rb_commend, "is_ai": False, "model": ""}
+
+    system = """You are the Pathproof Attack Path Analyst — a cloud IAM security engineer reviewing a real privilege-escalation graph. Output ONLY valid JSON:
+{"message": "...", "citations": []}
+
+Rules:
+- message: 2-3 plain English sentences. Lead with the single highest-impact action.
+- Never invent a policy name, ARN, CVE, or remediation step that is not present in the briefing below — every fact must be traceable to the data given. If you are not given a chokepoint, do not invent one.
+- If a chokepoint policy is present in the briefing, lead with it: name it exactly as given, state exactly how many paths close if it is fixed.
+- If no chokepoint exists, say so plainly and recommend fixing the open paths individually.
+- If there are zero open paths, say the graph is clear — this is a good outcome, not something to manufacture urgency about."""
+
+    prompt_lines = [
+        f"Open privilege-escalation paths: {open_path_count}",
+        f"Total graph nodes: {node_count}, edges: {edge_count}",
+    ]
+    if chokepoint:
+        prompt_lines.append(
+            f"Chokepoint policy: {chokepoint.get('policy_name') or '(unnamed policy)'} ({chokepoint['policy_arn']}) — "
+            f"fixing it closes {chokepoint['closes_count']} of {chokepoint['total_open_count']} open paths."
+        )
+    else:
+        prompt_lines.append("No single policy is shared by more than one open path — no chokepoint exists.")
+    if targets:
+        target_lines = "; ".join(
+            f"{t['node_id']}: {t['open_path_count']} open path(s), worst severity {t['worst_severity'] or 'none (contained)'}"
+            for t in targets[:5]
+        )
+        prompt_lines.append(f"Targets reached: {target_lines}")
+    prompt = "\n".join(prompt_lines) + "\n\nProvide the analyst JSON."
+
+    try:
+        if settings.advisor_provider == "claude" and settings.anthropic_api_key:
+            client = _anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+            response = await client.messages.create(
+                model=settings.advisor_claude_model,
+                max_tokens=300,
+                system=system,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            content = response.content[0].text.strip()
+            model_name = settings.advisor_claude_model
+        else:
+            async with httpx.AsyncClient(timeout=30) as client:
+                resp = await client.post(
+                    f"{settings.advisor_llm_url}/api/chat",
+                    json={
+                        "model": settings.advisor_llm_model,
+                        "messages": [
+                            {"role": "system", "content": system},
+                            {"role": "user", "content": prompt},
+                        ],
+                        "stream": False,
+                        "options": {"temperature": 0},
+                    },
+                )
+                resp.raise_for_status()
+                content = _strip_thinking(resp.json()["message"]["content"])
+                model_name = settings.advisor_llm_model
+        start = content.find("{")
+        end = content.rfind("}") + 1
+        parsed = json.loads(content[start:end])
+        return {
+            "message": str(parsed.get("message", rb_msg)).strip(),
+            "commend": rb_commend,
+            "citations": list(parsed.get("citations", [])),
+            "is_ai": True,
+            "model": model_name,
+        }
+    except Exception as e:
+        log.warning("Graph insight LLM failed (%s), using rule-based fallback", e)
+        return {"message": rb_msg, "commend": rb_commend, "is_ai": False, "model": ""}
+
+
+async def generate_kill_chain_narrative(kill_chains: list[dict]) -> dict:
+    """The Kill Chain Narrative — synthesizes graph_service.py's own
+    _compute_kill_chains() output (real, ordered entry-to-outcome hop
+    sequences) into one compelling, true story, same rule-based-fallback-
+    first discipline as generate_graph_insight above. One deliberate fix
+    over that function's own known gap: citations here are built
+    DETERMINISTICALLY from the real hop data the caller already computed,
+    never parsed out of the LLM's own free-text output — every citation is
+    independently verifiable against the input, not just plausible-looking
+    text the model produced."""
+    if not kill_chains:
+        rb_msg = (
+            "No real, connected kill chain currently exists from the internet to a crown-jewel "
+            "target — the proven entry point and the escalation/data-access paths haven't landed "
+            "on the same principal yet."
+        )
+    else:
+        chain_phrases = [
+            f"in {len(chain['hops'])} real hop{'s' if len(chain['hops']) != 1 else ''}, reach {chain['outcome']}"
+            for chain in kill_chains
+        ]
+        rb_msg = "An attacker starting from the internet can " + "; and separately, ".join(chain_phrases) + "."
+
+    # Deterministic, real, independently-verifiable — never dependent on
+    # anything the LLM generates.
+    citations = [
+        f"{hop['edge_type']}: {hop['source_label']} → {hop['target_label']} ({hop['severity']})"
+        for chain in kill_chains
+        for hop in chain["hops"]
+    ]
+
+    if not settings.advisor_enabled or not kill_chains:
+        return {"message": rb_msg, "citations": citations, "is_ai": False, "model": ""}
+
+    system = """You are the Pathproof Attack Path Analyst — a cloud security engineer narrating a real, proven multi-hop attack chain for a non-technical executive audience. Output ONLY valid JSON:
+{"message": "..."}
+
+Rules:
+- message: 2-4 plain English sentences telling the full story as one narrative — start from the internet-facing entry point, walk through each real hop, and end with the concrete outcome (what an attacker actually gains).
+- Never invent a resource name, port, role, policy, or outcome not present in the briefing below — every fact must be traceable to the data given.
+- Be concrete and compelling, but never overstate: this is a proven, real chain from real scan data, not a hypothetical — say so with confidence, but never claim anything beyond what the hops actually show.
+- If multiple chains are given, narrate the shared entry point once, then branch into each real outcome."""
+
+    prompt_lines: list[str] = []
+    for chain in kill_chains:
+        prompt_lines.append(
+            f"Chain to {chain['target_label']} (outcome: {chain['outcome']}, severity: {chain['chain_severity']}):"
+        )
+        for i, hop in enumerate(chain["hops"], 1):
+            prompt_lines.append(
+                f"  Hop {i} ({hop['edge_type']}, severity {hop['severity']}): {hop['source_label']} -> {hop['target_label']}"
+            )
+    prompt = "\n".join(prompt_lines) + "\n\nNarrate this as one compelling, true story."
+
+    try:
+        if settings.advisor_provider == "claude" and settings.anthropic_api_key:
+            client = _anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+            response = await client.messages.create(
+                model=settings.advisor_claude_model,
+                max_tokens=400,
+                system=system,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            content = response.content[0].text.strip()
+            model_name = settings.advisor_claude_model
+        else:
+            async with httpx.AsyncClient(timeout=30) as client:
+                resp = await client.post(
+                    f"{settings.advisor_llm_url}/api/chat",
+                    json={
+                        "model": settings.advisor_llm_model,
+                        "messages": [
+                            {"role": "system", "content": system},
+                            {"role": "user", "content": prompt},
+                        ],
+                        "stream": False,
+                        "options": {"temperature": 0},
+                    },
+                )
+                resp.raise_for_status()
+                content = _strip_thinking(resp.json()["message"]["content"])
+                model_name = settings.advisor_llm_model
+        start = content.find("{")
+        end = content.rfind("}") + 1
+        parsed = json.loads(content[start:end])
+        return {
+            "message": str(parsed.get("message", rb_msg)).strip(),
+            "citations": citations,
+            "is_ai": True,
+            "model": model_name,
+        }
+    except Exception as e:
+        log.warning("Kill chain narrative LLM failed (%s), using rule-based fallback", e)
+        return {"message": rb_msg, "citations": citations, "is_ai": False, "model": ""}
+
+
+async def generate_fix_verification_summary(verifications: list[dict]) -> dict:
+    """Simulate-the-Fix's "verified closed" narrative — deliberately the
+    mirror image of generate_graph_insight's role split: the WHETHER a path
+    is closed is pure mechanical re-scan data (CloudPrivEscPath.status/
+    closed_at, computed in graph_service._compute_fix_verifications, never
+    touched by this function), and this function only ever narrates that
+    already-settled fact — it cannot make a path "more closed" or invent
+    one. Same rule-based-fallback-first discipline as every other advisor
+    function; the fallback alone is already a complete, correct, citable
+    sentence, the LLM call only makes it read richer."""
+    if not verifications:
+        # Nothing to narrate — skip the LLM call entirely rather than risk
+        # it inventing something to say about zero real data.
+        return {"message": "No fixes have been verified closed by a re-scan yet.", "is_ai": False, "model": ""}
+
+    total_closed = sum(v["closed_count"] for v in verifications)
+    fully = [v for v in verifications if v["fully_closed"]]
+    partial = [v for v in verifications if not v["fully_closed"]]
+    top = verifications[0]
+    top_label = top["policy_name"] or (top["policy_arn"].rsplit("/", 1)[-1] if top["policy_arn"] else "a path with no shared policy")
+    rb_msg = (
+        f"{total_closed} path{'s' if total_closed != 1 else ''} verified closed by re-scan across "
+        f"{len(verifications)} group{'s' if len(verifications) != 1 else ''}, largest being \"{top_label}\" "
+        f"({top['closed_count']} closed). "
+    )
+    if partial:
+        if len(partial) == 1:
+            rb_msg += "That group still has an open path remaining under the same policy — not fully remediated yet."
+        else:
+            rb_msg += f"{len(partial)} of those groups still have an open path remaining under the same policy — not fully remediated yet."
+    else:
+        rb_msg += "Every group is fully closed — no open path remains under any of these policies."
+
+    return await _fix_verification_llm(rb_msg, verifications)
+
+
+async def _fix_verification_llm(rb_msg: str, verifications: list[dict]) -> dict:
+    if not settings.advisor_enabled:
+        return {"message": rb_msg, "is_ai": False, "model": ""}
+
+    system = """You are the Pathproof Fix Verification Analyst — a cloud IAM security engineer confirming which privilege-escalation paths a re-scan has verified closed. Output ONLY valid JSON:
+{"message": "...", "citations": []}
+
+Rules:
+- message: 2-3 plain English sentences, confirming what has been verified fixed and by what mechanism (a re-scan found the path no longer present).
+- Never invent a policy name, ARN, date, or count that is not present in the briefing below — every fact must be traceable to the data given.
+- If a group is only partially closed (still_open_count > 0), say so explicitly — never imply a policy is fully fixed when it is not.
+- Do not use hedging language ("might be", "could indicate") about whether a path is closed — status is a settled, re-scan-verified fact, state it plainly."""
+
+    prompt_lines = [f"{v['closed_count']} closed, {v['still_open_count']} still open under policy \"{v['policy_name'] or v['policy_arn'] or '(no shared policy)'}\", fully_closed={v['fully_closed']}, latest verified at {v['latest_closed_at']}" for v in verifications[:8]]
+    prompt = "\n".join(prompt_lines) + "\n\nProvide the analyst JSON."
+
+    try:
+        if settings.advisor_provider == "claude" and settings.anthropic_api_key:
+            client = _anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+            response = await client.messages.create(
+                model=settings.advisor_claude_model,
+                max_tokens=300,
+                system=system,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            content = response.content[0].text.strip()
+            model_name = settings.advisor_claude_model
+        else:
+            async with httpx.AsyncClient(timeout=30) as client:
+                resp = await client.post(
+                    f"{settings.advisor_llm_url}/api/chat",
+                    json={
+                        "model": settings.advisor_llm_model,
+                        "messages": [
+                            {"role": "system", "content": system},
+                            {"role": "user", "content": prompt},
+                        ],
+                        "stream": False,
+                        "options": {"temperature": 0},
+                    },
+                )
+                resp.raise_for_status()
+                content = _strip_thinking(resp.json()["message"]["content"])
+                model_name = settings.advisor_llm_model
+        start = content.find("{")
+        end = content.rfind("}") + 1
+        parsed = json.loads(content[start:end])
+        return {
+            "message": str(parsed.get("message", rb_msg)).strip(),
+            "citations": list(parsed.get("citations", [])),
+            "is_ai": True,
+            "model": model_name,
+        }
+    except Exception as e:
+        log.warning("Fix verification LLM failed (%s), using rule-based fallback", e)
+        return {"message": rb_msg, "is_ai": False, "model": ""}
 
 
 async def get_advisor_message(

@@ -1,0 +1,26 @@
+{
+  "_note": "Curated South African brand registry for the SA gold set (plan step 1.2). Domains were written from general knowledge and MUST be confirmed with `python -m brand_eval.gold verify-sa` (DNS + homepage title check) and by a human before any label is trusted. No phishing data lives here — only legitimate brands.",
+  "brands": [
+    {"slug": "standardbank", "name": "Standard Bank", "domain": "standardbank.co.za", "category": "bank", "title_keywords": ["standard bank"], "keywords": ["online", "banking"]},
+    {"slug": "absa", "name": "Absa", "domain": "absa.co.za", "category": "bank", "title_keywords": ["absa"], "keywords": ["online", "banking"]},
+    {"slug": "fnb", "name": "FNB", "domain": "fnb.co.za", "category": "bank", "title_keywords": ["fnb", "first national bank"], "keywords": ["online", "banking"]},
+    {"slug": "nedbank", "name": "Nedbank", "domain": "nedbank.co.za", "category": "bank", "title_keywords": ["nedbank"], "keywords": ["online", "banking"]},
+    {"slug": "capitec", "name": "Capitec Bank", "domain": "capitecbank.co.za", "category": "bank", "title_keywords": ["capitec"], "keywords": ["online", "banking"]},
+    {"slug": "africanbank", "name": "African Bank", "domain": "africanbank.co.za", "category": "bank", "title_keywords": ["african bank"], "keywords": ["loans"]},
+    {"slug": "tymebank", "name": "TymeBank", "domain": "tymebank.co.za", "category": "bank", "title_keywords": ["tymebank", "tyme"], "keywords": ["bank"]},
+    {"slug": "investec", "name": "Investec", "domain": "investec.com", "category": "bank", "title_keywords": ["investec"], "keywords": ["online"]},
+    {"slug": "sars", "name": "SARS", "domain": "sars.gov.za", "category": "government", "title_keywords": ["sars", "revenue service"], "keywords": ["efiling", "refund", "tax"]},
+    {"slug": "vodacom", "name": "Vodacom", "domain": "vodacom.co.za", "category": "telco", "title_keywords": ["vodacom"], "keywords": ["airtime", "data"]},
+    {"slug": "mtn", "name": "MTN", "domain": "mtn.co.za", "category": "telco", "title_keywords": ["mtn"], "keywords": ["airtime", "data"]},
+    {"slug": "telkom", "name": "Telkom", "domain": "telkom.co.za", "category": "telco", "title_keywords": ["telkom"], "keywords": ["fibre", "airtime"]},
+    {"slug": "takealot", "name": "Takealot", "domain": "takealot.com", "category": "retail", "title_keywords": ["takealot"], "keywords": ["shop", "deals"]},
+    {"slug": "woolworths", "name": "Woolworths", "domain": "woolworths.co.za", "category": "retail", "title_keywords": ["woolworths"], "keywords": ["shop", "rewards"]},
+    {"slug": "shoprite", "name": "Shoprite", "domain": "shoprite.co.za", "category": "retail", "title_keywords": ["shoprite"], "keywords": ["specials", "xtra"]},
+    {"slug": "checkers", "name": "Checkers", "domain": "checkers.co.za", "category": "retail", "title_keywords": ["checkers"], "keywords": ["sixty60", "specials"]},
+    {"slug": "picknpay", "name": "Pick n Pay", "domain": "pnp.co.za", "category": "retail", "title_keywords": ["pick n pay", "pnp"], "keywords": ["smart", "shopper"]},
+    {"slug": "discovery", "name": "Discovery", "domain": "discovery.co.za", "category": "insurer", "title_keywords": ["discovery"], "keywords": ["vitality", "health"]},
+    {"slug": "sanlam", "name": "Sanlam", "domain": "sanlam.co.za", "category": "insurer", "title_keywords": ["sanlam"], "keywords": ["insurance", "investments"]},
+    {"slug": "oldmutual", "name": "Old Mutual", "domain": "oldmutual.co.za", "category": "insurer", "title_keywords": ["old mutual"], "keywords": ["insurance", "investments"]},
+    {"slug": "dstv", "name": "DStv", "domain": "dstv.com", "category": "media", "title_keywords": ["dstv", "multichoice"], "keywords": ["subscription", "payment"]}
+  ]
+}

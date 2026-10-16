@@ -18,6 +18,7 @@ import secrets
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import Response
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -33,7 +34,13 @@ from app.routers.billing import cancel_tenant_subscription
 from app.services.posture_service import (
     compute_posture, compute_sentinel_score, DomainSentinelInput,
 )
-from app.models import DmarcAggregate, TlsAggregate, SslCert
+from app.services.cloud_scan_service import compute_tenant_cloud_posture_score
+from app.services.exploitability_service import compute_tenant_verified_exploitability_score
+from app.services.phishing_service import compute_tenant_human_risk_score
+from app.services.command_report_service import assemble_command_report, render_command_report_pdf
+from app.models import DmarcAggregate, TlsAggregate, SslCert, PhishingEvent
+from app.services.tls_service import tls_window_totals
+from app.services import brand_exposure as brand_exposure_service
 from app.config import settings
 
 router = APIRouter(prefix="/msp", tags=["msp"])
@@ -51,9 +58,27 @@ class ClientSummaryOut(BaseModel):
     sentinel_score: int
     sentinel_grade: str
     sentinel_grade_color: str
+    sentinel_grade_label: str
+    # The real per-pillar math behind sentinel_score — already computed by
+    # compute_sentinel_score() below, just not previously returned. Powers
+    # the Command frontend's score-breakdown evidence panel instead of
+    # showing the final number with no way to see what it's made of.
+    pillar_dmarc: float
+    pillar_tls: float
+    pillar_certs: float
+    pillar_cloud_posture: float | None
+    pillar_human_risk: float | None
+    pillar_verified_exploitability: float | None
+    pillar_brand_exposure: float | None = None
+    volume_weighted: bool
     cert_alerts: int
     dmarc_reject_count: int
     dmarc_none_count: int
+    # Real phishing-derived figures (Coverage Map plan phishing
+    # transformation, Phase 9) — None means this client has never run a
+    # phishing campaign, never a fabricated 0%.
+    phish_click_rate: float | None = None
+    phish_report_rate: float | None = None
     created_at: str
 
 
@@ -122,13 +147,8 @@ async def _client_summary(client: Tenant, db: AsyncSession) -> ClientSummaryOut:
         vol = int(da_row[0] or 0)
         comp = round(int(da_row[1] or 0) / vol * 100, 1) if vol else None
 
-        ta = await db.execute(
-            select(func.sum(TlsAggregate.total_sessions), func.sum(TlsAggregate.successful_sessions))
-            .where(TlsAggregate.domain_id == d.id)
-        )
-        ta_row = ta.one()
-        tls_total = int(ta_row[0] or 0)
-        tls_pct = round(int(ta_row[1] or 0) / tls_total * 100, 1) if tls_total else None
+        tls_total, tls_ok, _ = await tls_window_totals(db, d.id)
+        tls_pct = round(tls_ok / tls_total * 100, 1) if tls_total else None
 
         certs = (await db.execute(select(SslCert).where(SslCert.domain_id == d.id))).scalars().all()
         min_days = min((c.days_remaining for c in certs if c.days_remaining is not None), default=None)
@@ -154,7 +174,28 @@ async def _client_summary(client: Tenant, db: AsyncSession) -> ClientSummaryOut:
             volume=vol,
         ))
 
-    sentinel = compute_sentinel_score(sentinel_inputs)
+    cloud_posture_score = await compute_tenant_cloud_posture_score(db, client.id)
+    human_risk_score = await compute_tenant_human_risk_score(db, client.id)
+    verified_exploitability_score = await compute_tenant_verified_exploitability_score(db, client.id)
+    brand_exposure = await brand_exposure_service.compute(db, client.id)
+    sentinel = compute_sentinel_score(
+        sentinel_inputs, cloud_posture_score=cloud_posture_score, human_risk_score=human_risk_score,
+        verified_exploitability_score=verified_exploitability_score,
+        brand_exposure_score=float(brand_exposure["score"]) if brand_exposure else None,
+    )
+
+    phish_click_rate = None
+    phish_report_rate = None
+    phish_event_result = await db.execute(
+        select(PhishingEvent.event_type, func.count())
+        .where(PhishingEvent.tenant_id == client.id)
+        .group_by(PhishingEvent.event_type)
+    )
+    phish_counts = {event_type: count for event_type, count in phish_event_result.all()}
+    phish_sent = phish_counts.get("sent", 0)
+    if phish_sent:
+        phish_click_rate = round(phish_counts.get("clicked", 0) / phish_sent * 100, 1)
+        phish_report_rate = round(phish_counts.get("reported", 0) / phish_sent * 100, 1)
 
     return ClientSummaryOut(
         id=str(client.id),
@@ -164,9 +205,20 @@ async def _client_summary(client: Tenant, db: AsyncSession) -> ClientSummaryOut:
         sentinel_score=sentinel.score,
         sentinel_grade=sentinel.grade,
         sentinel_grade_color=sentinel.grade_color,
+        sentinel_grade_label=sentinel.grade_label,
+        pillar_dmarc=sentinel.pillar_dmarc,
+        pillar_tls=sentinel.pillar_tls,
+        pillar_certs=sentinel.pillar_certs,
+        pillar_cloud_posture=sentinel.pillar_cloud_posture,
+        pillar_human_risk=sentinel.pillar_human_risk,
+        pillar_verified_exploitability=sentinel.pillar_verified_exploitability,
+        pillar_brand_exposure=sentinel.pillar_brand_exposure,
+        volume_weighted=sentinel.volume_weighted,
         cert_alerts=cert_alerts,
         dmarc_reject_count=dmarc_reject,
         dmarc_none_count=dmarc_none,
+        phish_click_rate=phish_click_rate,
+        phish_report_rate=phish_report_rate,
         created_at=client.created_at.isoformat(),
     )
 
@@ -321,6 +373,11 @@ async def delete_client(
         target_type="tenant", target_id=str(client.id), target_label=client.name,
         after={"had_active_subscription": had_subscription},
     )
+    # The client's own audit_log_entries cascade-delete with it — the same
+    # authorized bypass delete_account() uses (see that function's comment
+    # and the add_audit_log_immutability_trigger migration).
+    from sqlalchemy import text as _sql_text
+    await db.execute(_sql_text("SET LOCAL sentinel.allow_audit_log_delete = 'on'"))
     await db.delete(client)
     await db.commit()
 
@@ -343,8 +400,8 @@ async def invite_to_client(
 
     client = await _get_client_or_404(client_id, msp_tenant.id, db)
 
-    if payload.role not in ("admin", "viewer"):
-        raise HTTPException(status_code=400, detail="Role must be admin or viewer")
+    if payload.role not in ("admin", "approver", "viewer"):
+        raise HTTPException(status_code=400, detail="Role must be admin, approver, or viewer")
 
     # Mirrors the uniqueness rule from auth.py's accept_invite: a password
     # account with this email anywhere blocks a new password account; any
@@ -384,19 +441,20 @@ async def invite_to_client(
 
         invite_url = f"{settings.app_base_url}/accept-invite?token={token}"
         await email_service.send_email(
+            db,
             to=invite.email,
-            subject=f"You've been invited to {client.name} on Sentinel",
+            subject=f"You've been invited to {client.name} on ZoneProof",
             title=f"You've been invited to {client.name}",
             body_html=(
                 f"<p>{safe_inviter} has invited you to join "
-                f"<strong>{safe_client}</strong> on Sentinel as a {invite.role}.</p>"
+                f"<strong>{safe_client}</strong> on ZoneProof as a {invite.role}.</p>"
                 f"<p style=\"margin: 24px 0;\">"
                 f"<a href=\"{invite_url}\" style=\"background:#5b6ef5;color:#fff;padding:10px 20px;"
                 f"border-radius:8px;text-decoration:none;font-weight:600;\">Accept invite</a></p>"
                 f"<p style=\"color:#888;font-size:12px;\">This link expires in 7 days. "
                 f"If you weren't expecting this, you can ignore it.</p>"
             ),
-            text_body=f"{user.full_name or user.email} has invited you to join {client.name} on Sentinel. Accept: {invite_url}",
+            text_body=f"{user.full_name or user.email} has invited you to join {client.name} on ZoneProof. Accept: {invite_url}",
         )
         return {
             "mode": "invite",
@@ -441,3 +499,134 @@ async def _get_client_or_404(client_id: str, msp_tenant_id, db: AsyncSession) ->
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
     return client
+
+
+async def _msp_tenant(db: AsyncSession, user: User) -> Tenant:
+    msp_tenant = (await db.execute(select(Tenant).where(Tenant.id == user.tenant_id))).scalar_one()
+    _require_msp(msp_tenant)
+    return msp_tenant
+
+
+@router.get("/brand-guard")
+async def brand_guard_rollup(db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
+    """One row per client: how much brand-impersonation work there is across the whole book, most urgent client first."""
+    from app.models import BrandCandidate, BrandProfile
+    from app.routers.brand_guard import _ATTENTION_STATUSES, _DORMANT_STAGES, _OPEN_STATUSES
+
+    msp_tenant = await _msp_tenant(db, user)
+    clients = (await db.execute(select(Tenant).where(Tenant.parent_tenant_id == msp_tenant.id).order_by(Tenant.name))).scalars().all()
+    ids = [c.id for c in clients]
+    brands: dict = {}
+    scanned: dict = {}
+    counts: dict = {}
+    if ids:
+        for tid, n, last in (await db.execute(
+            select(BrandProfile.tenant_id, func.count(), func.max(BrandProfile.last_scanned_at))
+            .where(BrandProfile.tenant_id.in_(ids), BrandProfile.is_active == True).group_by(BrandProfile.tenant_id)
+        )).all():
+            brands[tid], scanned[tid] = n, last
+        now = datetime.now(timezone.utc)
+        for tid, st, stage, due, n in (await db.execute(
+            select(BrandCandidate.tenant_id, BrandCandidate.status, BrandCandidate.stage, BrandCandidate.due_at, func.count())
+            .where(BrandCandidate.tenant_id.in_(ids)).group_by(BrandCandidate.tenant_id, BrandCandidate.status, BrandCandidate.stage, BrandCandidate.due_at)
+        )).all():
+            c = counts.setdefault(tid, {"needs_attention": 0, "confirmed": 0, "takedown": 0, "overdue": 0})
+            if st in _OPEN_STATUSES and not (stage in _DORMANT_STAGES and st not in _ATTENTION_STATUSES):
+                c["needs_attention"] += n
+            if st in ("confirmed", "takedown"):
+                c[st] += n
+                if due is not None and due < now:
+                    c["overdue"] += n
+    rows = []
+    for c in clients:
+        k = counts.get(c.id, {"needs_attention": 0, "confirmed": 0, "takedown": 0, "overdue": 0})
+        rows.append({"client_id": str(c.id), "name": c.name, "brand_name": c.brand_name, "brands": brands.get(c.id, 0),
+                     "last_scanned_at": scanned[c.id].isoformat() if scanned.get(c.id) else None, **k})
+    rows.sort(key=lambda r: (-r["overdue"], -r["needs_attention"], -r["confirmed"], r["name"].lower()))
+    totals = {k: sum(r[k] for r in rows) for k in ("brands", "needs_attention", "confirmed", "takedown", "overdue")}
+    return {"clients": rows, "totals": totals}
+
+
+@router.get("/clients/{client_id}/brand-guard/cases")
+async def client_brand_cases(client_id: str, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
+    """A client's confirmed and in-takedown look-alikes, so an evidence pack can be picked."""
+    from app.models import BrandCandidate
+
+    msp_tenant = await _msp_tenant(db, user)
+    client = await _get_client_or_404(client_id, msp_tenant.id, db)
+    rows = (await db.execute(
+        select(BrandCandidate).where(BrandCandidate.tenant_id == client.id, BrandCandidate.status.in_(("confirmed", "takedown", "removed")))
+        .order_by(BrandCandidate.due_at.asc().nulls_last()).limit(200)
+    )).scalars().all()
+    return [{"id": str(c.id), "domain": c.candidate_domain, "status": c.status, "due_at": c.due_at.isoformat() if c.due_at else None, "abuse_score": round(c.abuse_score, 1)} for c in rows]
+
+
+@router.get("/clients/{client_id}/brand-guard/candidates/{candidate_id}/evidence-pack")
+async def client_evidence_pack(client_id: str, candidate_id: str, format: str = "pdf", db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
+    """The evidence pack for a client's look-alike, presented as the MSP's (white label). Audit-logged against the MSP, naming the client."""
+    from app.routers.brand_guard import _build_pack
+    from app.services import audit_service, brand_evidence_pack
+    from app.services.pdf_report_service import render_html_to_pdf
+
+    if format not in ("json", "pdf"):
+        raise HTTPException(status_code=422, detail="format must be json or pdf")
+    msp_tenant = await _msp_tenant(db, user)
+    require_feature(msp_tenant, "white_label")
+    client = await _get_client_or_404(client_id, msp_tenant.id, db)
+    client_user = (await db.execute(select(User).where(User.tenant_id == client.id).order_by(User.created_at))).scalars().first()
+    if not client_user:
+        raise HTTPException(status_code=400, detail="This client has no users yet")
+    # The pack is built exactly as the client would see it (scoped to the client's tenant), then presented under the MSP's name.
+    detail, pack = await _build_pack(candidate_id, db, client_user, generated_by=user.full_name or user.email, issuer={"name": msp_tenant.brand_name or msp_tenant.name})
+    await audit_service.log(
+        db, tenant_id=msp_tenant.id, actor=user, action="msp.client_evidence_pack_exported", target_type="brand_candidate", target_id=candidate_id,
+        target_label=f"{client.name}: {detail.candidate_domain}", after={"format": format, "hash": pack["integrity"]["hash"], "client_id": str(client.id)},
+    )
+    await db.commit()
+    stem = f"evidence-{detail.candidate_domain}-{pack['integrity']['hash'][:8]}"
+    if format == "json":
+        return Response(content=brand_evidence_pack.canonical(pack), media_type="application/json", headers={"Content-Disposition": f'attachment; filename="{stem}.json"'})
+    return Response(content=await render_html_to_pdf(brand_evidence_pack.render_html(pack)), media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{stem}.pdf"'})
+
+
+@router.get("/clients/{client_id}/report-pdf")
+async def get_client_report_pdf(
+    client_id: str,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """White-label PDF for one client, branded with the CLIENT's own
+    brand_name/brand_logo_url (not the MSP's) — this is the exact feature
+    the pricing strategy identifies as what unlocks MSP willingness to pay
+    premium (Coverage Map plan Phase 10), so it must produce a report that
+    looks like it came from the MSP's own brand, not ZoneProof's."""
+    tenant_result = await db.execute(select(Tenant).where(Tenant.id == user.tenant_id))
+    msp_tenant = tenant_result.scalar_one()
+    _require_msp(msp_tenant)
+    require_feature(msp_tenant, "white_label")
+
+    client = await _get_client_or_404(client_id, msp_tenant.id, db)
+
+    # get_report_data() (reused inside assemble_command_report) resolves
+    # its tenant from user.tenant_id — need a real user of the CLIENT
+    # tenant to drive it, same pattern scheduled_report_service.py already
+    # uses to run a report job on a tenant's behalf without an interactive
+    # session for that tenant.
+    client_user = (await db.execute(
+        select(User).where(User.tenant_id == client.id, User.role == "admin")
+    )).scalars().first()
+    if not client_user:
+        client_user = (await db.execute(
+            select(User).where(User.tenant_id == client.id)
+        )).scalars().first()
+    if not client_user:
+        raise HTTPException(status_code=400, detail="This client has no users yet — cannot generate a report")
+
+    report = await assemble_command_report(db, client, client_user)
+    pdf_bytes = await render_command_report_pdf(report)
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{client.name}-sentinel-report-{report.generated_at[:10]}.pdf"'},
+    )

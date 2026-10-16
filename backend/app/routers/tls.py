@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.database import get_db
-from app.models import Domain, TlsAggregate
+from app.models import Domain, TlsAggregate, TlsPolicy, TlsReport
 from app.models.user import User
 from app.routers.auth import get_current_user
 from app.schemas.tls import TlsOverviewOut, TlsFailGroupOut, TlsFailTypeOut, TlsMxHostOut, TlsDomainSummaryOut
@@ -23,6 +25,49 @@ async def _get_domain(domain_id: str, tenant_id, db: AsyncSession) -> Domain:
     if not d:
         raise HTTPException(status_code=404, detail="Domain not found")
     return d
+
+
+@dataclass
+class _WindowAgg:
+    """Same fields the overview reads from TlsAggregate, computed for the window."""
+    mx_host: str
+    reporter_org: str = ""
+    total_sessions: int = 0
+    successful_sessions: int = 0
+    failed_sessions: int = 0
+    top_failure_reason: str | None = None
+    top_failure_count: int = 0
+
+
+async def _windowed_aggregates(db: AsyncSession, domain_id, cutoff: datetime) -> list[_WindowAgg]:
+    """
+    Sessions per MX host from the raw reports whose period ends inside the window.
+
+    The stored TlsAggregate rows are rebuilt from every policy ever received and
+    stamped with the start of the current month, so filtering them by days cannot
+    window anything: a 7 day view mid-month came back empty. The raw reports
+    carry the real reporting period, so the window is applied to those.
+    """
+    stmt = (
+        select(TlsPolicy)
+        .join(TlsReport, TlsPolicy.report_id == TlsReport.id)
+        .where(TlsPolicy.domain_id == domain_id, TlsReport.period_end >= cutoff)
+        .options(selectinload(TlsPolicy.failure_details))
+    )
+    policies = (await db.execute(stmt)).scalars().all()
+
+    groups: dict[str, _WindowAgg] = {}
+    for p in policies:
+        mx = p.policy_mx_host or p.policy_domain
+        g = groups.setdefault(mx, _WindowAgg(mx_host=mx))
+        g.successful_sessions += p.total_successful_session_count
+        g.failed_sessions += p.total_failure_session_count
+        g.total_sessions += p.total_successful_session_count + p.total_failure_session_count
+        for fd in p.failure_details:
+            if fd.failed_session_count > g.top_failure_count:
+                g.top_failure_count = fd.failed_session_count
+                g.top_failure_reason = fd.result_type
+    return list(groups.values())
 
 
 def _severity(failed: int, total: int, reason: str | None) -> str:
@@ -77,13 +122,7 @@ async def get_tls_overview(
     domain = await _get_domain(domain_id, user.tenant_id, db)
 
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
-    result = await db.execute(
-        select(TlsAggregate).where(
-            TlsAggregate.domain_id == domain.id,
-            TlsAggregate.period_begin >= cutoff,
-        )
-    )
-    aggs = result.scalars().all()
+    aggs = await _windowed_aggregates(db, domain.id, cutoff)
 
     total = sum(a.total_sessions for a in aggs)
     successful = sum(a.successful_sessions for a in aggs)

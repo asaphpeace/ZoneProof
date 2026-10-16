@@ -5,14 +5,20 @@ Flow:
   1. Connect to IMAP inbox (reports@mailsentry.co.za)
   2. Fetch unseen messages
   3. For each message:
-     a. Determine report type from content-type / filename:
-        - DMARC: .xml.gz / .xml.zip → DMARC aggregate XML (RFC 7489)
-        - TLS:   application/tlsrpt+gzip / .json.gz → TLS JSON (RFC 8460)
-     b. Extract domain slug from recipient subaddress (To: header)
-     c. Resolve domain from slug → domain_id
-     d. Parse and insert raw report + records
-     e. Trigger aggregation rebuild for that domain
-     f. Mark message as seen
+     a. Extract slug from recipient subaddress (To:/Delivered-To: header)
+     b. Resolve the slug against Domain.reporting_slug first (DMARC/
+        TLS-RPT aggregate reports — the original use of this mailbox);
+        if that doesn't match, try Tenant.phishing_report_slug instead
+        (Phishing Simulation roadmap Phase 26 — an employee forwarding a
+        real suspicious email). Same shared mailbox, same slug-in-
+        recipient-address routing convention, two different tenant-
+        scoped features hanging off it.
+     c. Domain match: determine DMARC vs TLS-RPT from content-type/
+        filename, parse, insert, rebuild aggregates.
+        Tenant match: parse the forwarded message into a ReportedEmail
+        row (app/services/email_ingestion_service.py) — no attachment
+        type-sniffing needed, the whole message is the input.
+     d. Mark message as seen once actually processed.
 """
 from __future__ import annotations
 
@@ -35,6 +41,7 @@ from app.services.dmarc_parser import parse_dmarc_xml
 from app.services.tls_parser import parse_tls_json
 from app.services.dmarc_service import rebuild_aggregates
 from app.services.tls_service import rebuild_tls_aggregates
+from app.services.email_ingestion_service import parse_reported_email
 
 log = logging.getLogger(__name__)
 
@@ -43,6 +50,13 @@ async def _get_domain_by_slug(db: AsyncSession, slug: str):
     from sqlalchemy import select
     from app.models import Domain
     result = await db.execute(select(Domain).where(Domain.reporting_slug == slug))
+    return result.scalar_one_or_none()
+
+
+async def _get_tenant_by_report_slug(db: AsyncSession, slug: str):
+    from sqlalchemy import select
+    from app.models.user import Tenant
+    result = await db.execute(select(Tenant).where(Tenant.phishing_report_slug == slug))
     return result.scalar_one_or_none()
 
 
@@ -66,9 +80,25 @@ def _decompress(data: bytes, filename: str) -> bytes:
 
 async def poll_inbox() -> None:
     """Connect to IMAP and process all unseen report emails."""
+    if not settings.imap_password:
+        log.info("IMAP: IMAP_PASSWORD is not set, skipping report ingestion")
+        return
+
     imap = aioimaplib.IMAP4_SSL(host=settings.imap_host, port=settings.imap_port)
     await imap.wait_hello_from_server()
-    await imap.login(settings.imap_user, settings.imap_password)
+    login = await imap.login(settings.imap_user, settings.imap_password)
+    if login.result != "OK":
+        # Without this check a rejected login leaves the session in NONAUTH
+        # and SELECT aborts with a confusing "illegal in state NONAUTH".
+        log.error(
+            "IMAP: login to %s as %s was rejected (%s) — check IMAP_USER/IMAP_PASSWORD",
+            settings.imap_host, settings.imap_user, login.result,
+        )
+        try:
+            await imap.logout()
+        except Exception:
+            pass
+        return
     await imap.select("INBOX")
 
     _, data = await imap.search("UNSEEN")
@@ -90,45 +120,16 @@ async def poll_inbox() -> None:
 
             async with AsyncSessionLocal() as db:
                 domain = await _get_domain_by_slug(db, slug)
-                if not domain:
-                    log.warning("IMAP: unknown slug %s, skipping", slug)
-                    continue
-
-                processed = False
-                for part in msg.iter_attachments():
-                    ct = part.get_content_type()
-                    filename = part.get_filename() or ""
-                    payload = part.get_payload(decode=True)
-                    if not payload:
-                        continue
-
-                    # Determine report type
-                    is_dmarc = (
-                        "xml" in ct or
-                        filename.endswith((".xml.gz", ".xml.zip", ".xml"))
-                    )
-                    is_tls = (
-                        "tlsrpt" in ct or
-                        "json" in ct or
-                        filename.endswith((".json.gz", ".json.zip", ".json"))
-                    )
-
-                    if is_dmarc:
-                        raw_bytes = _decompress(payload, filename)
-                        report = await parse_dmarc_xml(db, domain, raw_bytes.decode("utf-8", errors="replace"))
-                        # Still mark the message seen on a duplicate — there's nothing
-                        # further to do with it, and leaving it unseen would just
-                        # cause the same duplicate-detection log line every poll cycle.
-                        if report is not None:
-                            await rebuild_aggregates(db, domain.id)
+                if domain:
+                    processed = await _process_dmarc_tls_attachments(db, domain, msg)
+                else:
+                    tenant = await _get_tenant_by_report_slug(db, slug)
+                    if tenant:
+                        await parse_reported_email(db, tenant, msg)
                         processed = True
-
-                    elif is_tls:
-                        raw_bytes = _decompress(payload, filename)
-                        report = await parse_tls_json(db, domain, raw_bytes.decode("utf-8", errors="replace"))
-                        if report is not None:
-                            await rebuild_tls_aggregates(db, domain.id)
-                        processed = True
+                    else:
+                        log.warning("IMAP: unknown slug %s, skipping", slug)
+                        processed = False
 
                 if processed:
                     await imap.store(uid, "+FLAGS", r"(\Seen)")
@@ -137,3 +138,43 @@ async def poll_inbox() -> None:
             log.exception("IMAP: error processing uid %s", uid)
 
     await imap.logout()
+
+
+async def _process_dmarc_tls_attachments(db: AsyncSession, domain, msg) -> bool:
+    processed = False
+    for part in msg.iter_attachments():
+        ct = part.get_content_type()
+        filename = part.get_filename() or ""
+        payload = part.get_payload(decode=True)
+        if not payload:
+            continue
+
+        # Determine report type
+        is_dmarc = (
+            "xml" in ct or
+            filename.endswith((".xml.gz", ".xml.zip", ".xml"))
+        )
+        is_tls = (
+            "tlsrpt" in ct or
+            "json" in ct or
+            filename.endswith((".json.gz", ".json.zip", ".json"))
+        )
+
+        if is_dmarc:
+            raw_bytes = _decompress(payload, filename)
+            report = await parse_dmarc_xml(db, domain, raw_bytes.decode("utf-8", errors="replace"))
+            # Still mark the message seen on a duplicate — there's nothing
+            # further to do with it, and leaving it unseen would just
+            # cause the same duplicate-detection log line every poll cycle.
+            if report is not None:
+                await rebuild_aggregates(db, domain.id)
+            processed = True
+
+        elif is_tls:
+            raw_bytes = _decompress(payload, filename)
+            report = await parse_tls_json(db, domain, raw_bytes.decode("utf-8", errors="replace"))
+            if report is not None:
+                await rebuild_tls_aggregates(db, domain.id)
+            processed = True
+
+    return processed

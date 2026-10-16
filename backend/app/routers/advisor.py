@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models import Domain, DmarcAggregate, TlsAggregate, SslCert
+from app.services.tls_service import tls_window_totals
 from app.models.dns_record import DnsRecord
 from app.models.user import User
 from app.routers.auth import get_current_user
@@ -83,13 +84,9 @@ async def get_advisor(
         fail_sources = list({row[0] for row in fa.all()})
 
         # TLS
-        ta = await db.execute(
-            select(func.sum(TlsAggregate.total_sessions), func.sum(TlsAggregate.successful_sessions))
-            .where(TlsAggregate.domain_id == domain.id)
-        )
-        ta_row = ta.one()
-        if ta_row[0]:
-            tls_pass_pct = round(ta_row[1] / ta_row[0] * 100, 1)
+        tls_total, tls_ok, _ = await tls_window_totals(db, domain.id)
+        if tls_total:
+            tls_pass_pct = round(tls_ok / tls_total * 100, 1)
 
         # Certs
         certs = (await db.execute(select(SslCert).where(SslCert.domain_id == domain.id))).scalars().all()

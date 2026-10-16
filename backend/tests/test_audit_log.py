@@ -4,6 +4,7 @@ that the explicit logging call sites (see audit_service.py's module
 docstring on why these are explicit rather than middleware-driven) actually
 produce a readable entry end to end.
 """
+import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -97,6 +98,77 @@ async def test_audit_log_filters_by_action(client: AsyncClient, db_session: Asyn
     assert resp2.json() == []
 
 
+async def test_audit_log_export_returns_a_real_csv(client: AsyncClient, db_session: AsyncSession):
+    tenant = await make_tenant(db_session, plan="enterprise")
+    await make_user(db_session, tenant, email="export-admin@example.com", password="oldpass123")
+    await db_session.flush()
+
+    token = await _login(client, "export-admin@example.com", "oldpass123")
+    await client.post(
+        "/auth/change-password",
+        json={"current_password": "oldpass123", "new_password": "newpass456"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    new_token = await _login(client, "export-admin@example.com", "newpass456")
+
+    resp = await client.get("/audit-log/export", headers={"Authorization": f"Bearer {new_token}"})
+    assert resp.status_code == 200
+    assert resp.headers["content-type"].startswith("text/csv")
+    assert "attachment" in resp.headers["content-disposition"]
+    body = resp.text
+    assert "action" in body.splitlines()[0]  # header row
+    assert "auth.password_changed" in body
+
+
+async def test_audit_log_export_blocked_on_free_plan(client: AsyncClient, db_session: AsyncSession):
+    tenant = await make_tenant(db_session, plan="free")
+    await make_user(db_session, tenant, email="free-export@example.com", password="pass123")
+    await db_session.flush()
+
+    token = await _login(client, "free-export@example.com", "pass123")
+    resp = await client.get("/audit-log/export", headers={"Authorization": f"Bearer {token}"})
+    assert resp.status_code == 403
+
+
+# ── New call sites (Coverage Map plan Phase 9) — connect/verify/revoke for
+# Cloud/Host/OAuth connections and the engagement approve/revoke gates were
+# real, previously-unaudited mutation points. ──
+
+async def test_cloud_connection_lifecycle_is_audited(client: AsyncClient, db_session: AsyncSession):
+    tenant = await make_tenant(db_session, plan="enterprise")
+    await make_user(db_session, tenant, email="cloud-admin@example.com", password="pass123")
+    await db_session.flush()
+
+    token = await _login(client, "cloud-admin@example.com", "pass123")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    create_resp = await client.post("/cloud-connections", json={"provider": "aws"}, headers=headers)
+    connection_id = create_resp.json()["id"]
+    await client.post(f"/cloud-connections/{connection_id}/revoke", headers=headers)
+
+    resp = await client.get("/audit-log", headers=headers)
+    actions = [e["action"] for e in resp.json()]
+    assert "cloud_connection.created" in actions
+    assert "cloud_connection.revoked" in actions
+
+
+async def test_engagement_dev_bypass_approval_is_audited(client: AsyncClient, db_session: AsyncSession):
+    tenant = await make_tenant(db_session, plan="enterprise")
+    await make_user(db_session, tenant, email="eng-admin@example.com", password="pass123")
+    await db_session.flush()
+
+    token = await _login(client, "eng-admin@example.com", "pass123")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    create_resp = await client.post("/engagements", json={"tier": "cloud"}, headers=headers)
+    engagement_id = create_resp.json()["id"]
+    await client.post(f"/engagements/{engagement_id}/approve", headers=headers)
+
+    resp = await client.get("/audit-log", headers=headers)
+    entries = resp.json()
+    assert any(e["action"] == "engagement.approved_dev_bypass" for e in entries)
+
+
 async def test_audit_log_count_endpoint(client: AsyncClient, db_session: AsyncSession):
     tenant = await make_tenant(db_session, plan="enterprise")
     await make_user(db_session, tenant, email="count-admin@example.com", password="oldpass123")
@@ -114,3 +186,72 @@ async def test_audit_log_count_endpoint(client: AsyncClient, db_session: AsyncSe
     new_token = await _login(client, "count-admin@example.com", "newpass456")
     after = await client.get("/audit-log/count", headers={"Authorization": f"Bearer {new_token}"})
     assert after.json()["count"] == 1
+
+
+# ── DB-level immutability (Phase 18) ────────────────────────────────────────
+#
+# Real negative tests against the trigger installed by
+# alembic/versions/5195e95231d0_audit_log_immutability_trigger.py (and
+# mirrored for the test DB by the after_create event listener in
+# app/models/audit_log.py) — not just "no PATCH/DELETE route exists".
+
+async def test_direct_update_against_audit_log_entries_fails_at_the_db_level(db_session: AsyncSession):
+    from sqlalchemy import text
+    from sqlalchemy.exc import DBAPIError
+
+    from app.services import audit_service
+
+    tenant = await make_tenant(db_session)
+    await audit_service.log(db_session, tenant_id=tenant.id, action="test.seed_entry")
+    await db_session.flush()
+
+    # begin_nested() (a real SAVEPOINT) contains the failed statement to
+    # just this block — a plain db_session.rollback() would instead unwind
+    # the whole test's outer transaction, including the seed data above.
+    with pytest.raises(DBAPIError, match="immutable"):
+        async with db_session.begin_nested():
+            await db_session.execute(text("UPDATE audit_log_entries SET action = 'tampered'"))
+
+
+async def test_direct_delete_against_audit_log_entries_fails_at_the_db_level(db_session: AsyncSession):
+    from sqlalchemy import select, text
+    from sqlalchemy.exc import DBAPIError
+
+    from app.models import AuditLogEntry
+    from app.services import audit_service
+
+    tenant = await make_tenant(db_session)
+    await audit_service.log(db_session, tenant_id=tenant.id, action="test.seed_entry")
+    await db_session.flush()
+
+    with pytest.raises(DBAPIError, match="immutable"):
+        async with db_session.begin_nested():
+            await db_session.execute(text("DELETE FROM audit_log_entries"))
+
+    # The row genuinely survived — this isn't just an exception, the data is
+    # intact, checked on the same session right after the SAVEPOINT unwound.
+    rows = (await db_session.execute(select(AuditLogEntry).where(AuditLogEntry.tenant_id == tenant.id))).scalars().all()
+    assert len(rows) == 1
+
+
+async def test_delete_succeeds_only_with_the_authorized_bypass_guc_set(db_session: AsyncSession):
+    from sqlalchemy import select, text
+    from sqlalchemy.exc import DBAPIError
+
+    from app.models import AuditLogEntry
+    from app.services import audit_service
+
+    tenant = await make_tenant(db_session)
+    await audit_service.log(db_session, tenant_id=tenant.id, action="test.seed_entry")
+    await db_session.flush()
+
+    # Without the GUC: still rejected.
+    with pytest.raises(DBAPIError, match="immutable"):
+        async with db_session.begin_nested():
+            await db_session.execute(text("DELETE FROM audit_log_entries WHERE tenant_id = :tid"), {"tid": str(tenant.id)})
+
+    # With the GUC set (SET LOCAL — scoped to this transaction only): succeeds.
+    await db_session.execute(text("SET LOCAL sentinel.allow_audit_log_delete = 'on'"))
+    await db_session.execute(text("DELETE FROM audit_log_entries WHERE tenant_id = :tid"), {"tid": str(tenant.id)})
+    rows = (await db_session.execute(select(AuditLogEntry).where(AuditLogEntry.tenant_id == tenant.id))).scalars().all()
+    assert rows == []

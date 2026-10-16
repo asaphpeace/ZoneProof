@@ -1,0 +1,12 @@
+{
+  "file": "public_suffix_list.dat",
+  "source": "https://publicsuffix.org/list/public_suffix_list.dat",
+  "retrieved_at": "2026-10-01T07:57:06.229972+00:00",
+  "bytes": 334832,
+  "sha256": "73c95828f5f62a3fce06d3fa9b2efd3f0a45a8c8dc2a65411545fab898a576f7",
+  "psl_version": "2026-09-30_20-56-07_UTC",
+  "psl_commit": "714ac1bf5f2d038161c7419478cc3207431d706d",
+  "rules": 10334,
+  "licence": "Mozilla Public License 2.0 (https://mozilla.org/MPL/2.0/). The list is kept unmodified; refresh by re-downloading and updating this manifest.",
+  "used_by": "app/services/public_suffix.py"
+}

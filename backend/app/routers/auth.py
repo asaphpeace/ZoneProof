@@ -21,7 +21,7 @@ from app.schemas.auth import (
     TokenResponse, RegisterRequest,
     InviteRequest, InviteOut, AcceptInviteRequest,
     TeamMemberOut, UpdateMemberRequest,
-    MeOut, UpdateMeRequest, ChangePasswordRequest,
+    MeOut, UpdateMeRequest, ChangePasswordRequest, DeleteAccountRequest,
     ForgotPasswordRequest, ResetPasswordRequest, VerifyEmailRequest,
     TotpSetupOut, TotpVerifyRequest,
     TwoFAChallengeResponse, TwoFAChallengeRequest,
@@ -498,18 +498,19 @@ async def forgot_password(
 
     reset_url = f"{settings.app_base_url}/reset-password?token={token}"
     await email_service.send_email(
+        db,
         to=user.email,
-        subject="Reset your Sentinel password",
+        subject="Reset your ZoneProof password",
         title="Reset your password",
         body_html=(
-            f"<p>We received a request to reset the password for your Sentinel account.</p>"
+            f"<p>We received a request to reset the password for your ZoneProof account.</p>"
             f"<p style=\"margin: 24px 0;\">"
             f"<a href=\"{reset_url}\" style=\"background:#5b6ef5;color:#fff;padding:10px 20px;"
             f"border-radius:8px;text-decoration:none;font-weight:600;\">Reset password</a></p>"
             f"<p style=\"color:#888;font-size:12px;\">This link expires in {_RESET_TOKEN_EXPIRE_MINUTES} minutes. "
             f"If you didn't request this, you can safely ignore this email — your password hasn't been changed.</p>"
         ),
-        text_body=f"Reset your Sentinel password: {reset_url} (expires in {_RESET_TOKEN_EXPIRE_MINUTES} minutes)",
+        text_body=f"Reset your ZoneProof password: {reset_url} (expires in {_RESET_TOKEN_EXPIRE_MINUTES} minutes)",
     )
     return {"message": _GENERIC_RESET_MESSAGE}
 
@@ -565,17 +566,18 @@ async def _send_verification_email(db: AsyncSession, user: User) -> None:
 
     verify_url = f"{settings.app_base_url}/verify-email?token={token}"
     sent = await email_service.send_email(
+        db,
         to=user.email,
-        subject="Verify your email for Sentinel",
+        subject="Verify your email for ZoneProof",
         title="Verify your email address",
         body_html=(
-            f"<p>Confirm this is your email address to finish setting up your Sentinel account.</p>"
+            f"<p>Confirm this is your email address to finish setting up your ZoneProof account.</p>"
             f"<p style=\"margin: 24px 0;\">"
             f"<a href=\"{verify_url}\" style=\"background:#5b6ef5;color:#fff;padding:10px 20px;"
             f"border-radius:8px;text-decoration:none;font-weight:600;\">Verify email</a></p>"
             f"<p style=\"color:#888;font-size:12px;\">This link expires in {_VERIFY_TOKEN_EXPIRE_HOURS} hours.</p>"
         ),
-        text_body=f"Verify your email for Sentinel: {verify_url} (expires in {_VERIFY_TOKEN_EXPIRE_HOURS} hours)",
+        text_body=f"Verify your email for ZoneProof: {verify_url} (expires in {_VERIFY_TOKEN_EXPIRE_HOURS} hours)",
     )
     if not sent:
         _log.warning("Verification email failed to send to %s — check SENDGRID_API_KEY and sender address", user.email)
@@ -625,21 +627,23 @@ async def resend_verification(
 
 @router.post("/send-test-email", status_code=204)
 async def send_test_email(
+    db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
     """Admin-only: sends a test email to the requesting user to verify SendGrid is configured correctly on this environment."""
     _require_admin(user)
     from app.config import settings
     sent = await email_service.send_email(
+        db,
         to=user.email,
-        subject="Sentinel — test email",
+        subject="ZoneProof — test email",
         title="Test email",
         body_html=(
-            "<p>This is a test email from Sentinel.</p>"
+            "<p>This is a test email from ZoneProof.</p>"
             "<p>If you received this, SendGrid is configured correctly.</p>"
             f"<p style=\"color:#888;font-size:12px;\">Sent from: {settings.email_from_address}</p>"
         ),
-        text_body="This is a test email from Sentinel. If you received this, SendGrid is configured correctly.",
+        text_body="This is a test email from ZoneProof. If you received this, SendGrid is configured correctly.",
     )
     if not sent:
         raise HTTPException(status_code=502, detail="Email send failed — check SENDGRID_API_KEY and sender verification in SendGrid.")
@@ -647,23 +651,50 @@ async def send_test_email(
 
 @router.delete("/account", status_code=204)
 async def delete_account(
+    payload: DeleteAccountRequest,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
     """
     Admins: deletes the entire workspace (tenant + all users + all domains).
+    Requires confirm_tenant_name to exactly match the tenant's current name —
+    real friction for an irreversible, whole-workspace destructive action.
     Non-admins: removes only their own user account from the tenant.
     """
     if user.role == "admin":
-        # Delete the whole tenant — cascades to users, domains, AND the audit
-        # log itself (audit_log_entries.tenant_id is ON DELETE CASCADE), so a
-        # DB-logged entry here would be deleted in the same transaction it
-        # describes. Log to the application logger instead — nobody could
-        # query a tenant-scoped audit log for a tenant that no longer exists.
+        from app.models import Domain, TenantErasureLog
+        from sqlalchemy import text as _sql_text
+
         tenant_result = await db.execute(select(Tenant).where(Tenant.id == user.tenant_id))
         tenant = tenant_result.scalar_one()
+
+        if payload.confirm_tenant_name != tenant.name:
+            raise HTTPException(
+                status_code=400,
+                detail="confirm_tenant_name must exactly match the workspace name to proceed.",
+            )
+
+        domain_count = await db.scalar(select(func.count()).select_from(Domain).where(Domain.tenant_id == tenant.id))
+        user_count = await db.scalar(select(func.count()).select_from(User).where(User.tenant_id == tenant.id))
+
+        # Durable, tenant-independent proof this erasure happened — survives
+        # the cascade below (see TenantErasureLog's docstring). Written
+        # before the delete, in the same transaction.
+        db.add(TenantErasureLog(
+            tenant_id=tenant.id, tenant_name=tenant.name, deleted_by_email=user.email,
+            domain_count=domain_count or 0, user_count=user_count or 0,
+        ))
+
+        # Delete the whole tenant — cascades to users, domains, AND the audit
+        # log itself (audit_log_entries.tenant_id is ON DELETE CASCADE). The
+        # audit_log_entries table also has a DB-level trigger blocking any
+        # UPDATE/DELETE outside this one authorized transaction — this GUC
+        # is the sanctioned bypass for exactly this cascade (see the
+        # add_audit_log_immutability_trigger migration).
+        await db.execute(_sql_text("SET LOCAL sentinel.allow_audit_log_delete = 'on'"))
         _log.warning(
-            "Tenant deleted: tenant_id=%s name=%r deleted_by=%s", tenant.id, tenant.name, user.email
+            "Tenant deleted: tenant_id=%s name=%r deleted_by=%s domains=%d users=%d",
+            tenant.id, tenant.name, user.email, domain_count or 0, user_count or 0,
         )
         await db.delete(tenant)
     else:
@@ -698,7 +729,7 @@ async def enable_2fa(
     totp = pyotp.TOTP(secret)
     otpauth_url = totp.provisioning_uri(
         name=user.email,
-        issuer_name="Sentinel",
+        issuer_name="ZoneProof",
     )
 
     qr = qrcode.QRCode(version=1, box_size=8, border=4)
@@ -771,6 +802,16 @@ def _require_admin(user: User) -> None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin role required")
 
 
+def _require_admin_or_approver(user: User) -> None:
+    # 'approver' is scoped narrower than 'admin' by convention, not by a
+    # separate permission matrix — it exists specifically so a tenant can
+    # let someone authorize/launch a real phishing simulation against real
+    # employees without also handing them the tenant-wide kill switch or
+    # the recipient-identity-unmask power, both of which stay admin-only.
+    if user.role not in ("admin", "approver"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin or approver role required")
+
+
 # ── Team management ───────────────────────────────────────────────────────────
 
 @router.get("/team", response_model=list[TeamMemberOut])
@@ -813,8 +854,8 @@ async def update_member(
     before = {"role": member.role, "is_active": member.is_active}
 
     if payload.role is not None:
-        if payload.role not in ("admin", "viewer"):
-            raise HTTPException(status_code=400, detail="Role must be admin or viewer")
+        if payload.role not in ("admin", "approver", "viewer"):
+            raise HTTPException(status_code=400, detail="Role must be admin, approver, or viewer")
         member.role = payload.role
     if payload.is_active is not None:
         member.is_active = payload.is_active
@@ -873,8 +914,8 @@ async def create_invite(
     # Check user limit before issuing the invite
     await enforce_user_limit(tenant, db)
 
-    if payload.role not in ("admin", "viewer"):
-        raise HTTPException(status_code=400, detail="Role must be admin or viewer")
+    if payload.role not in ("admin", "approver", "viewer"):
+        raise HTTPException(status_code=400, detail="Role must be admin, approver, or viewer")
 
     # Check for existing pending invite to same email on this tenant
     existing = await db.execute(
@@ -920,19 +961,20 @@ async def create_invite(
 
     invite_url = f"{settings.app_base_url}/accept-invite?token={token}"
     await email_service.send_email(
+        db,
         to=invite.email,
-        subject=f"You've been invited to {tenant.name} on Sentinel",
+        subject=f"You've been invited to {tenant.name} on ZoneProof",
         title=f"You've been invited to {tenant.name}",
         body_html=(
             f"<p>{safe_inviter} has invited you to join "
-            f"<strong>{safe_tenant}</strong> on Sentinel as a {invite.role}.</p>"
+            f"<strong>{safe_tenant}</strong> on ZoneProof as a {invite.role}.</p>"
             f"<p style=\"margin: 24px 0;\">"
             f"<a href=\"{invite_url}\" style=\"background:#5b6ef5;color:#fff;padding:10px 20px;"
             f"border-radius:8px;text-decoration:none;font-weight:600;\">Accept invite</a></p>"
             f"<p style=\"color:#888;font-size:12px;\">This link expires in 7 days. "
             f"If you weren't expecting this, you can ignore it.</p>"
         ),
-        text_body=f"{user.full_name or user.email} has invited you to join {tenant.name} on Sentinel. Accept: {invite_url}",
+        text_body=f"{user.full_name or user.email} has invited you to join {tenant.name} on ZoneProof. Accept: {invite_url}",
     )
     return InviteOut(
         id=str(invite.id),

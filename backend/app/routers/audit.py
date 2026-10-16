@@ -1,6 +1,9 @@
+import csv
+import io
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -53,6 +56,50 @@ async def list_audit_log(
         )
         for e in entries
     ]
+
+
+@router.get("/export")
+async def export_audit_log(
+    days: int = Query(365, ge=1, le=365),
+    action: str | None = Query(None),
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """CSV export for compliance handoff — the specific artifact an
+    enterprise security questionnaire tends to ask for ("can you provide
+    an audit trail export"). Same admin/plan gate and filters as the list
+    endpoint, just every matching row instead of one page."""
+    _require_admin(user)
+    tenant_result = await db.execute(select(Tenant).where(Tenant.id == user.tenant_id))
+    tenant = tenant_result.scalar_one()
+    require_feature(tenant, "audit_log")
+
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    stmt = (
+        select(AuditLogEntry)
+        .where(AuditLogEntry.tenant_id == user.tenant_id, AuditLogEntry.created_at >= cutoff)
+        .order_by(AuditLogEntry.created_at.desc())
+    )
+    if action:
+        stmt = stmt.where(AuditLogEntry.action == action)
+    entries = (await db.execute(stmt)).scalars().all()
+
+    buffer = io.StringIO()
+    writer = csv.writer(buffer)
+    writer.writerow(["timestamp", "actor_email", "action", "target_type", "target_id", "target_label", "ip_address", "before", "after"])
+    for e in entries:
+        writer.writerow([
+            e.created_at.isoformat(), e.actor_email or "", e.action,
+            e.target_type or "", e.target_id or "", e.target_label or "", e.ip_address or "",
+            e.before or "", e.after or "",
+        ])
+    buffer.seek(0)
+
+    filename = f"zoneproof-audit-log-{datetime.now(timezone.utc).date().isoformat()}.csv"
+    return StreamingResponse(
+        iter([buffer.getvalue()]), media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.get("/count")

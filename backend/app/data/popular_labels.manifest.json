@@ -1,0 +1,14 @@
+{
+  "source": "Majestic Million (CC BY 3.0)",
+  "source_file": "majestic_million.csv",
+  "popular_labels": {
+    "rows": 100000,
+    "sha256_of_rows": "6b4788ce30c11857df29478651f297a1198b7d17f2f9015125809e4038e12203"
+  },
+  "popular_domains": {
+    "rows": 100000,
+    "sha256_of_rows": "2258515e8ba56bd20253b161ac396c17c47ce7907fc7ce18ddd9dc3ac8a76532"
+  },
+  "labels": 100000,
+  "sha256_of_labels": "6b4788ce30c11857df29478651f297a1198b7d17f2f9015125809e4038e12203"
+}

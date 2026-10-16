@@ -1,0 +1,30 @@
+[Unit]
+Description=ZoneProof egress worker (brand look-alike probes and renderer)
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+User=zpworker
+Group=zpworker
+SupplementaryGroups=docker
+WorkingDirectory=/opt/zoneproof-worker
+# ZP_API and ZP_KEY live in this file (root-owned, mode 600); nothing secret is written into this unit.
+EnvironmentFile=/etc/zoneproof-worker.env
+# The unit cannot write to the home directory, so the docker client keeps its (empty) config in the private /tmp.
+Environment=DOCKER_CONFIG=/tmp/zp-docker PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/zoneproof-worker-venv/bin/python probe_worker/worker.py
+Restart=always
+RestartSec=10
+
+# The worker needs to write nothing and gain nothing.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+
+[Install]
+WantedBy=multi-user.target

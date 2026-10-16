@@ -45,7 +45,9 @@ def test_active_probing_defaults_to_off():
 
 
 def test_active_candidate_wordlist_stays_small_and_email_relevant():
-    """Guards against this quietly growing into a generic brute-force list."""
-    assert len(_ACTIVE_CANDIDATES) <= 15
+    """Guards against this quietly growing into a generic brute-force list.
+    Raised from 15 to 75 on 2026-10-15 for the bounded email-scoped list; the
+    stricter content checks live in test_subdomain_sources.py."""
+    assert len(_ACTIVE_CANDIDATES) <= 75
     assert "mail" in _ACTIVE_CANDIDATES
     assert "mta-sts" in _ACTIVE_CANDIDATES

@@ -1,0 +1,21 @@
+# The renderer container (plan step 7.3). Built on the worker machine; one throwaway container per job (see worker.build_docker_command).
+#
+#   docker build -f probe_worker/Dockerfile.render -t zoneproof-render:1 .        (run from the backend/ folder)
+#
+# Holds no secrets: no signing key, no API address, no database. The supervisor passes in one hostname and reads one JSON result.
+# Keep the playwright version below in step with backend/requirements.txt.
+FROM mcr.microsoft.com/playwright/python:v1.60.0-noble
+
+# The base image ships the browsers but not the Python package; its version must match the browsers' (v1.60.0 above).
+RUN pip install --no-cache-dir httpx playwright==1.60.0
+
+WORKDIR /app
+COPY app/services/safe_fetch.py /app/app/services/safe_fetch.py
+COPY probe_worker/render_job.py probe_worker/render_policy.py /app/probe_worker/
+RUN touch /app/app/__init__.py /app/app/services/__init__.py
+
+# Not root. The browser needs --no-sandbox inside a container; the container itself is the sandbox (read-only filesystem, all capabilities
+# dropped, memory and process limits, no network except the public internet), and it is destroyed after every job.
+USER 10001:10001
+ENV HOME=/tmp PLAYWRIGHT_BROWSERS_PATH=/ms-playwright PYTHONDONTWRITEBYTECODE=1
+ENTRYPOINT ["python", "/app/probe_worker/render_job.py"]

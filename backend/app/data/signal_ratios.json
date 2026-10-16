@@ -1,0 +1,52 @@
+{
+  "background": 3000,
+  "bad_all": 503,
+  "bad_young": 34,
+  "how_to_read": "ln_lr is the natural log of the conservative likelihood ratio; points = 10 * ln_lr. Signals in `unmeasured` keep their hand-set weight and are marked as assumed.",
+  "measured_on": "2026-10-02",
+  "signals": {
+    "credential_lure_word": {
+      "basis": "measured",
+      "group": "all ages",
+      "ln_lr": 1.3024,
+      "note": "measured: lower bound 3.68; 19/503 listed vs 16/3000 new registrations; LR+ 7.04 (3.68-13.46) [all ages]",
+      "null": false
+    },
+    "dns_live": {
+      "basis": "measured",
+      "group": "registered within 30 days",
+      "ln_lr": 0.0,
+      "note": "measured: does not separate; 32/34 listed vs 2504/2909 new registrations; LR+ 1.08 (0.98-1.18) [registered within 30 days]",
+      "null": true
+    },
+    "esp_sender": {
+      "basis": "measured",
+      "group": "all ages",
+      "ln_lr": 1.5008,
+      "note": "measured: lower bound 4.49; 18/502 listed vs 11/2909 new registrations; LR+ 9.31 (4.49-19.31) [all ages]",
+      "null": false
+    },
+    "mx_live": {
+      "basis": "measured",
+      "group": "registered within 30 days",
+      "ln_lr": -0.007,
+      "note": "measured (points the other way): upper bound 0.99; 5/34 listed vs 993/2909 new registrations; LR+ 0.46 (0.21-0.99) [registered within 30 days]",
+      "null": false
+    },
+    "parked": {
+      "basis": "measured",
+      "group": "all ages",
+      "ln_lr": -0.8756,
+      "note": "measured (points the other way): upper bound 0.42; 13/502 listed vs 320/2909 new registrations; LR+ 0.24 (0.14-0.42) [all ages]",
+      "null": false
+    }
+  },
+  "unmeasured": {
+    "defensive_mail_posture": "not enough data to say; 0/34 listed vs 49/2909 new registrations; LR+ 0.84 (0.05-13.35) [registered within 30 days]",
+    "dkim_published": "not enough data to say; 5/34 listed vs 253/2909 new registrations; LR+ 1.80 (0.83-3.92) [registered within 30 days]",
+    "dmarc_published": "not enough data to say; 3/34 listed vs 677/2909 new registrations; LR+ 0.43 (0.16-1.16) [registered within 30 days]",
+    "free_platform_cname": "not enough data to say; 0/502 listed vs 33/2909 new registrations; LR+ 0.09 (0.01-1.41) [all ages]",
+    "high_abuse_suffix": "not enough data to say; 5/34 listed vs 835/3000 new registrations; LR+ 0.56 (0.26-1.22) [registered within 30 days]",
+    "spf_published": "not enough data to say; 7/34 listed vs 998/2909 new registrations; LR+ 0.62 (0.33-1.18) [registered within 30 days]"
+  }
+}

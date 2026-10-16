@@ -133,21 +133,74 @@ class SentinelResult:
     grade: str                  # A / B / C / D / F
     grade_color: str
     grade_label: str
-    pillar_dmarc: float         # portfolio-weighted DMARC points (0–60)
-    pillar_tls: float           # portfolio-weighted TLS points   (0–25)
-    pillar_certs: float         # portfolio-weighted cert points  (0–15)
+    pillar_dmarc: float         # portfolio-weighted DMARC points (0–60, email-auth pillar's own 100-scale)
+    pillar_tls: float           # portfolio-weighted TLS points   (0–25,     "        "        "    )
+    pillar_certs: float         # portfolio-weighted cert points  (0–15,     "        "        "    )
     volume_weighted: bool       # True if volume data was available
+    pillar_cloud_posture: float | None  # 0–100 on Cloud Posture's own scale; None if no connected cloud account
+    pillar_human_risk: float | None = None  # 0–100 on Human Risk's own scale; None if no phishing campaign history
+    pillar_verified_exploitability: float | None = None  # 0–100 real per-Finding exploitability rollup; None if nothing scored yet
+    pillar_brand_exposure: float | None = None  # 0–100 look-alike domain exposure (brand_exposure.py); None if no active, scanned brand
 
 
-def compute_sentinel_score(domains: list[DomainSentinelInput]) -> SentinelResult:
+# ── Cross-domain composite weights (ARCHITECTURE.md Section 8) ───────────────
+# Full target: Email Auth 20 / Cloud Posture 15 / External Exposure 15 /
+# Credential Hygiene 10 / Human Risk 15 / Verified Exploitability 25 = 100.
+# Verified Exploitability now exists (exploitability_service.py). Email
+# Auth, Cloud Posture, Human Risk, and now Verified Exploitability exist
+# today (Tier 2, External Exposure/Credential Hygiene as standalone
+# pillars, isn't built) — renormalized across whatever signals are actually
+# available below, so adding a tier later is a matter of adding one more
+# term to the sum, not a rewrite. This is why _EMAIL_AUTH_WEIGHT/
+# _CLOUD_POSTURE_WEIGHT/_HUMAN_RISK_WEIGHT aren't used as raw percentages
+# directly.
+_EMAIL_AUTH_WEIGHT = 20
+_CLOUD_POSTURE_WEIGHT = 15
+_HUMAN_RISK_WEIGHT = 15
+_BRAND_EXPOSURE_WEIGHT = 15      # same as Human Risk; None-means-absent, so it only counts for a tenant that uses Brand Guard
+# The term this comment named but never had data for, until
+# exploitability_service.py's real per-Finding scoring shipped.
+_VERIFIED_EXPLOITABILITY_WEIGHT = 25
+
+
+def compute_sentinel_score(
+    domains: list[DomainSentinelInput],
+    cloud_posture_score: float | None = None,
+    human_risk_score: float | None = None,
+    verified_exploitability_score: float | None = None,
+    brand_exposure_score: float | None = None,
+) -> SentinelResult:
     """
     Compute a volume-weighted portfolio Sentinel Score (0–100).
     Falls back to simple average when no domain has volume data.
+
+    cloud_posture_score: 0-100, from cloud_scan_service's tenant-wide
+    Cloud-Posture computation (BUILD_PLAN.md Phase 1 step 10). None means
+    the tenant has no connected cloud account — in that case this returns
+    exactly what it always has, unchanged, so shipping this doesn't quietly
+    move an existing V1-only customer's score the day it deploys. Once a
+    cloud account connects, the composite blends both signals, renormalized
+    over whichever weights are actually available (see _EMAIL_AUTH_WEIGHT /
+    _CLOUD_POSTURE_WEIGHT above).
+
+    human_risk_score: 0-100, from phishing_service's tenant-wide Human Risk
+    computation (Coverage Map plan phishing transformation, Phase 9). Same
+    None-means-absent convention as cloud_posture_score — a tenant with no
+    phishing campaign history sees no change to their score at all.
+
+    verified_exploitability_score: 0-100, from exploitability_service's
+    compute_tenant_verified_exploitability_score() — the real per-Finding
+    exploitability rollup (CVSS/EPSS/exploit-available for CVEs, real
+    reachability/policy-scope signals for everything else). Same
+    None-means-absent convention: a tenant with no scored open findings
+    yet sees no change to their score, never a fabricated perfect 100.
     """
     if not domains:
         return SentinelResult(
             score=0, grade="F", grade_color="#ff4d6d", grade_label="At risk",
             pillar_dmarc=0, pillar_tls=0, pillar_certs=0, volume_weighted=False,
+            pillar_cloud_posture=cloud_posture_score, pillar_human_risk=human_risk_score,
+            pillar_verified_exploitability=verified_exploitability_score, pillar_brand_exposure=brand_exposure_score,
         )
 
     total_volume = sum(d.volume for d in domains)
@@ -163,7 +216,21 @@ def compute_sentinel_score(domains: list[DomainSentinelInput]) -> SentinelResult
         weighted_tls   += _sentinel_tls_pts(d.tls_stage, d.tls_pass_pct) * w
         weighted_certs += _sentinel_cert_pts(d.min_cert_days, d.cert_status) * w
 
-    raw = weighted_dmarc + weighted_tls + weighted_certs
+    email_auth_score_0_100 = weighted_dmarc + weighted_tls + weighted_certs  # already 0-100 (60+25+15)
+
+    weighted_terms = [(email_auth_score_0_100, _EMAIL_AUTH_WEIGHT)]
+    if cloud_posture_score is not None:
+        weighted_terms.append((cloud_posture_score, _CLOUD_POSTURE_WEIGHT))
+    if human_risk_score is not None:
+        weighted_terms.append((human_risk_score, _HUMAN_RISK_WEIGHT))
+    if verified_exploitability_score is not None:
+        weighted_terms.append((verified_exploitability_score, _VERIFIED_EXPLOITABILITY_WEIGHT))
+    if brand_exposure_score is not None:
+        weighted_terms.append((brand_exposure_score, _BRAND_EXPOSURE_WEIGHT))
+
+    weight_sum = sum(w for _, w in weighted_terms)
+    raw = sum(s * (w / weight_sum) for s, w in weighted_terms)
+
     score = min(100, max(0, round(raw)))
 
     grade, color, label = "F", "#ff4d6d", "At risk"
@@ -181,4 +248,8 @@ def compute_sentinel_score(domains: list[DomainSentinelInput]) -> SentinelResult
         pillar_tls=round(weighted_tls, 1),
         pillar_certs=round(weighted_certs, 1),
         volume_weighted=use_weights,
+        pillar_cloud_posture=round(cloud_posture_score, 1) if cloud_posture_score is not None else None,
+        pillar_human_risk=round(human_risk_score, 1) if human_risk_score is not None else None,
+        pillar_verified_exploitability=round(verified_exploitability_score, 1) if verified_exploitability_score is not None else None,
+        pillar_brand_exposure=round(brand_exposure_score, 1) if brand_exposure_score is not None else None,
     )

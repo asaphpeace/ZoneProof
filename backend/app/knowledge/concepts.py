@@ -86,7 +86,7 @@ CONCEPTS: dict[str, Concept] = {
             "once compliance is sustained, not just briefly high."
         ),
         learn_more=(
-            "Stages only ever move forward in Sentinel's recommendations — loosening a policy is a "
+            "Stages only ever move forward in ZoneProof's recommendations — loosening a policy is a "
             "deliberate human decision, never something the system suggests as a 'fix.'"
         ),
     ),

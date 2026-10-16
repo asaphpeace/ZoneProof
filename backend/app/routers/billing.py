@@ -615,11 +615,12 @@ async def _handle_payment_failed(invoice: dict, db: AsyncSession) -> None:
     safe_tenant = html.escape(tenant.name)
 
     await email_service.send_email(
+        db,
         to=recipient,
-        subject="Action needed: your Sentinel payment failed",
+        subject="Action needed: your ZoneProof payment failed",
         title="We couldn't process your payment",
         body_html=(
-            f"<p>A payment of <strong>{amount_line}</strong> for <strong>{safe_tenant}</strong> on Sentinel "
+            f"<p>A payment of <strong>{amount_line}</strong> for <strong>{safe_tenant}</strong> on ZoneProof "
             f"could not be processed.</p>"
             f"<p>Please update your payment method to avoid any interruption to your plan.</p>"
             + (f'<p style="margin: 24px 0;"><a href="{portal_hint}" style="background:#5b6ef5;color:#fff;'
@@ -627,5 +628,5 @@ async def _handle_payment_failed(invoice: dict, db: AsyncSession) -> None:
                if portal_hint else "")
             + '<p style="color:#888;font-size:12px;">You can update your card from Billing settings in the app.</p>'
         ),
-        text_body=f"A payment of {amount_line} for {tenant.name} on Sentinel failed. Please update your payment method.",
+        text_body=f"A payment of {amount_line} for {tenant.name} on ZoneProof failed. Please update your payment method.",
     )

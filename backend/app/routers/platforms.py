@@ -244,7 +244,7 @@ async def _build_setup_card(domain: Domain, platform_key: str, db: AsyncSession)
     instructions, nameservers = await detect_registrar(domain.name)
 
     # DKIM's value always comes from the platform's own dashboard (it's
-    # account-specific and Sentinel never sees it in advance) — but the
+    # account-specific and ZoneProof never sees it in advance) — but the
     # *publish* step is generic and was missing entirely before this fix.
     # dkim_host_pattern gives the host shape so the user knows where to put
     # whatever selector + value the platform showed them, and
@@ -358,7 +358,7 @@ async def email_platform_setup_instructions(
     spf_warning_html = "".join(f"<p style='color:#b45309'>{html_lib.escape(w)}</p>" for w in card.spf_composition.warnings)
 
     body_html = f"""
-    <p>{safe_user_email} uses Sentinel to monitor email security for <b>{safe_domain_name}</b> and is setting up
+    <p>{safe_user_email} uses ZoneProof to monitor email security for <b>{safe_domain_name}</b> and is setting up
     <b>{safe_card_name}</b> as a sending platform.</p>
 
     <p><b>SPF — combined record covering every platform on this domain (not just {safe_card_name} alone):</b></p>
@@ -379,6 +379,7 @@ async def email_platform_setup_instructions(
     """
 
     sent = await send_email(
+        db,
         to=payload.to_email,
         subject=f"{card.name} setup for {domain.name}",
         title=f"{card.name} setup for {domain.name}",
