@@ -1,4 +1,6 @@
-const BASE = '/api'
+// Same-origin '/api' by default (nginx, Vite proxy, CloudFront behaviour). Set VITE_API_BASE at build time to point at a separate API origin.
+export const API_BASE: string = ((import.meta as any).env?.VITE_API_BASE as string | undefined)?.replace(/\/+$/, '') || '/api'
+const BASE = API_BASE
 
 let _token: string | null = localStorage.getItem('sentinel_token')
 

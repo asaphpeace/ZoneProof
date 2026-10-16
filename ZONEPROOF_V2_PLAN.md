@@ -97,13 +97,13 @@ Constraints from the project setup: every Regional resource lives in the project
 |---|---|---|
 | C1 | **Separate the scheduler from the API.** The API starts about 14 interval jobs itself; two containers would run each twice. One worker service or a leader lock | **DONE 2026-10-15 as a leader lock** (`scheduler_lock.py`, Postgres advisory lock on its own connection). Verified with two live instances: one leader, one standby, takeover in about 15 s. `SCHEDULER_ENABLED=false` makes an instance API-only, so a dedicated worker is still possible. Not covered: per-process job history (G2), a pooler in transaction mode needs `SCHEDULER_LOCK_DATABASE_URL` |
 | C2 | Secrets from a managed secrets store at start-up (SendGrid, Stripe, DB, signing key, IMAP) | **DONE 2026-10-15** (`secrets_loader.py`): `SECRETS_PROVIDER=aws` reads one JSON secret from Secrets Manager at start (env wins; unreadable secret stops start-up); `ENVIRONMENT=production` refuses the dev signing key, a key under 32 chars, or the default DB password; compose now requires `POSTGRES_PASSWORD`, defaults `ENVIRONMENT=production`, duplicate SendGrid line removed. Needs `secretsmanager:GetSecretValue` on that one secret. Not done: rotation |
-| C3 | Managed Postgres. Run migrations as a one-off release step, not in every replica's entrypoint | Check `entrypoint.sh` |
+| C3 | Managed Postgres. Run migrations as a one-off release step, not in every replica's entrypoint | **DONE 2026-10-16.** Schema logic moved to `migrate.sh`; `entrypoint.sh migrate` runs it as a one-off release step; `RUN_MIGRATIONS=false` starts a replica without touching the schema; default unchanged for compose. Managed Postgres itself not created |
 | C4 | Report intake moves from IMAP polling to push (received mail stored, queued, processed) | Confirm service availability in the project Region first |
-| C5 | Frontend as static assets behind CloudFront; API stays Regional | CloudFront is global; backend must stay in the project Region |
+| C5 | Frontend as static assets behind CloudFront; API stays Regional | **PARTLY DONE 2026-10-16.** `VITE_API_BASE` build setting (default `/api`, so nothing changes today). Bucket, CloudFront and the `/api/*` behaviour (CloudFront cannot strip the prefix without a function; backend mounts at `/`) belong to C10 |
 | C6 | Hosted model for the advisor in place of host Ollama | `host.docker.internal` does not exist on AWS |
 | C7 | Report files to object storage; shared store for rate limits and caches | Per-instance memory breaks at scale |
-| C8 | Health checks, structured logs to log groups, alarms | `/health` and JSON logs already exist |
-| C9 | Cost guardrails and cleanup checklist per build step | Spend limit pauses the project |
+| C8 | Health checks, structured logs to log groups, alarms | **PARTLY DONE 2026-10-16.** Added `/health/ready` (database check, 503 when down) for load balancer targets. JSON logs already go to stdout, so the log driver ships them. Log groups with retention and alarms belong to C10 |
+| C9 | Cost guardrails and cleanup checklist per build step | **DONE 2026-10-16.** `AWS_BUILD_CHECKLIST.md`: what bills and how to undo it, per step |
 | C10 | Deploy method (CDK or CloudFormation) | Pick when C1 to C4 are settled |
 
 ### D. Email telemetry integrations

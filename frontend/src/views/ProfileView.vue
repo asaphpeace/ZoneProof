@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { api, getToken } from '@/api/client'
+import { api, getToken, API_BASE } from '@/api/client'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 
@@ -161,7 +161,7 @@ const exporting = ref(false)
 async function exportData() {
   exporting.value = true
   try {
-    const res = await fetch('/api/auth/me/export', { headers: { Authorization: `Bearer ${getToken()}` } })
+    const res = await fetch(`${API_BASE}/auth/me/export`, { headers: { Authorization: `Bearer ${getToken()}` } })
     if (!res.ok) throw new Error('Export failed')
     const blob = await res.blob()
     const url = URL.createObjectURL(blob)

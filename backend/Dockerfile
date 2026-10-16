@@ -19,7 +19,7 @@ RUN playwright install chromium --with-deps
 
 COPY . .
 
-RUN chmod +x entrypoint.sh
+RUN chmod +x entrypoint.sh migrate.sh
 
 EXPOSE 8000
 

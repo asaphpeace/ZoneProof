@@ -398,4 +398,20 @@ app.include_router(brand_probe_worker.router)
 
 @app.get("/health")
 async def health():
+    """Liveness: the process is up. Use for container restarts."""
+    return {"status": "ok"}
+
+
+@app.get("/health/ready")
+async def health_ready():
+    """Readiness: the database answers. Use for load balancer targets; 503 takes the task out of rotation."""
+    from fastapi.responses import JSONResponse
+    from sqlalchemy import text
+    from app.database import engine
+    try:
+        async with engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+    except Exception as e:
+        log.warning("readiness check failed: %s", type(e).__name__)
+        return JSONResponse({"status": "unavailable"}, status_code=503)
     return {"status": "ok"}
