@@ -39,7 +39,7 @@ const severityColor = (s: string) => ({ critical: 'var(--bad)', warn: 'var(--war
 .backdrop-thin { position: fixed; inset: 0; z-index: 71; }
 .alertmenu {
   position: fixed; top: 64px; right: 118px; width: 350px; max-width: 92vw;
-  background: linear-gradient(160deg, #0c0e1c, #070710);
+  background: linear-gradient(160deg, var(--surface-raised), var(--bg));
   border: 1px solid var(--line2); border-radius: 16px; z-index: 72;
   padding: 14px; box-shadow: 0 20px 50px rgba(0,0,0,.55);
 }

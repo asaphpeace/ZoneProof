@@ -46,7 +46,7 @@ const filtered = computed(() => {
 
 <style scoped>
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); z-index: 400; display: grid; place-items: center; padding: 20px; }
-.panel { width: 520px; max-width: 94vw; max-height: 80vh; overflow-y: auto; background: #0c0e1c; border: 1px solid var(--line2); border-radius: 18px; padding: 22px; box-shadow: 0 30px 80px rgba(0,0,0,.7); }
+.panel { width: 520px; max-width: 94vw; max-height: 80vh; overflow-y: auto; background: var(--surface-raised); border: 1px solid var(--line2); border-radius: 18px; padding: 22px; box-shadow: 0 30px 80px rgba(0,0,0,.7); }
 .mh { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 .mh span { font-family: var(--disp); font-weight: 800; font-size: 16px; }
 .mx { background: none; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); width: 28px; height: 28px; cursor: pointer; font-size: 14px; }

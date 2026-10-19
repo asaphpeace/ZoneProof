@@ -195,7 +195,7 @@ const MTA_CLASS: Record<string, string> = {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
           </svg>
-          <input v-model="search" placeholder="Search domains…" class="search-input" />
+          <input v-model="search" placeholder="Filter this list…" aria-label="Filter the domain list" class="search-input" />
         </div>
         <button class="btn-add" @click="openAdd" :class="{ disabled: atLimit }" :title="atLimit ? `${domains.length}/${domainLimit} domains — upgrade to add more` : ''">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -678,7 +678,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 26px; margin: 0; let
 
 /* ── Slide-over & modal overlay ───────────────────────────────────────── */
 .overlay {
-  position: fixed; inset: 0; background: rgba(6,6,15,.65);
+  position: fixed; inset: 0; background: color-mix(in srgb, var(--bg) 65%, transparent);
   backdrop-filter: blur(6px); z-index: 900;
   display: flex; align-items: center; justify-content: flex-end;
 }

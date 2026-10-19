@@ -98,7 +98,7 @@ function fixThis(h: any) {
 .mx-fix-btn { flex: none; background: rgba(245,197,66,.14); border: 1px solid rgba(245,197,66,.35); color: var(--amber); border-radius: 9px; padding: 5px 11px; font-size: 11px; font-weight: 700; cursor: pointer; }
 
 .server-fix-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); z-index: 300; display: grid; place-items: center; padding: 20px; }
-.server-fix-box { width: 420px; max-width: 92vw; background: #0c0e1c; border: 1px solid var(--line2); border-radius: 16px; padding: 20px; box-shadow: 0 30px 80px rgba(0,0,0,.7); }
+.server-fix-box { width: 420px; max-width: 92vw; background: var(--surface-raised); border: 1px solid var(--line2); border-radius: 16px; padding: 20px; box-shadow: 0 30px 80px rgba(0,0,0,.7); }
 .sf-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .sf-head span { font-family: var(--mono); font-weight: 700; font-size: 13px; }
 .sf-x { background: none; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); width: 24px; height: 24px; cursor: pointer; font-size: 12px; }

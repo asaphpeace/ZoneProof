@@ -324,7 +324,7 @@ const verdictStyle: Record<string, { color: string; bg: string; border: string }
 
 /* ARC info popover */
 .arc-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); z-index: 320; display: grid; place-items: center; padding: 20px; }
-.arc-box { width: 420px; max-width: 92vw; background: #0c0e1c; border: 1px solid var(--line2); border-radius: 16px; padding: 20px; box-shadow: 0 30px 80px rgba(0,0,0,.7); }
+.arc-box { width: 420px; max-width: 92vw; background: var(--surface-raised); border: 1px solid var(--line2); border-radius: 16px; padding: 20px; box-shadow: 0 30px 80px rgba(0,0,0,.7); }
 .arc-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .arc-head span { font-family: var(--disp); font-weight: 800; font-size: 14px; }
 .arc-x { background: none; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); width: 24px; height: 24px; cursor: pointer; font-size: 12px; }

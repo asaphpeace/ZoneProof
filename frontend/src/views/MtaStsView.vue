@@ -434,7 +434,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 25px; letter-spacing
 .sub { color: var(--muted); margin-top: 5px; font-size: 13px; }
 
 .dom-select {
-  background: #0c0e1c;
+  background: var(--surface-raised);
   border: 1px solid var(--line2);
   border-radius: 12px;
   color: var(--txt);
@@ -520,7 +520,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 25px; letter-spacing
 
 /* Modal */
 .modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:200;display:grid;place-items:center;padding:20px; }
-.modal-box { width:600px;max-width:94vw;max-height:90vh;overflow-y:auto;background:#0c0e1c;border:1px solid var(--line2);border-radius:18px;padding:24px;box-shadow:0 30px 80px rgba(0,0,0,.7); }
+.modal-box { width:600px;max-width:94vw;max-height:90vh;overflow-y:auto;background: var(--surface-raised);border:1px solid var(--line2);border-radius:18px;padding:24px;box-shadow:0 30px 80px rgba(0,0,0,.7); }
 .mh { display:flex;align-items:center;justify-content:space-between;margin-bottom:16px; }
 .mh span { font-family:var(--disp);font-weight:800;font-size:16px; }
 .mx-btn { background:none;border:1px solid var(--line);border-radius:8px;color:var(--muted);width:28px;height:28px;cursor:pointer;font-size:14px; }

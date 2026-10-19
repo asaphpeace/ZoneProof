@@ -345,7 +345,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 25px; letter-spacing
   cursor: pointer; outline: none; transition: border-color .15s; min-width: 200px;
 }
 .domain-select:focus { border-color: var(--indigo); }
-.domain-select option { background: #0c0e1c; }
+.domain-select option { background: var(--surface-raised); }
 
 .type-filters { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
 .filter-label { font-family: var(--mono); font-size: 9px; letter-spacing: .8px; text-transform: uppercase; color: var(--faint); margin-right: 4px; }

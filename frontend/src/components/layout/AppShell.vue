@@ -164,7 +164,7 @@ function goUpgrade() {
 /* ── Upgrade prompt ───────────────────────────────────────────── */
 .upgrade-overlay {
   position: fixed; inset: 0; z-index: 2000;
-  background: rgba(6,6,15,.7); backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--bg) 70%, transparent); backdrop-filter: blur(8px);
   display: grid; place-items: center; padding: 20px;
 }
 .upgrade-modal {

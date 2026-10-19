@@ -23,5 +23,5 @@ withDefaults(defineProps<{ size?: number; subtitle?: string; wordmark?: boolean 
 .mark { background: var(--accent); display: grid; place-items: center; flex: none; }
 .name { font-family: var(--disp); font-weight: 800; font-size: 17px; letter-spacing: -.3px; line-height: 1.1; }
 .name b { color: var(--accent-soft); font-weight: 800; }
-.sub { font-family: var(--mono); font-size: 9px; color: var(--faint); letter-spacing: 1.2px; text-transform: uppercase; margin-top: 2px; }
+.sub { font-family: var(--body); font-size: 10.5px; color: var(--faint); margin-top: 2px; white-space: nowrap; }
 </style>

@@ -45,7 +45,7 @@ function onKey(e: KeyboardEvent) {
 .backdrop { position: fixed; inset: 0; background: rgba(3,4,12,.62); backdrop-filter: blur(3px); z-index: 60; }
 .drawer {
   position: fixed; top: 0; right: 0; height: 100vh; width: 430px; max-width: 92vw;
-  background: linear-gradient(160deg, #0c0e1c, #070710);
+  background: linear-gradient(160deg, var(--surface-raised), var(--bg));
   border-left: 1px solid var(--line2); z-index: 70;
   animation: drawer-in .28s ease;
   padding: 22px; overflow-y: auto; box-shadow: -20px 0 60px rgba(0,0,0,.55);

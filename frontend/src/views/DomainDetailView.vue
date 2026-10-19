@@ -803,7 +803,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 26px; margin: 0; let
 
 /* ── Exclude reason modal ─────────────────────────────────────────────── */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); z-index: 300; display: grid; place-items: center; padding: 20px; }
-.modal-box { width: 480px; max-width: 94vw; background: #0c0e1c; border: 1px solid var(--line2); border-radius: 18px; padding: 22px; box-shadow: 0 30px 80px rgba(0,0,0,.7); }
+.modal-box { width: 480px; max-width: 94vw; background: var(--surface-raised); border: 1px solid var(--line2); border-radius: 18px; padding: 22px; box-shadow: 0 30px 80px rgba(0,0,0,.7); }
 .mh { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 .mh span { font-family: var(--disp); font-weight: 800; font-size: 15px; }
 .mx { background: none; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); width: 26px; height: 26px; cursor: pointer; font-size: 13px; }

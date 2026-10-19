@@ -488,7 +488,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 25px; letter-spacing
   cursor: pointer; outline: none; transition: border-color .15s;
 }
 .filter-select:focus { border-color: var(--indigo); }
-.filter-select option { background: #0c0e1c; }
+.filter-select option { background: var(--surface-raised); }
 .filter-caret { position: absolute; right: 8px; width: 13px; height: 13px; color: var(--faint); pointer-events: none; }
 
 /* ── Table ───────────────────────────────────────────────────── */

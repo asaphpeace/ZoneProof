@@ -1,0 +1,63 @@
+/* SYNCED COPY — do not edit here. Source of truth:
+ * PathProof repo, packages/ui-primitives/src/brand.css. Change it there,
+ * then copy it over this file. */
+
+/*
+ * Foundation Security Labs — shared brand layer (colour only).
+ *
+ * One platform, one face: ZoneProof, PathProof and PactProof share the same
+ * navy base, text ramp, lines and status colours, and each module keeps its
+ * own accent so a customer can tell which module they are in at a glance.
+ *
+ * This file is the source of truth. ZoneProof (a separate repo for now)
+ * carries a verbatim copy at frontend/src/styles/brand.css — change it here,
+ * then copy it across, until the apps share one workspace.
+ *
+ * Layering:
+ *   brand.css      raw --fsl-* values (this file)
+ *   primitives.css shape scale (spacing, radius) — no colour
+ *   app tokens.css maps the app's own variable names onto --fsl-*
+ *
+ * Contrast (WCAG 2.1):
+ *   --fsl-text, --fsl-text-2, --fsl-text-3 are all >= 4.5:1 on --fsl-bg,
+ *   --fsl-surface and --fsl-raised. On --fsl-hover, --fsl-text-3 drops to
+ *   4.3:1, so keep faint text off hover/selected rows (use --fsl-text-2).
+ *   Module accents are for fills, borders and icons. For accent-coloured
+ *   text on navy use the matching *-soft value (>= 6:1); the saturated
+ *   ZoneProof indigo is only 3.5:1 as text on --fsl-bg.
+ */
+:root {
+  /* Surfaces — darkest to lightest */
+  --fsl-bg:       #0b1932; /* page background (dark navy) */
+  --fsl-surface:  #102442; /* panels, cards (panel navy) */
+  --fsl-raised:   #152b4e; /* modals, drawers, toasts, menus */
+  --fsl-hover:    #1a355e; /* hover / selected row */
+  --fsl-border:   #24406b; /* solid border where a line can't be translucent */
+  --fsl-line:     rgba(255, 255, 255, .08);
+  --fsl-line-2:   rgba(255, 255, 255, .14);
+
+  /* Text */
+  --fsl-text:     #f1f5fb;
+  --fsl-text-2:   #aeb9cc; /* secondary */
+  --fsl-text-3:   #8c99b1; /* faint: labels, metadata */
+  --fsl-ink:      #0b1932; /* dark text on bright fills */
+
+  /* Platform brand (company chrome, module switcher, links outside a module) */
+  --fsl-brand:      #38bdf8; /* cyan */
+  --fsl-brand-deep: #2563eb; /* blue */
+
+  /* Status — same meaning in every module */
+  --fsl-good: #34e0a1;
+  --fsl-warn: #f5c542;
+  --fsl-bad:  #ff4d6d;
+  --fsl-crit: #ff2d55;
+  --fsl-info: #38bdf8;
+
+  /* Module accents */
+  --fsl-zoneproof:      #5b5cf0; /* indigo — outside: domains, email, brand */
+  --fsl-zoneproof-soft: #a5a6ff;
+  --fsl-pathproof:      oklch(0.75 0.14 195); /* teal — inside: attack paths */
+  --fsl-pathproof-soft: oklch(0.83 0.10 195);
+  --fsl-pactproof:      #38bdf8; /* provisional — between: trust relationships */
+  --fsl-pactproof-soft: #8fd8fb;
+}

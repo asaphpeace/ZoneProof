@@ -71,7 +71,7 @@ async function gotIt() {
 
 .concept-popover {
   position: absolute; top: calc(100% + 6px); left: 0; z-index: 250; width: 280px;
-  background: #0c0e1c; border: 1px solid var(--line2); border-radius: 13px;
+  background: var(--surface-raised); border: 1px solid var(--line2); border-radius: 13px;
   padding: 14px 16px; box-shadow: 0 20px 50px rgba(0,0,0,.6);
 }
 .concept-loading { font-family: var(--mono); font-size: 11px; color: var(--faint); }

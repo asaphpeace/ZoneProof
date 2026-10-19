@@ -1,25 +1,33 @@
+@import './brand.css';
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
+/*
+ * ZoneProof's names for the Foundation Security Labs brand layer
+ * (./brand.css). Base, text and status colours are shared with PathProof;
+ * indigo stays ZoneProof's own module accent.
+ */
 :root {
-  --bg:      #06060f;
-  --txt:     #eef1f8;
-  --muted:   #9098b5;
-  --faint:   #5b6285;
+  --bg:      var(--fsl-bg);
+  --surface-raised: var(--fsl-raised); /* modals, drawers, toasts, menus */
+  --ink:     var(--fsl-ink);           /* dark text on bright fills */
+  --txt:     var(--fsl-text);
+  --muted:   var(--fsl-text-2);
+  --faint:   var(--fsl-text-3);
   --pink:    #f5417a;
-  --indigo:  #5b5cf0;
-  --accent:  #5b5cf0;   /* ZoneProof indigo: primary actions, links, active states */
+  --indigo:  var(--fsl-zoneproof);
+  --accent:  var(--fsl-zoneproof);     /* primary actions, active states */
   --accent-hover: #4b4ce0;
-  --accent-soft:  #a5a6ff;   /* wordmark, links on dark */
+  --accent-soft:  var(--fsl-zoneproof-soft); /* wordmark, links on dark */
   --indigo2: #8b5cf6;
-  --amber:   #f5c542;
+  --amber:   var(--fsl-warn);
   --teal:    #2ee6c5;
-  --good:    #34e0a1;
-  --warn:    #f5c542;
-  --bad:     #ff4d6d;
-  --crit:    #ff2d55;
+  --good:    var(--fsl-good);
+  --warn:    var(--fsl-warn);
+  --bad:     var(--fsl-bad);
+  --crit:    var(--fsl-crit);
   --glass:   linear-gradient(160deg, rgba(255,255,255,.05), rgba(255,255,255,.014));
-  --line:    rgba(255,255,255,.08);
-  --line2:   rgba(255,255,255,.14);
+  --line:    var(--fsl-line);
+  --line2:   var(--fsl-line-2);
   --disp:   'Sora', sans-serif;
   --body:   'DM Sans', sans-serif;
   --mono:   'JetBrains Mono', monospace;
@@ -85,7 +93,7 @@ body {
 :focus-visible { outline: 2px solid var(--indigo, #7b7dff); outline-offset: 2px; }
 .skip-link {
   position: absolute; left: -9999px; top: 8px; z-index: 1000;
-  padding: 9px 16px; border-radius: 10px; background: #14162a; color: #fff; font-weight: 600; text-decoration: none;
+  padding: 9px 16px; border-radius: 10px; background: var(--surface-raised); color: #fff; font-weight: 600; text-decoration: none;
   border: 1px solid var(--indigo, #7b7dff);
 }
 .skip-link:focus { left: 12px; }

@@ -74,7 +74,7 @@ function navigate(name: string) {
   <aside class="sidebar" :class="{ open: ui.navOpen }" aria-label="Main navigation">
     <!-- Brand -->
     <div class="brand">
-      <ZoneProofLogo subtitle="DMARC · MTA-STS · BRAND" />
+      <ZoneProofLogo subtitle="by Foundation Security Labs" />
     </div>
 
 

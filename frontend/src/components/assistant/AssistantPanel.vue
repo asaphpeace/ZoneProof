@@ -69,7 +69,7 @@ function clear() {
   <button class="fab" :class="{ active: open }" @click="toggle" title="ZoneProof AI">
     <svg v-if="!open" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="16" cy="16" r="16" fill="url(#fab-grad)"/>
-      <path d="M10 16.5l3.5 3.5L22 11" stroke="#06060f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M10 16.5l3.5 3.5L22 11" style="stroke: var(--ink)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
       <defs>
         <linearGradient id="fab-grad" x1="0" y1="0" x2="32" y2="32">
           <stop offset="0%" stop-color="#5b5cf0"/>
@@ -188,7 +188,7 @@ function clear() {
 .orb {
   width: 34px; height: 34px; border-radius: 50%; flex: none;
   background: radial-gradient(circle at 30% 30%, #2ef5d4, #5b5cf0);
-  display: grid; place-items: center; color: #06060f;
+  display: grid; place-items: center; color: var(--ink);
 }
 .header-text { flex: 1; }
 .panel-title { font-family: var(--disp); font-weight: 700; font-size: 13.5px; }
@@ -250,7 +250,7 @@ function clear() {
 .send-btn {
   width: 34px; height: 34px; border-radius: 10px; flex: none;
   background: linear-gradient(135deg, #5b5cf0, #2ee6c5);
-  border: none; color: #06060f; cursor: pointer;
+  border: none; color: var(--ink); cursor: pointer;
   display: grid; place-items: center; transition: .15s;
 }
 .send-btn:disabled { opacity: .35; cursor: not-allowed; }

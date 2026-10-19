@@ -12,7 +12,7 @@ defineProps<{ grade: string; color: string }>()
 .score { display: inline-flex; align-items: center; }
 .shield {
   width: 34px; height: 38px; display: grid; place-items: center;
-  font-family: var(--disp); font-weight: 800; font-size: 13px; color: #06060f;
+  font-family: var(--disp); font-weight: 800; font-size: 13px; color: var(--ink);
   clip-path: polygon(50% 0, 100% 16%, 100% 60%, 50% 100%, 0 60%, 0 16%);
 }
 </style>

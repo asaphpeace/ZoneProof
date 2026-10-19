@@ -326,7 +326,7 @@ const factList = computed(() => {
 
 <style scoped>
 .overlay { position: fixed; inset: 0; z-index: 90; background: rgba(4,6,14,.6); display: flex; justify-content: flex-end; }
-.drawer { width: 680px; max-width: 100%; height: 100%; background: #0c0e1c; border-left: 1px solid var(--line2); box-shadow: -24px 0 60px rgba(0,0,0,.5); display: flex; flex-direction: column; outline: none; }
+.drawer { width: 680px; max-width: 100%; height: 100%; background: var(--surface-raised); border-left: 1px solid var(--line2); box-shadow: -24px 0 60px rgba(0,0,0,.5); display: flex; flex-direction: column; outline: none; }
 .head { padding: 18px 26px 16px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
 .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .lbl { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }

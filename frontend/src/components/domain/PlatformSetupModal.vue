@@ -190,7 +190,7 @@ async function sendEmail() {
 
 <style scoped>
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); z-index: 300; display: grid; place-items: center; padding: 20px; }
-.panel { width: 640px; max-width: 94vw; max-height: 90vh; overflow-y: auto; background: #0c0e1c; border: 1px solid var(--line2); border-radius: 18px; padding: 24px; box-shadow: 0 30px 80px rgba(0,0,0,.7); }
+.panel { width: 640px; max-width: 94vw; max-height: 90vh; overflow-y: auto; background: var(--surface-raised); border: 1px solid var(--line2); border-radius: 18px; padding: 24px; box-shadow: 0 30px 80px rgba(0,0,0,.7); }
 .loading { padding: 40px; text-align: center; color: var(--muted); font-family: var(--mono); font-size: 12px; }
 .mh { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
 .mh span { font-family: var(--disp); font-weight: 800; font-size: 16px; }

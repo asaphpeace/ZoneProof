@@ -299,7 +299,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 25px; letter-spacing
 }
 .domain-select:hover  { border-color: var(--indigo); }
 .domain-select:focus  { border-color: var(--indigo); box-shadow: 0 0 0 3px rgba(91,92,240,.18); }
-.domain-select option { background: #0c0e1c; color: var(--txt); }
+.domain-select option { background: var(--surface-raised); color: var(--txt); }
 .ds-caret {
   position: absolute; right: 12px; width: 15px; height: 15px;
   color: var(--faint); pointer-events: none;
@@ -309,7 +309,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 25px; letter-spacing
 
 /* ── Modal ───────────────────────────────────────────────────── */
 .modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:200;display:grid;place-items:center;padding:20px; }
-.modal-box { width:580px;max-width:94vw;max-height:88vh;overflow-y:auto;background:#0c0e1c;border:1px solid var(--line2);border-radius:18px;padding:24px;box-shadow:0 30px 80px rgba(0,0,0,.7); }
+.modal-box { width:580px;max-width:94vw;max-height:88vh;overflow-y:auto;background: var(--surface-raised);border:1px solid var(--line2);border-radius:18px;padding:24px;box-shadow:0 30px 80px rgba(0,0,0,.7); }
 .mh { display:flex;align-items:center;justify-content:space-between;margin-bottom:16px; }
 .mh span { font-family:var(--disp);font-weight:800;font-size:16px; }
 .mx { background:none;border:1px solid var(--line);border-radius:8px;color:var(--muted);width:28px;height:28px;cursor:pointer;font-size:14px; }

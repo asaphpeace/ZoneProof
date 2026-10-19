@@ -461,7 +461,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 25px; letter-spacing
 .gl-item { display: flex; align-items: center; gap: 4px; font-family: var(--mono); font-size: 9.5px; color: var(--faint); }
 .gl-badge {
   width: 18px; height: 20px; display: grid; place-items: center;
-  font-family: var(--disp); font-weight: 800; font-size: 9px; color: #06060f;
+  font-family: var(--disp); font-weight: 800; font-size: 9px; color: var(--ink);
   clip-path: polygon(50% 0, 100% 16%, 100% 60%, 50% 100%, 0 60%, 0 16%); flex: none;
 }
 
@@ -514,7 +514,7 @@ h1 { font-family: var(--disp); font-weight: 800; font-size: 25px; letter-spacing
 .fr-logo {
   width: 56px; height: 56px; border-radius: 18px; display: grid; place-items: center;
   background: radial-gradient(circle at 30% 25%, #2ef5d4, #5b5cf0);
-  color: #06060f; margin-bottom: 24px; position: relative;
+  color: var(--ink); margin-bottom: 24px; position: relative;
 }
 .fr-logo svg { width: 26px; height: 26px; }
 .fr-title {

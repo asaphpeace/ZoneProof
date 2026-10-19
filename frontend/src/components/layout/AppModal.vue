@@ -52,7 +52,7 @@ function onKey(e: KeyboardEvent) {
 .modal {
   position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
   width: 580px; max-width: 94vw; max-height: 88vh; overflow-y: auto;
-  background: linear-gradient(160deg, #0c0e1c, #070710);
+  background: linear-gradient(160deg, var(--surface-raised), var(--bg));
   border: 1px solid var(--line2); border-radius: 18px; z-index: 70;
   padding: 24px; box-shadow: 0 30px 80px rgba(0,0,0,.6);
   animation: modal-in .25s ease;
