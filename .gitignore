@@ -68,3 +68,6 @@ backend/data/brand_guard_corpus/
 
 # Generated local-only logins for the dev_live scratch schema
 backend/data/dev_live_users.txt
+.claude/settings.local.json
+policy.json
+zp-worker.tgz
