@@ -44,7 +44,8 @@ Status, from the code and from `ECOSYSTEM_PROJECT_BRIEF.md` / `ZONEPROOF_FEATURE
 | Stripe checkout, webhooks, portal | Built | Live status, VAT, refunds unknown |
 | Plan limits | Partial | ZoneProof only; PathProof has none |
 | Per-module entitlements (switch modules on per tenant) | Planned | `require_module(...)` guard |
-| Module catalogue: unbought modules shown locked with "Add module" | Planned | |
+| Module catalogue: unbought modules shown locked with "Add module" | Planned | In Settings and billing only |
+| Unbought modules shown inside the work, not as greyed menus ("this case would be richer with PactProof") | Planned | Approved 19 Oct 2026 |
 | Bundles (e.g. Protect / Verify / Complete) and MSP à la carte | Planned | |
 
 ### 1.4 Home
@@ -64,6 +65,7 @@ Status, from the code and from `ECOSYSTEM_PROJECT_BRIEF.md` / `ZONEPROOF_FEATURE
 | Official identities: social profiles, WhatsApp/phone, apps | Planned | PactProof registry |
 | Suppliers and partners | Planned | PactProof |
 | One combined inventory view | Planned | |
+| One page per person, domain and supplier, combining signals from every module | Planned | Approved 19 Oct 2026; the combined inventory opens into these |
 
 ### 1.6 Alerts and notifications
 | Feature | Status | Notes |
@@ -72,6 +74,7 @@ Status, from the code and from `ECOSYSTEM_PROJECT_BRIEF.md` / `ZONEPROOF_FEATURE
 | Channels: email, Slack, Teams, webhook | Built | |
 | SIEM export | Built | |
 | One alert feed across modules | Planned | |
+| Weekly "what we handled" summary | Planned | Approved 19 Oct 2026; email first, WhatsApp possible |
 
 ### 1.7 Cases and investigations
 | Feature | Status | Notes |
@@ -82,6 +85,7 @@ Status, from the code and from `ECOSYSTEM_PROJECT_BRIEF.md` / `ZONEPROOF_FEATURE
 | One case per incident, visible from every module | Planned | Brief principle "one incident, many views" |
 | Case stages: Discover → Understand → Verify → Decide → Protect → Prove | Planned | From the prototype |
 | Evidence states: observed, inferred, declared, verified, conflicted, unassessed, stale | Planned | Decisions locked while evidence is unassessed |
+| Related signals join one open case, and the case says so ("we linked this to last week's look-alike") | Planned | Approved 19 Oct 2026 |
 
 ### 1.8 Approvals and governance
 | Feature | Status | Notes |
@@ -91,6 +95,7 @@ Status, from the code and from `ECOSYSTEM_PROJECT_BRIEF.md` / `ZONEPROOF_FEATURE
 | Rules-of-engagement e-signature (Dropbox Sign) | Built | |
 | Second-person approval for money, DNS and access changes | Planned | Pre-flight checks, rollback, SLA, delegate |
 | Automation levels with hard limits (suggest → draft → act once approved → act with receipt) | Planned | From the prototype |
+| Response mode per tenant: ask me first, act after hours only, act always | Planned | Approved 19 Oct 2026; sits on top of the automation levels |
 | Data export and erasure log | Built | |
 
 ### 1.9 Reports
@@ -129,6 +134,7 @@ Status, from the code and from `ECOSYSTEM_PROJECT_BRIEF.md` / `ZONEPROOF_FEATURE
 | Public no-login domain scanner | Built | |
 | Prospect assessment | Built | PathProof |
 | Help centre and per-DNS-host guides | Planned | |
+| First-run report: top 4 risks within 24 hours, tied to POPIA | Planned | Approved 19 Oct 2026; doubles as onboarding and sales |
 
 ### 1.13 Platform operations
 | Feature | Status | Notes |
@@ -149,7 +155,7 @@ Status, from the code and from `ECOSYSTEM_PROJECT_BRIEF.md` / `ZONEPROOF_FEATURE
 | SPF composition builder (lookup count, flatten warning) | Built |
 | DKIM failure diagnosis | Built |
 | Enforcement roadmap per domain, readiness gates, impact simulation | Built |
-| BIMI as the final roadmap step | Built |
+| BIMI as the final roadmap step | Partial (guidance only; no record builder or check) |
 
 ### 2.2 Mail transport
 | Feature | Status |
@@ -177,7 +183,7 @@ Status, from the code and from `ECOSYSTEM_PROJECT_BRIEF.md` / `ZONEPROOF_FEATURE
 | Takedown drafts routed to the right contact (a person sends) | Partial (built, not released) |
 | Blocklist exports (M365, DNS RPZ, Chrome), defensive-registration advice | Partial (built, not released) |
 | MSP roll-up, brand exposure in the score | Partial (built, not released) |
-| Page rendering and visual similarity | Planned |
+| Page rendering and visual similarity | Partial (side-by-side screenshots work when the render worker is on) |
 | Learning loop, accuracy calibration, cross-customer intelligence | Planned (founder decision gate) |
 
 ### 2.5 Score and guidance
@@ -214,18 +220,26 @@ Status, from the code and from `ECOSYSTEM_PROJECT_BRIEF.md` / `ZONEPROOF_FEATURE
 | Feature | Status |
 |---|---|
 | Microsoft 365 OAuth app risk | Built |
-| MFA and password audit | Built |
 | Google Workspace | Planned |
-| Breach-credential monitoring | Partial |
 
-### 3.4 Human risk
+### 3.4 People (human risk)
 | Feature | Status |
 |---|---|
+| Person and team risk view: clicks, reports, training, MFA, breached passwords | Planned |
 | Phishing simulation: Spoof Proof and human simulation | Built |
 | Template library, landing pages, QR lures | Built |
 | Training courses and completion tracking | Built |
+| Just-in-time training: a 2-minute lesson on the exact lure clicked or received | Planned |
 | Reported-mail triage | Built |
 | Campaign approvals, scheduled reports, dashboards | Built |
+| MFA and password audit (moved from 3.3) | Built |
+| Breach-credential monitoring (moved from 3.3) | Partial |
+| High-risk roles: accounts payable, payroll, executive support get tougher tests, targeted training, extra weight in checks | Planned |
+| Executive impersonation: VIP list (executives, finance leads, anyone who can move money) | Planned |
+| Executive impersonation: email using a VIP's name from an outside address | Planned (needs the Microsoft 365 email feed) |
+| Executive impersonation: fake social profiles and WhatsApp numbers using a VIP's name | Planned (Brand Guard engine and PactProof registry) |
+| Executive impersonation: "our CEO will never ask you to…" policy staff can check | Planned |
+| Payroll diversion check: salary bank-change requests verified by call back and second approver | Planned (reuses the Trust Check flow, 4.4) |
 
 ### 3.5 Engagements
 | Feature | Status |
@@ -250,6 +264,7 @@ Status, from the code and from `ECOSYSTEM_PROJECT_BRIEF.md` / `ZONEPROOF_FEATURE
 | Supplier and partner records with criticality and owner | Planned |
 | Approved channels and authorised contacts per relationship | Planned |
 | Two-way email assurance (A → B and B → A), built on ZoneProof data | Planned |
+| Watch suppliers' domains for look-alikes (Brand Guard engine) | Planned |
 
 ### 4.3 Trust Handshake
 | Feature | Status |
@@ -265,6 +280,8 @@ Status, from the code and from `ECOSYSTEM_PROJECT_BRIEF.md` / `ZONEPROOF_FEATURE
 | Call back on the number already on file, with a script and recorded outcome | Planned |
 | Decision receipt: claim, approver, evidence, policy, validity | Planned |
 | Hold the linked payment until decided | Planned |
+| Spot bank-change requests in Microsoft 365 mail and open a check automatically | Planned |
+| Notify the real supplier when a fake request uses its name | Planned |
 
 ### 4.5 Payment protection
 | Feature | Status |
@@ -287,8 +304,9 @@ Status, from the code and from `ECOSYSTEM_PROJECT_BRIEF.md` / `ZONEPROOF_FEATURE
 ### 4.8 Signals PactProof uses from the other modules
 | Signal | From |
 |---|---|
-| Look-alike domains, Brand Guard hits, a supplier's DMARC posture | ZoneProof |
-| OAuth grants between organisations, phishing results | PathProof |
+| Look-alike domains (yours and your suppliers'), Brand Guard hits, a supplier's DMARC posture | ZoneProof |
+| OAuth grants between organisations, phishing results, high-risk roles, who can approve payments | PathProof |
+| Bank-change emails detected in Microsoft 365 mail | Microsoft 365 email feed (core) |
 
 ---
 
@@ -298,7 +316,7 @@ Status, from the code and from `ECOSYSTEM_PROJECT_BRIEF.md` / `ZONEPROOF_FEATURE
 |---|---|---|
 | Cases | Brand Guard cases, investigations, PactProof case rail | One case system in the core (1.7) |
 | Reported suspicious mail | PathProof triage; prototype "Messages" | Core alert feed, triaged in PathProof |
-| Executive impersonation | Prototype "Executive trust" | PathProof human risk |
+| Executive impersonation | Prototype "Executive trust" | **Decided 19 Oct 2026:** PathProof People (3.4) |
 | Public verification | Brand Guard; PactProof Verify | PactProof owns the public page |
 | MSP portfolio | Both apps | Core org switcher (1.2) |
 | Scores | ZoneProof Score; composite | ZoneProof Score per module; composite on Home |
@@ -309,8 +327,23 @@ Status, from the code and from `ECOSYSTEM_PROJECT_BRIEF.md` / `ZONEPROOF_FEATURE
 
 | Area | Built | Partial | Planned |
 |---|---|---|---|
-| Platform core | 36 | 8 | 23 |
-| ZoneProof | 16 | 7 | 3 |
-| PathProof | 19 | 1 | 2 |
-| PactProof | 0 | 0 | 19 |
-| **Total** | **71** | **16** | **47** |
+| Platform core | 36 | 8 | 29 |
+| ZoneProof | 15 | 9 | 2 |
+| PathProof | 19 | 1 | 10 |
+| PactProof | 0 | 0 | 22 |
+| **Total** | **70** | **18** | **63** |
+
+151 features. Was 134 before the 19 Oct 2026 decisions below.
+
+---
+
+## 7. Decisions log
+
+### 19 Oct 2026 — approved by the founder
+- **People (3.4):** executive impersonation moves here (settles the overlap in section 5). MFA and password audit and breach credentials move here from 3.3. New: payroll diversion check, high-risk roles, person and team risk view, just-in-time training.
+- **Suppliers and payments (4.2, 4.4):** spot bank-change emails in Microsoft 365 mail, notify the real supplier, watch suppliers' domains for look-alikes.
+- **How the product is arranged (core):** one page per person, domain and supplier; cases that merge and say so; weekly "what we handled" summary; response mode (ask first, after hours, always); first-run top-4-risks report; unbought modules shown inside the work instead of greyed menus.
+- **Status corrections:** BIMI Built → Partial (guidance only). Page rendering and visual similarity Planned → Partial (works when the render worker is on).
+
+### Open — not yet decided
+- **"Money protected" figure on Home** (e.g. "R1.2M in payments verified this quarter"). Founder: "not sure but perhaps". Not in the feature list until decided.
