@@ -120,7 +120,7 @@ Status, from the code and from `ECOSYSTEM_PROJECT_BRIEF.md` / `ZONEPROOF_FEATURE
 | AWS (Prowler, Cloudsplaining, Inspector) | Built | Inspector read permission unconfirmed on a real account |
 | SSH host scanning (Lynis) | Built | |
 | Microsoft 365 | Partial | OAuth risk built; scan has no button on its own page |
-| Email telemetry framework | Partial | Backend only |
+| Email telemetry framework | Partial | Backend only. Read-only through APIs, never in the mail path (decided 20 Oct 2026) |
 | Source health page | Built | |
 | Google Workspace | Planned | |
 | Breach credentials (HIBP) | Partial | Waits on API key |
@@ -344,6 +344,11 @@ Status, from the code and from `ECOSYSTEM_PROJECT_BRIEF.md` / `ZONEPROOF_FEATURE
 - **Suppliers and payments (4.2, 4.4):** spot bank-change emails in Microsoft 365 mail, notify the real supplier, watch suppliers' domains for look-alikes.
 - **How the product is arranged (core):** one page per person, domain and supplier; cases that merge and say so; weekly "what we handled" summary; response mode (ask first, after hours, always); first-run top-4-risks report; unbought modules shown inside the work instead of greyed menus.
 - **Status corrections:** BIMI Built → Partial (guidance only). Page rendering and visual similarity Planned → Partial (works when the render worker is on).
+
+### 20 Oct 2026 — approved by the founder
+- **Mail access scope: we read mail, we never carry it.** Mail is read after delivery through APIs (Microsoft 365 Graph first, Google Workspace later), headers and body, only for the mailboxes the customer chooses. We never sit in the MX path, hold mail inline, manage queues or detonate links in a sandbox. Settles the open "mail access scope" question.
+- **Why:** mail checks are one of our senses, not our product. Each check is a clue for stories (executive impersonation, bank-change requests, supplier look-alikes) and evidence for confidence. Specialists' verdicts (Microsoft Defender, reputation services) are inputs, not competitors. Staying out of the mail path avoids uptime and lost-mail liability.
+- **Design consequence:** the prototype's mail-queue screen is vision only, not planned. Link checks stop at reputation lookups. Mail signals sit beside executive impersonation in People (3.4), and one message taken apart is the evidence view a story opens. No feature count changes.
 
 ### Open — not yet decided
 - **"Money protected" figure on Home** (e.g. "R1.2M in payments verified this quarter"). Founder: "not sure but perhaps". Not in the feature list until decided.
