@@ -348,7 +348,7 @@ Status, from the code and from `ECOSYSTEM_PROJECT_BRIEF.md` / `ZONEPROOF_FEATURE
 ### 20 Oct 2026 — approved by the founder
 - **Mail access scope: we read mail, we never carry it.** Mail is read after delivery through APIs (Microsoft 365 Graph first, Google Workspace later), headers and body, only for the mailboxes the customer chooses. We never sit in the MX path, hold mail inline, manage queues or detonate links in a sandbox. Settles the open "mail access scope" question.
 - **Why:** mail checks are one of our senses, not our product. Each check is a clue for stories (executive impersonation, bank-change requests, supplier look-alikes) and evidence for confidence. Specialists' verdicts (Microsoft Defender, reputation services) are inputs, not competitors. Staying out of the mail path avoids uptime and lost-mail liability.
-- **Design consequence:** the prototype's mail-queue screen is vision only, not planned. Link checks stop at reputation lookups. Mail signals sit beside executive impersonation in People (3.4), and one message taken apart is the evidence view a story opens. No feature count changes.
+- **Design consequence:** the prototype's mail-queue screen is vision only, not planned. Link checks stop at reputation lookups. Mail signals stay a shared sense feeding all three modules; executive impersonation (3.4) and bank-change spotting (4.4) are their main users. One message taken apart is the evidence view a story opens. No feature count changes.
 
 ### Open — not yet decided
 - **"Money protected" figure on Home** (e.g. "R1.2M in payments verified this quarter"). Founder: "not sure but perhaps". Not in the feature list until decided.
